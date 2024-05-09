@@ -99,7 +99,6 @@ public class RemoteExecutor implements AutoCloseable {
             return session;
         }
         try {
-            log.info("SSH connection params:{}", sshConnectionParam.getLogString());
             session = SSHUtils.getSession(sshClient, sshConnectionParam);
             if (session == null || !session.auth().verify().isSuccess()) {
                 throw new TaskException("SSH connection failed");
@@ -161,7 +160,7 @@ public class RemoteExecutor implements AutoCloseable {
         int exitCode = -1;
         log.info("Remote shell task run status: {}", logLine);
         if (logLine.contains(STATUS_TAG_MESSAGE)) {
-            String status = StringUtils.substringAfter(logLine, STATUS_TAG_MESSAGE).trim();
+            String status = logLine.replace(STATUS_TAG_MESSAGE, "").trim();
             if (status.equals("0")) {
                 log.info("Remote shell task success");
                 exitCode = 0;
