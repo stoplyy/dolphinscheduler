@@ -301,7 +301,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <finalName>api-server</finalName>
+                            <!-- <finalName>api-server</finalName> -->
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-api-server.xml</descriptor>
                             </descriptors>
@@ -311,6 +311,7 @@
                 </executions>
             </plugin>
         </plugins>
+        <finalName>api-server</finalName>
     </build>
 
     <profiles>
