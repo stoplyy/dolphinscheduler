@@ -269,6 +269,7 @@
         </dependency>
     </dependencies>
     <build>
+        <finalName>api-server</finalName>
         <testResources>
             <testResource>
                 <directory>${project.basedir}/../dolphinscheduler-dao/src/main/resources</directory>
@@ -311,7 +312,6 @@
                 </executions>
             </plugin>
         </plugins>
-        <finalName>api-server</finalName>
     </build>
 
     <profiles>
