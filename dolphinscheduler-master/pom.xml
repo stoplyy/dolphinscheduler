@@ -108,6 +108,14 @@
             <artifactId>dolphinscheduler-common</artifactId>
             <exclusions>
                 <exclusion>
+                    <artifactId>jna-platform</artifactId>
+                    <groupId>net.java.dev.jna</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jna</artifactId>
+                    <groupId>net.java.dev.jna</groupId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.jacoco</groupId>
                     <artifactId>org.jacoco.agent</artifactId>
                 </exclusion>
