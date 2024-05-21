@@ -41,7 +41,7 @@
             <dependency>
                 <groupId>com.tuhu.inf</groupId>
                 <artifactId>tuhu-spring-cloud-framework-bom</artifactId>
-                <version>3.2.1-RELEASE</version>
+                <version>2.5.2-RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -50,10 +50,43 @@
 
     <dependencies>
         <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.10.0</version> <!-- 请根据需要使用最新版本 -->
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.10.0</version> <!-- 同上 -->
+            <exclusions>
+                <exclusion>
+                    <artifactId>jna</artifactId>
+                    <groupId>net.java.dev.jna</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.tuhu</groupId>
+            <artifactId>tuhu-boot-starter-logger</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-autoconfigure</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>com.tuhu.dolphin</groupId>
             <artifactId>tuhu-spring-cloud-starter-dolphin</artifactId>
-            <version>3.0.0</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-recipes</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.tuhu.commons</groupId>
                     <artifactId>commons-log</artifactId>
@@ -75,8 +108,8 @@
             <artifactId>dolphinscheduler-common</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>org.jacoco.agent</artifactId>
                     <groupId>org.jacoco</groupId>
+                    <artifactId>org.jacoco.agent</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -89,8 +122,8 @@
             <artifactId>dolphinscheduler-service</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>jsqlparser</artifactId>
                     <groupId>com.github.jsqlparser</groupId>
+                    <artifactId>jsqlparser</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.projectlombok</groupId>

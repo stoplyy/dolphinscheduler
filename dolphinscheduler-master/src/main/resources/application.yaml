@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 spring:
+  # main:
+  #   allow-bean-definition-overriding: true
   profiles:
     active: postgresql
   banner:
@@ -88,8 +90,8 @@ mybatis-plus:
 registry:
   type: zookeeper
   zookeeper:
-    namespace: dolphinscheduler
-    connect-string: localhost:2181
+    namespace: stellarops
+    connect-string: 127.0.0.1:2181
     retry-policy:
       base-sleep-time: 60ms
       max-sleep: 300ms
