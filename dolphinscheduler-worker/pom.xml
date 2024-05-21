@@ -150,7 +150,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <finalName>worker-server</finalName>
+                            <!-- <finalName>worker-server</finalName> -->
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-worker-server.xml</descriptor>
                             </descriptors>
@@ -160,6 +160,7 @@
                 </executions>
             </plugin>
         </plugins>
+        <finalName>worker-server</finalName>
     </build>
 
     <profiles>

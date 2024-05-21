@@ -414,7 +414,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <finalName>master-server</finalName>
+                            <!-- <finalName>master-server</finalName> -->
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-master-server.xml</descriptor>
                             </descriptors>
@@ -424,6 +424,7 @@
                 </executions>
             </plugin>
         </plugins>
+        <finalName>master-server</finalName>
     </build>
 
     <profiles>
