@@ -19,7 +19,7 @@
   ~
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
@@ -52,16 +52,18 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
-            <version>5.10.0</version> <!-- 请根据需要使用最新版本 -->
+            <version>5.10.0</version>
+            <!-- 请根据需要使用最新版本 -->
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
-            <version>5.10.0</version> <!-- 同上 -->
+            <version>5.10.0</version>
+            <!-- 同上 -->
             <exclusions>
                 <exclusion>
-                    <artifactId>jna</artifactId>
                     <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -108,12 +110,12 @@
             <artifactId>dolphinscheduler-common</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>jna-platform</artifactId>
                     <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna-platform</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>jna</artifactId>
                     <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.jacoco</groupId>
