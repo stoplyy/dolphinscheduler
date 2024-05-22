@@ -308,10 +308,10 @@
                             <mainClass>org.apache.dolphinscheduler.api.ApiApplicationServer</mainClass>
                         </manifest>
                     </archive>
-                    <excludes>
+                    <!-- <excludes>
                         <exclude>*.yaml</exclude>
                         <exclude>*.xml</exclude>
-                    </excludes>
+                    </excludes> -->
                 </configuration>
             </plugin>
             <plugin>
