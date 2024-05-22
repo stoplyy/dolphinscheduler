@@ -39,6 +39,7 @@ server:
       custom-format: '%{client}a - %u %t "%r" %s %O %{ms}Tms'
 
 spring:
+  cloud.kubernetes.enabled: false
   banner:
     charset: UTF-8
   jackson:
