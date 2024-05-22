@@ -453,7 +453,8 @@
                 <version>${logback.version}</version>
             </dependency>
 
-            <!--excel poi-->
+            <!--excel
+            poi-->
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi</artifactId>
@@ -971,7 +972,7 @@
         </dependencies>
     </dependencyManagement>
 
-    <!-- <profiles>
+    <profiles>
         <profile>
             <id>zk-3.8</id>
             <activation>
@@ -995,5 +996,5 @@
                 <zookeeper.version>3.4.14</zookeeper.version>
             </properties>
         </profile>
-    </profiles> -->
+    </profiles>
 </project>
