@@ -16,7 +16,7 @@
   ~ limitations under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
@@ -123,6 +123,8 @@
         <checker-qual.version>3.19.0</checker-qual.version>
         <zeppelin-client.version>0.10.1</zeppelin-client.version>
         <aliyun-voice.version>2.1.4</aliyun-voice.version>
+        <curator.version>4.3.0</curator.version>
+        <zookeeper.version>3.4.14</zookeeper.version>
     </properties>
 
     <dependencyManagement>
@@ -969,7 +971,7 @@
         </dependencies>
     </dependencyManagement>
 
-    <profiles>
+    <!-- <profiles>
         <profile>
             <id>zk-3.8</id>
             <activation>
@@ -993,5 +995,5 @@
                 <zookeeper.version>3.4.14</zookeeper.version>
             </properties>
         </profile>
-    </profiles>
+    </profiles> -->
 </project>
