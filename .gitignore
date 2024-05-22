@@ -33,7 +33,7 @@ t.*
 .factorypath
 Chart.lock
 yarn.lock
-package-lock.json
+# package-lock.json
 config.gypi
 test/coverage
 /docs/zh_CN/介绍
