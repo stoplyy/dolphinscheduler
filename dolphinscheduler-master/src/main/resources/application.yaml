@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 spring:
+  cloud.kubernetes.enabled: false
   # main:
   #   allow-bean-definition-overriding: true
   profiles:
