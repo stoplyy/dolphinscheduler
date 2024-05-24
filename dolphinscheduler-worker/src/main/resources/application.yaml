@@ -16,6 +16,7 @@
 #
 
 dolphin.enable: false
+sudo.enable: false
 
 spring:
   cloud.kubernetes.enabled: false
