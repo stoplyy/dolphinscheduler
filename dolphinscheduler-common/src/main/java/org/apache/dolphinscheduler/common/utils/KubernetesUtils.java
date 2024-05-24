@@ -27,7 +27,8 @@ public class KubernetesUtils {
     public static final Boolean KUBERNETES_MODE = !StringUtils.isEmpty(System.getenv("KUBERNETES_SERVICE_HOST"))
             && !StringUtils.isEmpty(System.getenv("KUBERNETES_SERVICE_PORT"));
 
-    public static final Boolean KUBERNETES_ENABLED = Boolean.parseBoolean(System.getenv("KUBERNETES_ENABLE"));
+    public static final Boolean KUBERNETES_ENABLED = Boolean
+            .parseBoolean(System.getProperty("KUBERNETES_ENABLE", "false"));
 
     public boolean isKubernetesMode() {
         return KUBERNETES_MODE && KUBERNETES_ENABLED;
