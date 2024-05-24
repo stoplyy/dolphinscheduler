@@ -50,6 +50,25 @@
 
     <dependencies>
         <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.10.0</version>
+            <!-- 请根据需要使用最新版本 -->
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.10.0</version>
+            <!-- 同上 -->
+            <exclusions>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-common</artifactId>
         </dependency>
@@ -129,15 +148,34 @@
     </dependencies>
 
     <build>
+        <finalName>worker-server</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>org.apache.dolphinscheduler.server.worker.WorkerServer</mainClass>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
-                    <excludes>
-                        <exclude>*.yaml</exclude>
-                        <exclude>*.xml</exclude>
-                    </excludes>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>org.apache.dolphinscheduler.server.worker.WorkerServer</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
             <plugin>
@@ -150,7 +188,6 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <!-- <finalName>worker-server</finalName> -->
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-worker-server.xml</descriptor>
                             </descriptors>
@@ -160,7 +197,6 @@
                 </executions>
             </plugin>
         </plugins>
-        <finalName>worker-server</finalName>
     </build>
 
     <profiles>
