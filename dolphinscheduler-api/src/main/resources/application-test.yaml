@@ -219,7 +219,7 @@ security:
           tokenUri: "https://sso.tuhu.work/connect/token"
           userInfoUri: "https://sso.tuhu.work/connect/userinfo"
           callbackUrl: "https://stellarops-api.tuhu.work/login"
-          iconUri: "https://sso.tuhu.work"
+          iconUri: ""
           provider: tuhu
         github:
           authorizationUri: ""
