@@ -209,8 +209,18 @@ security:
       user:
         admin: ""
     oauth2:
-      enable: false
+      enable: true
       provider:
+        tuhu:
+          authorizationUri: "https://sso.tuhu.work/connect/authorize"
+          redirectUri: "https://stellarops-api.tuhu.work/redirect/login/oauth2"
+          clientId: "int-service-arch-stellarops-api"
+          clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
+          tokenUri: "https://sso.tuhu.work/connect/token"
+          userInfoUri: "https://sso.tuhu.work/connect/userinfo"
+          callbackUrl: "https://stellarops-api.tuhu.work/login"
+          iconUri: "https://sso.tuhu.work"
+          provider: tuhu
         github:
           authorizationUri: ""
           redirectUri: ""
