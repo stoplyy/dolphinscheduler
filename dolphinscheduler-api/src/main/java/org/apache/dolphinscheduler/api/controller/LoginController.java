@@ -176,6 +176,10 @@ public class LoginController extends BaseController {
     @DeleteMapping("cookies")
     public void clearCookieSessionId(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
+        if(cookies == null) {
+            response.setStatus(HttpStatus.SC_OK);
+            return;
+        }
         for (Cookie cookie : cookies) {
             cookie.setMaxAge(0);
             cookie.setValue(null);
