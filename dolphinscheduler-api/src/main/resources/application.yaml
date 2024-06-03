@@ -203,27 +203,7 @@ security:
         admin: ""
     oauth2:
       enable: false
-      provider:
-        github:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: github
-        google:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: google
+
 casdoor:
   # Your Casdoor server url
   endpoint: ""
