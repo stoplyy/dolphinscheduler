@@ -213,7 +213,7 @@ security:
       provider:
         tuhu:
           authorizationUri: "https://sso.tuhu.work/connect/authorize?scope=openid email"
-          redirectUri: "https://stellarops-web.tuhu.work/dolphinscheduler/redirect/login/oauth2"
+          redirectUri: "https://stellarops-api.tuhu.work/dolphinscheduler/redirect/login/oauth2"
           clientId: "int-service-arch-stellarops-api"
           clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
           tokenUri: "https://sso.tuhu.work/connect/token"
