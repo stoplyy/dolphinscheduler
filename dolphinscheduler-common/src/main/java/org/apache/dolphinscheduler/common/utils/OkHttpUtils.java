@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 import lombok.NonNull;
+import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -42,8 +43,8 @@ public class OkHttpUtils {
             .build();
 
     public static @NonNull String get(@NonNull String url,
-                                      @Nullable Map<String, String> httpHeaders,
-                                      @Nullable Map<String, Object> requestParams) throws IOException {
+            @Nullable Map<String, String> httpHeaders,
+            @Nullable Map<String, Object> requestParams) throws IOException {
         String finalUrl = addUrlParams(requestParams, url);
         Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
         addHeader(httpHeaders, requestBuilder);
@@ -53,10 +54,25 @@ public class OkHttpUtils {
         }
     }
 
+    public static @NonNull String postForm(@NonNull String url,
+            @Nullable Map<String, String> httpHeaders,
+            @Nullable Map<String, Object> requestFormParamsMap) throws IOException {
+
+        Request.Builder requestBuilder = new Request.Builder().url(url);
+        okhttp3.FormBody.Builder formBodyBuilder = new FormBody.Builder();
+        requestFormParamsMap.forEach((key, value) -> {
+            formBodyBuilder.add(key, value.toString());
+        });
+        requestBuilder = requestBuilder.post(formBodyBuilder.build());
+        try (Response response = CLIENT.newCall(requestBuilder.build()).execute()) {
+            return getResponseBody(response);
+        }
+    }
+
     public static @NonNull String post(@NonNull String url,
-                                       @Nullable Map<String, String> httpHeaders,
-                                       @Nullable Map<String, Object> requestParamsMap,
-                                       @Nullable Map<String, Object> requestBodyMap) throws IOException {
+            @Nullable Map<String, String> httpHeaders,
+            @Nullable Map<String, Object> requestParamsMap,
+            @Nullable Map<String, Object> requestBodyMap) throws IOException {
         String finalUrl = addUrlParams(requestParamsMap, url);
         Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
         addHeader(httpHeaders, requestBuilder);
@@ -70,8 +86,8 @@ public class OkHttpUtils {
     }
 
     public static @NonNull String demoPost(@NonNull String url,
-                                           @Nullable String token,
-                                           @Nullable Map<String, Object> requestBodyMap) throws IOException {
+            @Nullable String token,
+            @Nullable Map<String, Object> requestBodyMap) throws IOException {
 
         StringBuffer stringBuffer = new StringBuffer();
         if (requestBodyMap != null) {
@@ -80,8 +96,8 @@ public class OkHttpUtils {
             }
         }
 
-        RequestBody body =
-                RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), stringBuffer.toString());
+        RequestBody body = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"),
+                stringBuffer.toString());
 
         Request request = new Request.Builder()
                 .url(url)
@@ -95,6 +111,7 @@ public class OkHttpUtils {
         }
 
     }
+
     private static String addUrlParams(@Nullable Map<String, Object> requestParams, @NonNull String url) {
         if (requestParams == null) {
             return url;
@@ -118,11 +135,12 @@ public class OkHttpUtils {
         headers.forEach(requestBuilder::addHeader);
     }
 
+    @SuppressWarnings("resource")
     private static String getResponseBody(@NonNull Response response) throws IOException {
         if (response.code() != HttpStatus.SC_OK || response.body() == null) {
             throw new RuntimeException(String.format("Request execute failed, httpCode: %s, httpBody: %s",
                     response.code(),
-                    response.body()));
+                    response.body() == null ? "" : response.body().string()));
         }
         return response.body().string();
     }

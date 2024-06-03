@@ -212,35 +212,15 @@ security:
       enable: true
       provider:
         tuhu:
-          authorizationUri: "https://sso.tuhu.work/connect/authorize"
-          redirectUri: "https://stellarops-api.tuhu.work/dolphinscheduler/redirect/login/oauth2"
+          authorizationUri: "https://sso.tuhu.work/connect/authorize?scope=openid email"
+          redirectUri: "https://stellarops-web.tuhu.work/dolphinscheduler/redirect/login/oauth2"
           clientId: "int-service-arch-stellarops-api"
           clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
           tokenUri: "https://sso.tuhu.work/connect/token"
           userInfoUri: "https://sso.tuhu.work/connect/userinfo"
-          callbackUrl: "https://stellarops-api.tuhu.work/dolphinscheduler/login"
-          iconUri: ""
+          callbackUrl: "https://stellarops-web.tuhu.work/login"
+          iconUri: "https://res.tuhu.org/images/hongbao-tiger.png"
           provider: tuhu
-        github:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: github
-        google:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: google
 casdoor:
   # Your Casdoor server url
   endpoint: ""

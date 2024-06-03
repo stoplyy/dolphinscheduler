@@ -95,10 +95,10 @@ public class LoginController extends BaseController {
     /**
      * login
      *
-     * @param userName user name
+     * @param userName     user name
      * @param userPassword user password
-     * @param request request
-     * @param response response
+     * @param request      request
+     * @param response     response
      * @return login result
      */
     @Operation(summary = "login", description = "LOGIN_NOTES")
@@ -109,9 +109,9 @@ public class LoginController extends BaseController {
     @PostMapping(value = "/login")
     @ApiException(USER_LOGIN_FAILURE)
     public Result login(@RequestParam(value = "userName") String userName,
-                        @RequestParam(value = "userPassword") String userPassword,
-                        HttpServletRequest request,
-                        HttpServletResponse response) {
+            @RequestParam(value = "userPassword") String userPassword,
+            HttpServletRequest request,
+            HttpServletResponse response) {
         // user name check
         if (StringUtils.isEmpty(userName)) {
             return error(Status.USER_NAME_NULL.getCode(),
@@ -165,7 +165,7 @@ public class LoginController extends BaseController {
     @PostMapping(value = "/signOut")
     @ApiException(SIGN_OUT_ERROR)
     public Result signOut(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                          HttpServletRequest request) {
+            HttpServletRequest request) {
         String ip = getClientIpAddress(request);
         sessionService.expireSession(loginUser.getId());
         // clear session
@@ -176,7 +176,7 @@ public class LoginController extends BaseController {
     @DeleteMapping("cookies")
     public void clearCookieSessionId(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
-        if(cookies == null) {
+        if (cookies == null) {
             response.setStatus(HttpStatus.SC_OK);
             return;
         }
@@ -197,8 +197,7 @@ public class LoginController extends BaseController {
 
         Collection<OAuth2Configuration.OAuth2ClientProperties> values = oAuth2Configuration.getProvider().values();
         List<OAuth2Configuration.OAuth2ClientProperties> providers = values.stream().map(e -> {
-            OAuth2Configuration.OAuth2ClientProperties oAuth2ClientProperties =
-                    new OAuth2Configuration.OAuth2ClientProperties();
+            OAuth2Configuration.OAuth2ClientProperties oAuth2ClientProperties = new OAuth2Configuration.OAuth2ClientProperties();
             oAuth2ClientProperties.setAuthorizationUri(e.getAuthorizationUri());
             oAuth2ClientProperties.setRedirectUri(e.getRedirectUri());
             oAuth2ClientProperties.setClientId(e.getClientId());
@@ -213,31 +212,32 @@ public class LoginController extends BaseController {
     @Operation(summary = "redirectToOauth2", description = "REDIRECT_TO_OAUTH2_LOGIN")
     @GetMapping("redirect/login/oauth2")
     public void loginByAuth2(@RequestParam String code, @RequestParam String provider,
-                             HttpServletRequest request, HttpServletResponse response) {
-        OAuth2Configuration.OAuth2ClientProperties oAuth2ClientProperties =
-                oAuth2Configuration.getProvider().get(provider);
+            HttpServletRequest request, HttpServletResponse response) {
+        OAuth2Configuration.OAuth2ClientProperties oAuth2ClientProperties = oAuth2Configuration.getProvider()
+                .get(provider);
         try {
             Map<String, String> tokenRequestHeader = new HashMap<>();
-            tokenRequestHeader.put("Accept", "application/json");
+            tokenRequestHeader.put("Accept", "application/x-www-form-urlencoded");
             Map<String, Object> requestBody = new HashMap<>(16);
             requestBody.put("client_secret", oAuth2ClientProperties.getClientSecret());
             HashMap<String, Object> requestParamsMap = new HashMap<>();
             requestParamsMap.put("client_id", oAuth2ClientProperties.getClientId());
             requestParamsMap.put("code", code);
             requestParamsMap.put("grant_type", "authorization_code");
+            requestParamsMap.putAll(requestBody);
             requestParamsMap.put("redirect_uri",
                     String.format("%s?provider=%s", oAuth2ClientProperties.getRedirectUri(), provider));
-            String tokenJsonStr = OkHttpUtils.post(oAuth2ClientProperties.getTokenUri(), tokenRequestHeader,
-                    requestParamsMap, requestBody);
+            String tokenJsonStr = OkHttpUtils.postForm(
+                    oAuth2ClientProperties.getTokenUri(), tokenRequestHeader, requestParamsMap);
             String accessToken = JSONUtils.getNodeString(tokenJsonStr, "access_token");
             Map<String, String> userInfoRequestHeaders = new HashMap<>();
             userInfoRequestHeaders.put("Accept", "application/json");
             Map<String, Object> userInfoQueryMap = new HashMap<>();
             userInfoQueryMap.put("access_token", accessToken);
             userInfoRequestHeaders.put("Authorization", "Bearer " + accessToken);
-            String userInfoJsonStr =
-                    OkHttpUtils.get(oAuth2ClientProperties.getUserInfoUri(), userInfoRequestHeaders, userInfoQueryMap);
-            String username = JSONUtils.getNodeString(userInfoJsonStr, "login");
+            String userInfoJsonStr = OkHttpUtils.get(oAuth2ClientProperties.getUserInfoUri(), userInfoRequestHeaders,
+                    userInfoQueryMap);
+            String username = JSONUtils.getNodeString(userInfoJsonStr, "email");
             User user = usersService.getUserByUserName(username);
             if (user == null) {
                 user = usersService.createUser(UserType.GENERAL_USER, username, null);

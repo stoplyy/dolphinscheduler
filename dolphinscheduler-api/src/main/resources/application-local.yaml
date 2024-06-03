@@ -23,12 +23,6 @@ apollo:
       enabled: true
   autoUpdateInjectedSpringProperties: true
 
-dolphin.local.enable: true
-
-datasource_refs.int-service-arch-stellarops-portal-api.datasource_ref: '{"dsRef":[{"id": "tuhu_hubble-work-normal","type": "masterSlave","dbType": "mysql","poolType": "druid","dataSourceId": "localDs","poolConfig": { "initialSize": 10, "maxActive": 20, "maxIdle": 50 },"urlExtend": "useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowMultiQueries=true"}]}'
-
-datasources.localDs: '{"datasourceId":"localDs","dataSources":[{"id":"tuhu_hubble-work-normal","url":"jdbc:mysql://localhost:3306/dolphinscheduler","driverClass":"com.mysql.jdbc.Driver","readWeight":1,"canRead":true,"canWrite":true,"username":"root","active":true,"password":"xj2022"}]}'
-
 server:
   port: 12345
   servlet:
@@ -45,6 +39,7 @@ server:
       custom-format: '%{client}a - %u %t "%r" %s %O %{ms}Tms'
 
 spring:
+  cloud.kubernetes.enabled: false
   config:
     activate:
       on-profile: local
@@ -138,8 +133,8 @@ management:
 registry:
   type: zookeeper
   zookeeper:
-    namespace: dolphinscheduler
-    connect-string: 127.0.0.1:2181
+    namespace: stellarops
+    connect-string: 172.16.20.74:2181
     retry-policy:
       base-sleep-time: 60ms
       max-sleep: 300ms
@@ -217,28 +212,18 @@ security:
       user:
         admin: ""
     oauth2:
-      enable: false
+      enable: true
       provider:
-        github:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: github
-        google:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: google
+        tuhu:
+          authorizationUri: "https://sso.tuhu.work/connect/authorize?scope=openid email"
+          redirectUri: "http://localhost:5173/dolphinscheduler/redirect/login/oauth2"
+          clientId: "int-service-arch-stellarops-api"
+          clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
+          tokenUri: "https://sso.tuhu.work/connect/token"
+          userInfoUri: "https://sso.tuhu.work/connect/userinfo"
+          callbackUrl: "http://localhost:5173/login"
+          iconUri: "https://res.tuhu.org/images/hongbao-tiger.png"
+          provider: tuhu
 casdoor:
   # Your Casdoor server url
   endpoint: ""
