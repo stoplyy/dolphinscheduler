@@ -82,7 +82,7 @@ export function getUserInfo(): any {
   return axios({
     url: '/users/get-user-info',
     method: 'get',
-    headers: { "Session-Id": `${sessionId}` }
+    headers: { "Session-Id": `${sessionId}`, "sessionId": `${sessionId}` }
   })
 }
 
