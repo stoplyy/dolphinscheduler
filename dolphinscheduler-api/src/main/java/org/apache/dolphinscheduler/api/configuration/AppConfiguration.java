@@ -53,9 +53,6 @@ public class AppConfiguration implements WebMvcConfigurer {
     public static final String PATH_PATTERN = "/**";
     public static final String LOCALE_LANGUAGE_COOKIE = "language";
 
-    @Value("${cors.allowedOrigins}")
-    private List<String> allowedOrigins;
-
     @Autowired
     private ApiConfig apiConfig;
 
@@ -72,9 +69,11 @@ public class AppConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        String[] origins = allowedOrigins.toArray(new String[0]);
         registry.addMapping("/**")
-                .allowedOrigins(origins)
+                .allowedOrigins(
+                        "https://stellarops-web.tuhu.work",
+                        "https://stellarops-web.tuhuyun.cn",
+                        "https://stellarops-web.tuhutest.cn")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true)
                 .allowedHeaders("*")

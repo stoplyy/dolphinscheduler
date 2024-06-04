@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-cors:
-  allowedOrigins:
-    - https://stellarops-web.tuhu.work
-    - https://stellarops-web.tuhuyun.cn
-    - https://stellarops-web.tuhutest.cn
 
 server:
   port: 12345
