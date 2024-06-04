@@ -87,7 +87,11 @@ export function useLogin(state: any) {
     if (authType && authType === 'oauth2') {
       const sessionId = route.query.sessionId
       if (sessionId) {
-        cookies.set('sessionId', String(sessionId), { path: '/' })
+        cookies.set('sessionId', String(sessionId), {
+          path: '/',
+          sameSite: 'None',  // 设置 SameSite 为 None
+          secure: true       // 设置 Secure 为 true, 只有在 https 页面上才会设置
+        })
         const userInfoRes: UserInfoRes = await getUserInfo()
         await userStore.setUserInfo(userInfoRes)
         const timezone = userInfoRes.timeZone ? userInfoRes.timeZone : 'UTC'
