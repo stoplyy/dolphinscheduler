@@ -17,15 +17,11 @@
 
 package org.apache.dolphinscheduler.api.configuration;
 
+import java.util.Locale;
+
 import org.apache.dolphinscheduler.api.interceptor.LocaleChangeInterceptor;
 import org.apache.dolphinscheduler.api.interceptor.LoginHandlerInterceptor;
 import org.apache.dolphinscheduler.api.interceptor.RateLimitInterceptor;
-
-import java.util.List;
-import java.util.Locale;
-
-import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +30,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -59,28 +54,13 @@ public class AppConfiguration implements WebMvcConfigurer {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("https://stellarops-web.tuhu.work");
-        config.addAllowedOrigin("https://stellarops-web.tuhuyun.cn");
-        config.addAllowedOrigin("https://stellarops-web.tuhutest.cn");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);
         config.addAllowedHeader("*");
+        config.addAllowedOriginPattern("*");
         UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
         configSource.registerCorsConfiguration(PATH_PATTERN, config);
         return new CorsFilter(configSource);
-    }
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(
-                        "https://stellarops-web.tuhu.work",
-                        "https://stellarops-web.tuhuyun.cn",
-                        "https://stellarops-web.tuhutest.cn")
-                .allowedMethods("*")
-                .allowCredentials(true)
-                .allowedHeaders("*")
-                .maxAge(3600);
     }
 
     @Bean
