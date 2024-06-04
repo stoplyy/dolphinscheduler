@@ -59,7 +59,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
     /**
      * user login and return user in db
      *
-     * @param userId user identity field
+     * @param userId   user identity field
      * @param password user login password
      * @return user object in databse
      */
@@ -113,13 +113,16 @@ public abstract class AbstractAuthenticator implements Authenticator {
     @Override
     public User getAuthUser(HttpServletRequest request) {
         String sessionId = request.getHeader(Constants.SESSION_ID);
+        log.info("sessionId: {}", sessionId);
         if (StringUtils.isBlank(sessionId)) {
             Cookie cookie = WebUtils.getCookie(request, Constants.SESSION_ID);
+            log.info("cookie: {}", cookie);
             if (cookie != null) {
                 sessionId = cookie.getValue();
             }
         }
         Session session = sessionService.getSession(sessionId);
+        log.info("session user id: {}", session == null ? "null" : session.getUserId());
         if (session == null) {
             return null;
         }

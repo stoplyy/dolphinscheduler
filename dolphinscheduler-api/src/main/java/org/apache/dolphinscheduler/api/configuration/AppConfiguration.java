@@ -59,8 +59,11 @@ public class AppConfiguration implements WebMvcConfigurer {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("*");
+        config.addAllowedOrigin("https://stellarops-web.tuhu.work");
+        config.addAllowedOrigin("https://stellarops-web.tuhuyun.cn");
+        config.addAllowedOrigin("https://stellarops-web.tuhutest.cn");
         config.addAllowedMethod("*");
+        config.setAllowCredentials(true);
         config.addAllowedHeader("*");
         UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
         configSource.registerCorsConfiguration(PATH_PATTERN, config);
@@ -74,7 +77,7 @@ public class AppConfiguration implements WebMvcConfigurer {
                         "https://stellarops-web.tuhu.work",
                         "https://stellarops-web.tuhuyun.cn",
                         "https://stellarops-web.tuhutest.cn")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("*")
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .maxAge(3600);

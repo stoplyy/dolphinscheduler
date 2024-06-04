@@ -67,6 +67,7 @@ public class LoginHandlerInterceptor implements HandlerInterceptor {
         // get token
         String token = request.getHeader("token");
         User user;
+        log.info("token: {}", token);
         if (StringUtils.isEmpty(token)) {
             user = authenticator.getAuthUser(request);
             // if user is null
