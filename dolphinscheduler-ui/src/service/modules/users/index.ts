@@ -74,10 +74,13 @@ export function delUserById(data: IdReq) {
   })
 }
 
-export function getUserInfo(): any {
+export function getUserInfo(sessionId: String): any {
   return axios({
     url: '/users/get-user-info',
-    method: 'get'
+    method: 'get',
+    headers: {
+      'sessionId': `${sessionId}`
+    }
   })
 }
 
