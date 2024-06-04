@@ -118,6 +118,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
         Collections.list(request.getHeaderNames()).forEach(header -> {
             log.info("header name: {}, value: {}", header, request.getHeader(header));
         });
+        log.info("header sessionId: {}", sessionId);
         if (StringUtils.isBlank(sessionId)) {
             log.info("cookies: {}", JSONUtils.toJsonString(request.getCookies()));
             Cookie cookie = WebUtils.getCookie(request, Constants.SESSION_ID);
@@ -126,7 +127,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
             }
         }
         Session session = sessionService.getSession(sessionId);
-        log.info("session user id: {}", session == null ? "null" : session.getUserId());
+        log.info("session {} user id: {}", sessionId, session == null ? "null" : session.getUserId());
         if (session == null) {
             return null;
         }
