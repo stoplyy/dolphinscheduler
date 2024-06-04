@@ -40,7 +40,7 @@ export function useLogin(state: any) {
         const loginRes: LoginRes = await login({ ...state.loginForm })
         await userStore.setSessionId(loginRes.sessionId)
         await userStore.setSecurityConfigType(loginRes.securityConfigType)
-        cookies.set('sessionId', loginRes.sessionId, { path: '/' })
+        cookies.set('sessionId', loginRes.sessionId, { path: '/', domain: getDomain() })
 
         const userInfoRes: UserInfoRes = await getUserInfo()
         await userStore.setUserInfo(userInfoRes)
@@ -64,7 +64,9 @@ export function useLogin(state: any) {
     })
   }
 
-
+  const getDomain = () => {
+    return window.location.hostname === 'localhost' ? '' : '.' + window.location.hostname.split('.').slice(-2).join('.');
+  }
 
   const handleGetOAuth2Provider = () => {
     getOauth2Provider().then((res: Array<OAuth2Provider> | []) => {
@@ -89,8 +91,7 @@ export function useLogin(state: any) {
       if (sessionId) {
         cookies.set('sessionId', String(sessionId), {
           path: '/',
-          sameSite: 'None',  // 设置 SameSite 为 None
-          secure: true       // 设置 Secure 为 true, 只有在 https 页面上才会设置
+          domain: getDomain()
         })
         const userInfoRes: UserInfoRes = await getUserInfo()
         await userStore.setUserInfo(userInfoRes)
