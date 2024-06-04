@@ -27,6 +27,8 @@ import utils from '@/utils'
 const userStore = useUserStore()
 const uiSettingStore = useUISettingStore()
 
+axios.defaults.withCredentials = true
+
 /**
  * @description Log and display errors
  * @param {Error} error Error object

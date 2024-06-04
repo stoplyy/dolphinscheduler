@@ -21,7 +21,10 @@ import org.apache.dolphinscheduler.api.interceptor.LocaleChangeInterceptor;
 import org.apache.dolphinscheduler.api.interceptor.LoginHandlerInterceptor;
 import org.apache.dolphinscheduler.api.interceptor.RateLimitInterceptor;
 
+import java.util.List;
 import java.util.Locale;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +34,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -49,6 +53,9 @@ public class AppConfiguration implements WebMvcConfigurer {
     public static final String PATH_PATTERN = "/**";
     public static final String LOCALE_LANGUAGE_COOKIE = "language";
 
+    @Value("${cors.allowedOrigins}")
+    private List<String> allowedOrigins;
+
     @Autowired
     private ApiConfig apiConfig;
 
@@ -63,6 +70,17 @@ public class AppConfiguration implements WebMvcConfigurer {
         return new CorsFilter(configSource);
     }
 
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = allowedOrigins.toArray(new String[0]);
+        registry.addMapping("/**")
+                .allowedOrigins(origins)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowCredentials(true)
+                .allowedHeaders("*")
+                .maxAge(3600);
+    }
+
     @Bean
     public LoginHandlerInterceptor loginInterceptor() {
         return new LoginHandlerInterceptor();
@@ -70,6 +88,7 @@ public class AppConfiguration implements WebMvcConfigurer {
 
     /**
      * Cookie
+     * 
      * @return local resolver
      */
     @Bean(name = "localeResolver")
