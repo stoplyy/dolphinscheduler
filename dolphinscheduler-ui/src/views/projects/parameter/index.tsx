@@ -21,7 +21,8 @@ import {
   NInput,
   NPagination,
   NSpace,
-  NButton
+  NButton,
+  NAlert
 } from 'naive-ui'
 import { defineComponent, onMounted, toRefs, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -102,6 +103,12 @@ export default defineComponent({
       onCancelModal
     } = this
 
+    const renderAlert = this.tableData && !this.tableData.some((item: { paramName: string }) => item.paramName ==="appid") && (
+      <NAlert type="error">
+        This project data does not contain 【appid】 parameter.
+      </NAlert>
+    );
+
     return (
       <NSpace vertical>
         <Card>
@@ -124,7 +131,8 @@ export default defineComponent({
             </NSpace>
           </NSpace>
         </Card>
-        <Card title={t('project.parameter.parameter_manage')}>
+        <Card title={t('project.parameter.parameter_manage')} >
+          {renderAlert}
           <NSpace vertical>
             <NDataTable
               loading={loadingRef}

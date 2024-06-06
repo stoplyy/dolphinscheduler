@@ -180,7 +180,6 @@ const login = defineComponent({
             {this.oauth2Providers.length > 0 && <NDivider >
               {this.t('login.loginWithOAuth2')}
             </NDivider>}
-
             <NSpace class={styles['oauth2-provider']} justify="center">
               {this.oauth2Providers?.map((e: OAuth2Provider) => {
                 return (e.iconUri ? <div onClick={() => this.gotoOAuth2Page(e)}><NImage preview-disabled width="30" src={e.iconUri}></NImage> </div> : <NButton onClick={() => this.gotoOAuth2Page(e)}>{e.provider}</NButton>)

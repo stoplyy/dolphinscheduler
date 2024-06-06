@@ -22,6 +22,8 @@ const headerStyle = {
   borderBottom: '1px solid var(--n-border-color)'
 }
 
+const headerExtra = ''
+
 const contentStyle = {
   padding: '8px 10px'
 }
@@ -30,6 +32,9 @@ const headerExtraStyle = {}
 
 const props = {
   title: {
+    type: String as PropType<string>
+  },
+  headerExtra: {
     type: String as PropType<string>
   },
   headerStyle: {

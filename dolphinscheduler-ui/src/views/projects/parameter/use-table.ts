@@ -69,11 +69,11 @@ export function useTable() {
         key: 'paramValue',
         ...COLUMN_WIDTH_CONFIG['name']
       },
-      {
-        title: t('project.parameter.create_time'),
-        key: 'createTime',
-        ...COLUMN_WIDTH_CONFIG['time']
-      },
+      // {
+      //   title: t('project.parameter.create_time'),
+      //   key: 'createTime',
+      //   ...COLUMN_WIDTH_CONFIG['time']
+      // },
       {
         title: t('project.parameter.update_time'),
         key: 'updateTime',

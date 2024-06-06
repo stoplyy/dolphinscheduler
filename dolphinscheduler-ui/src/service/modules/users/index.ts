@@ -16,7 +16,6 @@
  */
 
 import { axios } from '@/service/service'
-import Cookies from 'js-cookie'
 
 import {
   UserNameReq,
@@ -77,12 +76,10 @@ export function delUserById(data: IdReq) {
 }
 
 export function getUserInfo(): any {
-  const sessionId = Cookies.get('sessionId');
 
   return axios({
     url: '/users/get-user-info',
     method: 'get'
-    // headers: { "Session-Id": `${sessionId}`, "sessionId": `${sessionId}` }
   })
 }
 

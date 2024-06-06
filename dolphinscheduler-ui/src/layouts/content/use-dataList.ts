@@ -122,6 +122,11 @@ export function useDataList() {
                 key: `/projects/${projectCode}/preferences`,
                 payload: { projectName: projectName },
               },
+              {
+                label: t('menu.project_cluster'),
+                key: `/projects/${projectCode}/cluster`,
+                payload: { projectName: projectName },
+              },
             ]
           },
           {
@@ -285,64 +290,64 @@ export function useDataList() {
         children:
           (userStore.getUserInfo as UserInfoRes).userType === 'ADMIN_USER'
             ? [
-                {
-                  label: t('menu.tenant_manage'),
-                  key: '/security/tenant-manage',
-                  icon: renderIcon(UsergroupAddOutlined)
-                },
-                {
-                  label: t('menu.user_manage'),
-                  key: '/security/user-manage',
-                  icon: renderIcon(UserAddOutlined)
-                },
-                {
-                  label: t('menu.alarm_group_manage'),
-                  key: '/security/alarm-group-manage',
-                  icon: renderIcon(WarningOutlined)
-                },
-                {
-                  label: t('menu.alarm_instance_manage'),
-                  key: '/security/alarm-instance-manage',
-                  icon: renderIcon(InfoCircleOutlined)
-                },
-                {
-                  label: t('menu.worker_group_manage'),
-                  key: '/security/worker-group-manage',
-                  icon: renderIcon(ControlOutlined)
-                },
-                {
-                  label: t('menu.yarn_queue_manage'),
-                  key: '/security/yarn-queue-manage',
-                  icon: renderIcon(SlackOutlined)
-                },
-                {
-                  label: t('menu.environment_manage'),
-                  key: '/security/environment-manage',
-                  icon: renderIcon(EnvironmentOutlined)
-                },
-                {
-                  label: t('menu.cluster_manage'),
-                  key: '/security/cluster-manage',
-                  icon: renderIcon(ClusterOutlined)
-                },
-                {
-                  label: t('menu.k8s_namespace_manage'),
-                  key: '/security/k8s-namespace-manage',
-                  icon: renderIcon(CloudServerOutlined)
-                },
-                {
-                  label: t('menu.token_manage'),
-                  key: '/security/token-manage',
-                  icon: renderIcon(SafetyOutlined)
-                }
-              ]
+              {
+                label: t('menu.tenant_manage'),
+                key: '/security/tenant-manage',
+                icon: renderIcon(UsergroupAddOutlined)
+              },
+              {
+                label: t('menu.user_manage'),
+                key: '/security/user-manage',
+                icon: renderIcon(UserAddOutlined)
+              },
+              {
+                label: t('menu.alarm_group_manage'),
+                key: '/security/alarm-group-manage',
+                icon: renderIcon(WarningOutlined)
+              },
+              {
+                label: t('menu.alarm_instance_manage'),
+                key: '/security/alarm-instance-manage',
+                icon: renderIcon(InfoCircleOutlined)
+              },
+              {
+                label: t('menu.worker_group_manage'),
+                key: '/security/worker-group-manage',
+                icon: renderIcon(ControlOutlined)
+              },
+              {
+                label: t('menu.yarn_queue_manage'),
+                key: '/security/yarn-queue-manage',
+                icon: renderIcon(SlackOutlined)
+              },
+              {
+                label: t('menu.environment_manage'),
+                key: '/security/environment-manage',
+                icon: renderIcon(EnvironmentOutlined)
+              },
+              {
+                label: t('menu.cluster_manage'),
+                key: '/security/cluster-manage',
+                icon: renderIcon(ClusterOutlined)
+              },
+              {
+                label: t('menu.k8s_namespace_manage'),
+                key: '/security/k8s-namespace-manage',
+                icon: renderIcon(CloudServerOutlined)
+              },
+              {
+                label: t('menu.token_manage'),
+                key: '/security/token-manage',
+                icon: renderIcon(SafetyOutlined)
+              }
+            ]
             : [
-                {
-                  label: t('menu.token_manage'),
-                  key: '/security/token-manage',
-                  icon: renderIcon(SafetyOutlined)
-                }
-              ]
+              {
+                label: t('menu.token_manage'),
+                key: '/security/token-manage',
+                icon: renderIcon(SafetyOutlined)
+              }
+            ]
       }
     ]
   }

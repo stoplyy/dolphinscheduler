@@ -76,6 +76,18 @@ export default {
       }
     },
     {
+      path: '/projects/:projectCode/cluster',
+      name: 'projects-cluster',
+      // component: () => import('@/views/projects/cluster/index.vue'),
+      component: components['projects-cluster'],
+      meta: {
+        title: '项目集群',
+        activeMenu: 'projects',
+        showSide: true,
+        auth: []
+      }
+    },
+    {
       path: '/projects/:projectCode/workflow/relation',
       name: 'workflow-relation',
       component: components['projects-workflow-relation'],
