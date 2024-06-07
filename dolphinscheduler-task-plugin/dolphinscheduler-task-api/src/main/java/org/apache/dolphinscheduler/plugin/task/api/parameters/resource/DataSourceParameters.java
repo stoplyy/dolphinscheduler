@@ -19,6 +19,7 @@ package org.apache.dolphinscheduler.plugin.task.api.parameters.resource;
 
 import org.apache.dolphinscheduler.spi.enums.DbType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DataSourceParameters extends AbstractResourceParameters {
@@ -36,6 +37,8 @@ public class DataSourceParameters extends AbstractResourceParameters {
     @JsonProperty(value = "DATASOURCE")
     private String resourceType;
 
+    // contains secret information, should not be exposed to the client
+    @JsonIgnore
     private String connectionParams;
 
     public DbType getType() {

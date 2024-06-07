@@ -33,7 +33,7 @@ import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.DataSourceParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.dolphinscheduler.spi.enums.DbType;
-
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -78,8 +78,26 @@ public class RemoteShellTask extends AbstractTask {
     public void init() {
         log.info("shell task params {}", taskExecutionContext.getTaskParams());
 
-        remoteShellParameters =
-                JSONUtils.parseObject(taskExecutionContext.getTaskParams(), RemoteShellParameters.class);
+        remoteShellParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(),
+                RemoteShellParameters.class);
+        if (CollectionUtils.isNotEmpty(remoteShellParameters.localParams)) {
+            for (Property parameter : remoteShellParameters.localParams) {
+                String value = parameter.getValue();
+                Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+                value = ParameterUtils.convertParameterPlaceholders(value, ParameterUtils.convert(paramsMap));
+                parameter.setValue(value);
+                // if the parameter is a datasource parameter,
+                // set the datasource id with the value
+                if (parameter.getProp().equalsIgnoreCase("datasource")) {
+                    try {
+                        remoteShellParameters.setDatasource(Integer.parseInt(value));
+                    } catch (NumberFormatException e) {
+                        throw new TaskException("source parameter is not a number: " + value);
+                    }
+                }
+            }
+            log.info("local params: {}", remoteShellParameters.localParams);
+        }
 
         if (!remoteShellParameters.checkParameters()) {
             throw new TaskException("sell task params is not valid");
@@ -174,6 +192,9 @@ public class RemoteShellTask extends AbstractTask {
     public void initRemoteExecutor() {
         DataSourceParameters dbSource = (DataSourceParameters) taskExecutionContext.getResourceParametersHelper()
                 .getResourceParameters(ResourceType.DATASOURCE, remoteShellParameters.getDatasource());
+        log.info("data source id:{} name: {}, type: {}", remoteShellParameters.getDatasource(),
+                dbSource.getConnectionParams(),
+                dbSource.getType());
         taskExecutionContext.getResourceParametersHelper().getResourceParameters(ResourceType.DATASOURCE,
                 remoteShellParameters.getDatasource());
         SSHConnectionParam sshConnectionParam = (SSHConnectionParam) DataSourceUtils.buildConnectionParams(
