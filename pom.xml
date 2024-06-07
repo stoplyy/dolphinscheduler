@@ -46,7 +46,7 @@
         <module>dolphinscheduler-service</module>
         <module>dolphinscheduler-microbench</module>
         <module>dolphinscheduler-data-quality</module>
-        <module>dolphinscheduler-standalone-server</module>
+        <!-- <module>dolphinscheduler-standalone-server</module> -->
         <module>dolphinscheduler-datasource-plugin</module>
         <module>dolphinscheduler-meter</module>
         <module>dolphinscheduler-master</module>
@@ -689,7 +689,7 @@
                         <eclipse>
                             <file>${maven.multiModuleProjectDirectory}/style/spotless_dolphinscheduler_formatter.xml</file>
                         </eclipse>
-                        <removeUnusedImports />
+                        <removeUnusedImports/>
                         <importOrder>
                             <file>${maven.multiModuleProjectDirectory}/style/eclipse.importorder</file>
                         </importOrder>
@@ -741,7 +741,7 @@
                         <excludes>
                             <exclude>**/.github/**/*.md</exclude>
                         </excludes>
-                        <flexmark />
+                        <flexmark/>
                     </markdown>
                     <upToDateChecking>
                         <enabled>true</enabled>
@@ -761,7 +761,7 @@
                 <artifactId>cobertura-maven-plugin</artifactId>
                 <version>${cobertura-maven-plugin.version}</version>
                 <configuration>
-                    <check />
+                    <check/>
                     <aggregate>true</aggregate>
                     <outputDirectory>./target/cobertura</outputDirectory>
                     <encoding>${project.build.sourceEncoding}</encoding>
