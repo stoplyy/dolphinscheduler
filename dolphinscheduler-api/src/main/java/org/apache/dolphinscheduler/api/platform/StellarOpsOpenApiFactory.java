@@ -1,8 +1,12 @@
 package org.apache.dolphinscheduler.api.platform;
 
-import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.openfeign.FeignContext;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
-import org.apache.dolphinscheduler.api.platform.facade.StellarOpsOpenApiEndpointFeign;
+import com.tuhu.stellarops.client.spring.endpoint.StellarOpsOpenApiEndpoint;
 
 import feign.Client;
 import feign.Contract;
@@ -10,32 +14,40 @@ import feign.Feign;
 import feign.Request;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
-import feign.okhttp.OkHttpClient;
 
-public class StellarOpsOpenApiFactory {
+@Component
+public class StellarOpsOpenApiFactory implements ApplicationContextAware {
+
+    private ApplicationContext applicationContext;
 
     private Client client;
-    private Encoder encoder;
-    private Decoder decoder;
-    private Contract contract;
 
-    public StellarOpsOpenApiFactory() {
-        this.client = new OkHttpClient(); // 使用 OkHttp 客户端
-        this.encoder = new JacksonEncoder(); // 使用 Jackson 作为 JSON 编码器
-        this.decoder = new JacksonDecoder(); // 使用 Jackson 作为 JSON 解码器
-        this.contract = new Contract.Default(); // 使用默认的合约
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
-    public StellarOpsOpenApiEndpointFeign createClient(String appId) {
-        Feign.Builder builder = Feign.builder();
-        builder.client(client)
-                .encoder(encoder)
-                .decoder(decoder)
-                .contract(contract)
-                .options(new Request.Options(5, TimeUnit.SECONDS, 20, TimeUnit.SECONDS, true));
+    @Autowired
+    public void setClient(Client client) {
+        this.client = client;
+    }
 
-        return builder.target(StellarOpsOpenApiEndpointFeign.class, "http://" + appId.replaceFirst("http://", ""));
+    public StellarOpsOpenApiEndpoint createClient(String appId) {
+        Feign.Builder builder = Feign.builder();
+        builder.client(client);
+        return builder.options(new Request.Options(5 * 1000, 20 * 1000))
+                .encoder(get(Encoder.class))
+                .decoder(get(Decoder.class))
+                .contract(get(Contract.class))
+                .target(StellarOpsOpenApiEndpoint.class, "http://" + appId);
+    }
+
+    protected <T> T get(Class<T> type) {
+        FeignContext context = applicationContext.getBean(FeignContext.class);
+        T instance = context.getInstance("int-service-arch-stellarops-portal-api", type);
+        if (instance == null) {
+            throw new IllegalStateException(
+                    "No bean found of type " + type + " for " + "int-service-arch-stellarops-portal-api");
+        }
+        return instance;
     }
 }

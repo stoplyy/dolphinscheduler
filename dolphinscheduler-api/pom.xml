@@ -48,7 +48,7 @@
             <dependency>
                 <groupId>com.tuhu.inf</groupId>
                 <artifactId>tuhu-spring-cloud-framework-bom</artifactId>
-                <version>2.5.2-RELEASE</version>
+                <version>3.2.1-RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -68,6 +68,33 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tuhu.poseidon</groupId>
+            <artifactId>tuhu-spring-cloud-starter-poseidon</artifactId>
+        </dependency>
+        <!-- <dependency>
+            <groupId>com.tuhu.boot.oidc</groupId>
+            <artifactId>tuhu-boot-starter-oidc</artifactId>
+            <version>1.0.2-RELEASE</version>
+            <scope>compile</scope>
+        </dependency> -->
 
         <dependency>
             <groupId>com.tuhu.inf</groupId>

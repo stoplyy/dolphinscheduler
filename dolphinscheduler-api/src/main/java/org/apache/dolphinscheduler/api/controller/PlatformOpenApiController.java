@@ -42,24 +42,24 @@ public class PlatformOpenApiController implements PlatformOpenApi {
         String taskName;
 
         public RestParamEntry build(String clusterId, String nodeId, String taskName) {
-            this.clusterId = clusterId;
-            this.nodeId = nodeId;
-            this.taskName = taskName;
+            this.clusterId = clusterId == null ? "0" : clusterId;
+            this.nodeId = nodeId == null ? "0" : nodeId;
+            this.taskName = taskName == null ? "empty" : taskName;
             return this;
         }
 
         public RestParamEntry build(Map<String, Object> params) {
-            this.clusterId = (String) params.getOrDefault("clusterId", null);
-            this.nodeId = (String) params.getOrDefault("nodeId", null);
-            this.taskName = (String) params.getOrDefault("taskName", null);
+            this.clusterId = (String) params.getOrDefault("clusterId", 0);
+            this.nodeId = (String) params.getOrDefault("nodeId", 0);
+            this.taskName = (String) params.getOrDefault("taskName", "empty");
             return this;
         }
 
         public String replaceNewString(String restUri) {
             String result = restUri;
-            result = result.replaceAll("\\{clusterId\\}", clusterId == null ? "" : clusterId);
-            result = result.replaceAll("\\{nodeId\\}", nodeId == null ? "" : nodeId);
-            result = result.replaceAll("\\{taskName\\}", taskName == null ? "" : taskName);
+            result = result.replaceAll("\\{clusterId\\}", clusterId == null ? "0" : clusterId);
+            result = result.replaceAll("\\{nodeId\\}", nodeId == null ? "0" : nodeId);
+            result = result.replaceAll("\\{taskName\\}", taskName == null ? "empty" : taskName);
             return result;
         }
     }

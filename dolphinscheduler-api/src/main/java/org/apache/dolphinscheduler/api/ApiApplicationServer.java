@@ -37,12 +37,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.EventListener;
 
 @ServletComponentScan
 @SpringBootApplication
-@ComponentScan("org.apache.dolphinscheduler")
+@ComponentScan({ "org.apache.dolphinscheduler", "com.tuhu" })
+@EnableFeignClients({ "org.apache.dolphinscheduler.api.platform", "com.tuhu" })
 @Slf4j
 public class ApiApplicationServer {
 

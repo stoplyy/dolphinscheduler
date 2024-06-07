@@ -37,7 +37,7 @@ import io.swagger.v3.oas.models.info.Info;
 @Configuration
 @ConditionalOnWebApplication
 @PropertySource("classpath:swagger.properties")
-public class SwaggerConfiguration implements WebMvcConfigurer {
+public class SwaggerConfigurationDolphin implements WebMvcConfigurer {
 
     @Autowired
     private DsVersionDao dsVersionDao;
