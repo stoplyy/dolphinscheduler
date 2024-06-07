@@ -52,7 +52,7 @@
         <module>dolphinscheduler-master</module>
         <module>dolphinscheduler-worker</module>
         <module>dolphinscheduler-tools</module>
-        <module>dolphinscheduler-ui</module>
+        <!-- <module>dolphinscheduler-ui</module> -->
         <module>dolphinscheduler-scheduler-plugin</module>
         <module>dolphinscheduler-storage-plugin</module>
         <module>dolphinscheduler-extract</module>
