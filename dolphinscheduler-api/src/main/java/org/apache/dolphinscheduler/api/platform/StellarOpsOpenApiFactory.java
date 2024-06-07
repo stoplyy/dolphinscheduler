@@ -43,10 +43,10 @@ public class StellarOpsOpenApiFactory implements ApplicationContextAware {
 
     protected <T> T get(Class<T> type) {
         FeignContext context = applicationContext.getBean(FeignContext.class);
-        T instance = context.getInstance("int-service-arch-stellarops-portal-api", type);
+        T instance = context.getInstance("int-service-arch-stellarops-api", type);
         if (instance == null) {
             throw new IllegalStateException(
-                    "No bean found of type " + type + " for " + "int-service-arch-stellarops-portal-api");
+                    "No bean found of type " + type + " for " + "int-service-arch-stellarops-api");
         }
         return instance;
     }
