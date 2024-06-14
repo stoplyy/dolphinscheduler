@@ -14,10 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-spring.main.allow-bean-definition-overriding: true
-spring.main.allow-circular-references: true
 
-datasource.plugin: mysql
+dolphin.enable: flase
+
+datasource.plugin: postgresql
+
+# spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
+apollo:
+  bootstrap:
+    enabled: true
+    namespaces: RD.tuhu-spring-cloud-cover,RD.tuhu-spring-cloud-public,application
+    eagerLoad:
+      enabled: true
+  autoUpdateInjectedSpringProperties: true
 
 server:
   port: 12345
@@ -36,8 +46,6 @@ server:
 
 spring:
   cloud.kubernetes.enabled: false
-  profiles:
-    active: postgresql
   banner:
     charset: UTF-8
   jackson:
@@ -129,8 +137,9 @@ management:
 registry:
   type: zookeeper
   zookeeper:
-    namespace: dolphinscheduler
-    connect-string: localhost:2181
+    namespace: stellarops
+    # connect-string: 172.16.20.74:2181
+    connect-string: 127.0.0.1:2181
     retry-policy:
       base-sleep-time: 60ms
       max-sleep: 300ms
@@ -208,8 +217,18 @@ security:
       user:
         admin: ""
     oauth2:
-      enable: false
-
+      enable: true
+      provider:
+        tuhu:
+          authorizationUri: "https://sso.tuhu.work/connect/authorize?scope=openid email"
+          redirectUri: "http://localhost:5173/dolphinscheduler/redirect/login/oauth2"
+          clientId: "int-service-arch-stellarops-api"
+          clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
+          tokenUri: "https://sso.tuhu.work/connect/token"
+          userInfoUri: "https://sso.tuhu.work/connect/userinfo"
+          callbackUrl: "http://localhost:5173/login"
+          iconUri: "https://res.tuhu.org/images/hongbao-tiger.png"
+          provider: tuhu
 casdoor:
   # Your Casdoor server url
   endpoint: ""

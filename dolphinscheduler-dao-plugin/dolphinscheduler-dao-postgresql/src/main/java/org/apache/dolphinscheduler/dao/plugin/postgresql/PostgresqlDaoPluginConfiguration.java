@@ -29,12 +29,14 @@ import org.apache.dolphinscheduler.dao.plugin.postgresql.monitor.PostgresqlMonit
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 
-@Profile("postgresql")
+// @Profile("postgresql")
+@ConditionalOnProperty(name = "datasource.plugin", havingValue = "postgresql")
 @Configuration
 public class PostgresqlDaoPluginConfiguration implements DaoPluginConfiguration {
 

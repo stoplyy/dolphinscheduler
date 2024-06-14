@@ -16,6 +16,8 @@
 #
 dolphin.enable: false
 
+datasource.plugin: mysql
+
 server:
   port: 12345
   servlet:
@@ -32,9 +34,6 @@ server:
       custom-format: '%{client}a - %u %t "%r" %s %O %{ms}Tms'
 
 spring:
-  config:
-    activate:
-      on-profile: mysql
   banner:
     charset: UTF-8
   jackson:

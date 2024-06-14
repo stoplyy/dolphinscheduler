@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.platform.common.ApolloConfigUtil;
 import org.apache.dolphinscheduler.api.platform.common.JSONUtils;
 
@@ -16,6 +17,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.apache.dolphinscheduler.api.utils.Result;
 
 @Slf4j
 public class PlatformRestServiceImpl {
@@ -27,10 +29,10 @@ public class PlatformRestServiceImpl {
             .addHeader("content-type", "application/json")
             .addHeader("Authorization", ApolloConfigUtil.getStellarOpsPlatformAuthToken());
 
-    public static BizResponse<Map<String, Object>> getRestBizResponse(String rest) {
-        BizResponse<Map<String, Object>> result = new BizResponse<>();
+    public static Result<Map<String, Object>> getRestBizResponse(String rest) {
         try {
 
+            BizResponse<Map<String, Object>> result = new BizResponse<>();
             Request request = baseRequestBuilder
                     .url(rest)
                     .get().build();
@@ -47,16 +49,16 @@ public class PlatformRestServiceImpl {
                 result.setCode(500);
                 result.setMessage("responseBody is null");
             }
+
+            return mapToResult(result);
         } catch (Exception ex) {
             log.error("http get error", ex);
-            return BizResponse.operationFailed("http get error: " + rest);
+            return Result.error(Status.INTERNAL_SERVER_ERROR_ARGS);
         }
-
-        return result;
     }
 
-    public static <T> BizResponse<List<T>> getRestBizResponse(String rest, Class<T> clazz) {
-        BizResponse<List<T>> result = new BizResponse<>();
+    public static <T> Result<List<T>> getRestBizResponse(String rest, Class<T> clazz) {
+        Result<List<T>> result = new Result<>();
         try {
 
             Request request = baseRequestBuilder
@@ -73,16 +75,35 @@ public class PlatformRestServiceImpl {
             mapToResult(result, resultMap, clazz);
         } catch (Exception ex) {
             log.error("http get error", ex);
-            return BizResponse.operationFailed("http get error: " + rest);
+            return Result.error(Status.INTERNAL_SERVER_ERROR_ARGS);
         }
 
         return result;
     }
 
     // 新的静态方法
-    public static <T> void mapToResult(BizResponse<List<T>> result, Map resultMap, Class<T> clazz) {
-        result.setCode((Integer) resultMap.get("code"));
-        result.setMessage((String) resultMap.get("message"));
+    public static <T> Result<T> mapToResult(BizResponse<T> bizResponse) {
+        Result<T> result = new Result<>();
+        Integer code = bizResponse.getCode();
+        if (code == 10000) { // 10000是成功的code
+            result.setCode(Status.SUCCESS.getCode());
+        } else {
+            result.setCode(code);
+        }
+        result.setMsg(bizResponse.getMessage());
+        result.setData(bizResponse.getData());
+        return result;
+    }
+
+    // 新的静态方法
+    public static <T> void mapToResult(Result<List<T>> result, Map resultMap, Class<T> clazz) {
+        Integer code = (Integer) resultMap.get("code");
+        if (code == 10000) { // 10000是成功的code
+            result.setCode(Status.SUCCESS.getCode());
+        } else {
+            result.setCode(code);
+        }
+        result.setMsg((String) resultMap.get("message"));
         if (resultMap.containsKey("data")) {
             List<T> list = JSONUtils.toObject(JSONUtils.toJson(resultMap.get("data")),
                     TypeFactory.defaultInstance().constructCollectionType(List.class, clazz));

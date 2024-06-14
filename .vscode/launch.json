@@ -21,6 +21,14 @@
     },
     {
       "type": "java",
+      "name": "postgresql-Api",
+      "request": "launch",
+      "mainClass": "org.apache.dolphinscheduler.api.ApiApplicationServer",
+      "vmArgs": "-Dspring.profiles.active=postgresql -Denv=FAT -server -Djava._appid_=int-service-arch-stellarops-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-api",
+      "projectName": "dolphinscheduler-api",
+    },
+    {
+      "type": "java",
       "name": "Mysql-Api",
       "request": "launch",
       "mainClass": "org.apache.dolphinscheduler.api.ApiApplicationServer",
@@ -57,6 +65,14 @@
       "request": "launch",
       "mainClass": "org.apache.dolphinscheduler.server.master.MasterServer",
       "vmArgs": "-Dspring.profiles.active=mysql -Denv=FAT -server -Djava._appid_=int-service-arch-stellarops-portal-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-portal-api",
+      "projectName": "dolphinscheduler-master"
+    },
+    {
+      "type": "java",
+      "name": "postgresql-Master",
+      "request": "launch",
+      "mainClass": "org.apache.dolphinscheduler.server.master.MasterServer",
+      "vmArgs": "-Dspring.profiles.active=postgresql -Denv=FAT -server -Djava._appid_=int-service-arch-stellarops-portal-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-portal-api",
       "projectName": "dolphinscheduler-master"
     },
     {
@@ -106,6 +122,14 @@
         "Master-Work",
         "Api-Work",
         "Worker-Work"
+      ]
+    },
+    {
+      "name": "postgresql-All",
+      "configurations": [
+        "local-Worker",
+        "postgresql-Api",
+        "postgresql-Master"
       ]
     }
   ]

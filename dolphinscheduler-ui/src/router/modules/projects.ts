@@ -78,10 +78,20 @@ export default {
     {
       path: '/projects/:projectCode/cluster',
       name: 'projects-cluster',
-      // component: () => import('@/views/projects/cluster/index.vue'),
-      component: components['projects-cluster'],
+      component: () => import('@/views/projects/cluster/index.vue'),
       meta: {
         title: '项目集群',
+        activeMenu: 'projects',
+        showSide: true,
+        auth: []
+      }
+    },
+    {
+      path: '/projects/:projectCode/nodes',
+      name: 'projects-nodes',
+      component: () => import('@/views/projects/nodes/index.vue'),
+      meta: {
+        title: '项目源管理',
         activeMenu: 'projects',
         showSide: true,
         auth: []

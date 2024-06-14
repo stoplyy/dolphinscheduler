@@ -13,6 +13,7 @@ import com.tuhu.stellarops.client.core.StellarOpsClusterInfo;
 import com.tuhu.stellarops.client.core.StellarOpsNodeInfo;
 
 import io.swagger.annotations.SwaggerDefinition;
+import org.apache.dolphinscheduler.api.utils.Result;
 
 /**
  * 示例
@@ -28,7 +29,7 @@ public interface PlatformOpenApi {
      * @return
      */
     @GetMapping("/{platform}/cluster/list")
-    BizResponse<List<StellarOpsClusterInfo>> getPlatformClusterList(@PathVariable String platform);
+    Result<List<StellarOpsClusterInfo>> getPlatformClusterList(@PathVariable String platform);
 
     /**
      * 获取节点列表
@@ -39,8 +40,8 @@ public interface PlatformOpenApi {
      * @return
      */
     @GetMapping("/{platform}/node/list/{clusterId}")
-    BizResponse<List<StellarOpsNodeInfo>> getPlatformNodeList(@PathVariable String platform,
-            @RequestParam String clusterId,
+    Result<List<StellarOpsNodeInfo>> getPlatformNodeList(@PathVariable String platform,
+            @PathVariable String clusterId,
             @RequestParam(required = false) String taskName);
 
     /**
@@ -53,7 +54,7 @@ public interface PlatformOpenApi {
      * @return
      */
     @GetMapping("/{platform}/rest/{rest}")
-    BizResponse<Map<String, Object>> getPlatformRest(@PathVariable String rest, @PathVariable String platform,
+    Result<Map<String, Object>> getPlatformRest(@PathVariable String rest, @PathVariable String platform,
             @RequestParam(required = false) String clusterId, @RequestParam(required = false) String nodeId,
             @RequestParam(required = false) String taskType);
 

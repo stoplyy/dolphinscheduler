@@ -903,6 +903,9 @@ export default {
     disabled: '未启用'
   },
   cluster: {
-    cluster_manage: '项目集群管理'
+    cluster_manage: '项目集群'
+  },
+  nodes: {
+    nodes_manage: '项目源管理'
   },
 }
