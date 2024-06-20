@@ -3,9 +3,9 @@ import {
 } from '@/common/column-width-config';
 import { CommonParameter } from "@/service/modules/project-platform/platform";
 import { DeleteOutlined, EditOutlined } from '@vicons/antd';
-import { NButton, NPopconfirm, NSpace, NTooltip } from "naive-ui";
+import { NButton, NEllipsis, NInput, NPopconfirm, NSpace, NTag, NTooltip } from "naive-ui";
 import { h } from "vue";
-import type { DataTableRowOper } from './types';
+import { DataFromEnum, type DataTableRowOper } from './types';
 
 export function useParamsTable(object: DataTableRowOper) {
 
@@ -38,7 +38,12 @@ export function useParamsTable(object: DataTableRowOper) {
       {
         title: "描述",
         key: "description",
-        ...COLUMN_WIDTH_CONFIG['note']
+        ...COLUMN_WIDTH_CONFIG['note'],
+        render: (row: CommonParameter) => {
+          return row.from === DataFromEnum.AUTO ?
+            h(NTag, { type: 'warning' }, { default: '导入参数' }) :
+            h(NEllipsis, { lineClamp: 1 }, { default: row.description })
+        }
       },
       {
         title: '更新时间',
@@ -63,6 +68,7 @@ export function useParamsTable(object: DataTableRowOper) {
                         circle: true,
                         type: 'info',
                         size: 'small',
+                        disabled: row.from === DataFromEnum.AUTO,
                         onClick: () => {
                           handleEdit(row)
                         }
@@ -71,7 +77,7 @@ export function useParamsTable(object: DataTableRowOper) {
                         icon: () => h(EditOutlined)
                       }
                     ),
-                  default: () => '修改'
+                  default: () => row.from === DataFromEnum.AUTO ? '导入不可修改' : '修改'
                 }
               ),
               h(
@@ -93,13 +99,14 @@ export function useParamsTable(object: DataTableRowOper) {
                             {
                               circle: true,
                               type: 'error',
+                              disabled: row.from === DataFromEnum.AUTO,
                               size: 'small'
                             },
                             {
                               icon: () => h(DeleteOutlined)
                             }
                           ),
-                        default: () => '删除'
+                        default: () => row.from === DataFromEnum.AUTO ? '导入不可删除' : '删除'
                       }
                     ),
                   default: () => '删除'

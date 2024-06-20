@@ -102,6 +102,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         try {
             project = ProjectNode
                     .builder()
+                    .projectCode(projectCode)
                     .clusterId(clsuter.getClusterId())
                     .clusterCode(clusterCode)
                     .nodeKey(nodeId + "")

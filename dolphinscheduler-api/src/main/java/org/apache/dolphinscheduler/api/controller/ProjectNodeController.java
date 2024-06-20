@@ -87,10 +87,11 @@ public class ProjectNodeController extends BaseController {
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @PathVariable long projectCode,
             @PathVariable int clusterCode,
+            @PathVariable("code") int nodeCode,
             @RequestParam("nodeName") String nodeName,
             @RequestParam("nodeId") String nodeId,
             @RequestParam(value = "description", required = false) String description) {
-        return service.update(loginUser, projectCode, clusterCode, nodeName, nodeId, description);
+        return service.update(loginUser, projectCode, nodeCode, nodeName, nodeId, description);
     }
 
     @Operation(summary = "queryNodeList", description = "QUERY_PROJECT_CLUSTER_LIST")
@@ -135,6 +136,7 @@ public class ProjectNodeController extends BaseController {
     public Result<ProjectNodeParameter> createParameter(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
             @PathVariable("nodeCode") Integer nodeCode,
             @RequestParam("paramName") String paramName,
             @RequestParam(value = "paramValue") String paramValue) {
@@ -154,6 +156,7 @@ public class ProjectNodeController extends BaseController {
     public Result<ProjectNodeParameter> updateParameter(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
             @PathVariable("nodeCode") Integer nodeCode,
             @PathVariable("code") Integer code,
             @RequestParam("paramName") String paramName,
@@ -187,6 +190,7 @@ public class ProjectNodeController extends BaseController {
     public Result<Boolean> batchDeleteParametersByCodes(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
             @PathVariable("nodeCode") Integer nodeCdoe,
             @RequestParam("codes") String codes) {
         return paramService.batchDeleteParametersByCodes(loginUser, projectCode, nodeCdoe, codes);
@@ -202,6 +206,7 @@ public class ProjectNodeController extends BaseController {
     public Result<List<ProjectNodeParameter>> queryParameterList(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
             @PathVariable("nodeCode") Integer nodeCode) {
         return paramService.queryParameterList(loginUser, projectCode, nodeCode);
     }
@@ -216,6 +221,7 @@ public class ProjectNodeController extends BaseController {
     public Result<ProjectNodeParameter> queryParameterByCode(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
             @PathVariable("code") Integer parameterCode) {
         return paramService.queryParameterByCode(loginUser, projectCode, parameterCode);
     }

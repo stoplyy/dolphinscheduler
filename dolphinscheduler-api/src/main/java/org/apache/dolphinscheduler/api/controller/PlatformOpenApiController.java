@@ -184,6 +184,7 @@ public class PlatformOpenApiController implements PlatformOpenApi {
                 String restUri = (String) configMap.get(rest);
                 return PlatformRestServiceImpl.getRestBizResponse(entry.replaceNewString(restUri));
             } else if (configMap.containsKey("baseHost")) {
+                // TODO: 根据rest 替换参数，当前没有替换，无法使用
                 String restUri = (String) configMap.get("baseHost");
                 return PlatformRestServiceImpl.getRestBizResponse(entry.replaceNewString(restUri));
             } else if (configMap.containsKey("appId")) {

@@ -2,10 +2,41 @@ import { h, reactive, vShow } from "vue";
 import { NButton, NTag, NSpace, NTooltip, NPopconfirm } from "naive-ui";
 import { DataFromEnum } from './types'
 import type { OpsClusterInfo, DataTableRowOper } from './types'
-import { DeleteOutlined, EditOutlined } from '@vicons/antd'
+import { DeleteOutlined, EditOutlined, SyncOutlined } from '@vicons/antd'
 import {
   COLUMN_WIDTH_CONFIG
 } from '@/common/column-width-config'
+import { getPlatformClusterList, queryProjectClusterList } from "@/service/modules/project-platform";
+
+export async function getClusterData(projectName: string, projectCode: number) {
+  const res = await getPlatformClusterList(projectName);
+  const clusterListDataTmp = res.map(item => ({
+    ...item,
+    from: DataFromEnum.AUTO
+  })) as unknown as OpsClusterInfo[];
+
+  const manuallyCluster = await queryProjectClusterList(projectCode);
+
+  manuallyCluster.map(item => {
+    if (!clusterListDataTmp?.find(cluster => cluster.clusterId === item.clusterId)) {
+      clusterListDataTmp?.push({
+        ...item,
+        from: DataFromEnum.MANUAL,
+        stellaropsClusterName: item.clusterName
+      })
+    } else {
+      const index = clusterListDataTmp?.findIndex(cluster => cluster.clusterId === item.clusterId);
+      const cluster = clusterListDataTmp[index];
+      clusterListDataTmp[index] = {
+        ...item,
+        from: cluster.from,
+        stellaropsClusterName: cluster.clusterName,
+        expMap: cluster.expMap
+      }
+    }
+  })
+  return clusterListDataTmp;
+};
 
 export function useClusterTable(object: DataTableRowOper) {
 
@@ -16,6 +47,15 @@ export function useClusterTable(object: DataTableRowOper) {
   const handleDelete = (row: OpsClusterInfo) => {
     object.deleteLogic(row);
   }
+
+  const handleSync = (row: OpsClusterInfo) => {
+    object.syncLogic(row);
+  }
+
+  const hasSync = (row: OpsClusterInfo) => {
+    return (row.id && row.id > 0) as boolean;
+  }
+
 
   const projectColumns =
     [
@@ -69,7 +109,12 @@ export function useClusterTable(object: DataTableRowOper) {
         key: "from",
         ...COLUMN_WIDTH_CONFIG['type'],
         render: (row: OpsClusterInfo) => {
-          return h(NTag, { type: row.from === DataFromEnum.AUTO ? 'success' : 'info' }, { default: () => row.from === DataFromEnum.AUTO ? '接口导入' : '手动添加' })
+          return h(NTag, { type: row.from === DataFromEnum.AUTO ? 'success' : 'info' }, {
+            default: () =>
+              row.from === DataFromEnum.AUTO ?
+                '接口导入' :
+                '手动添加'
+          })
         }
       },
       {
@@ -87,6 +132,7 @@ export function useClusterTable(object: DataTableRowOper) {
                     h(
                       NButton,
                       {
+                        disabled: !hasSync(row),
                         circle: true,
                         type: 'info',
                         size: 'small',
@@ -98,7 +144,7 @@ export function useClusterTable(object: DataTableRowOper) {
                         icon: () => h(EditOutlined)
                       }
                     ),
-                  default: () => '修改'
+                  default: () => !hasSync(row) ? '未落库不可编辑' : '编辑'
                 }
               ),
               h(
@@ -131,6 +177,38 @@ export function useClusterTable(object: DataTableRowOper) {
                       }
                     ),
                   default: () => '删除'
+                }
+              ),
+              h(
+                NPopconfirm,
+                {
+                  onPositiveClick: () => {
+                    handleSync(row)
+                  }
+                },
+                {
+                  trigger: () =>
+                    h(
+                      NTooltip,
+                      {},
+                      {
+                        trigger: () =>
+                          h(
+                            NButton,
+                            {
+                              disabled: hasSync(row),
+                              circle: true,
+                              type: 'success',
+                              size: 'small'
+                            },
+                            {
+                              icon: () => h(SyncOutlined)
+                            }
+                          ),
+                        default: () => hasSync(row) ? '已落库' : '落库'
+                      }
+                    ),
+                  default: () => '落库'
                 }
               )
             ]

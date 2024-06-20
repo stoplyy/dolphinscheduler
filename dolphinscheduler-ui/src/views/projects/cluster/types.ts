@@ -18,6 +18,7 @@ interface OpsClusterInfo extends ProjectCluster, StellarOpsClusterInfo {
 }
 
 interface DataTableRowOper {
+    syncLogic(row: any): void;
     deleteLogic: (row: any) => void;
     editLogic: (row: any) => void;
 }
