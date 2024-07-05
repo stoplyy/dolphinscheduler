@@ -1,21 +1,39 @@
 package org.apache.dolphinscheduler.api.controller;
 
+import static org.apache.dolphinscheduler.api.enums.Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.dolphinscheduler.api.enums.Status;
+import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.platform.AutoPlatformFactory;
 import org.apache.dolphinscheduler.api.platform.PathEnum;
-import org.apache.dolphinscheduler.api.platform.PlatformRestServiceImpl;
+import org.apache.dolphinscheduler.api.platform.PlatformRestService;
 import org.apache.dolphinscheduler.api.platform.common.ApolloConfigUtil;
 import org.apache.dolphinscheduler.api.platform.common.JSONUtils;
+import org.apache.dolphinscheduler.api.platform.common.PlatformConstant;
+import org.apache.dolphinscheduler.api.platform.common.RestParamEntry;
 import org.apache.dolphinscheduler.api.platform.facade.PlatformOpenApi;
+import org.apache.dolphinscheduler.api.service.ProjectClusterService;
+import org.apache.dolphinscheduler.api.service.ProjectNodeService;
+import org.apache.dolphinscheduler.api.service.ProjectParameterService;
+import org.apache.dolphinscheduler.api.service.ProjectService;
+import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
+import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.dao.entity.Project;
+import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
+import org.apache.dolphinscheduler.dao.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tuhu.boot.common.facade.response.BizResponse;
@@ -24,6 +42,10 @@ import com.tuhu.stellarops.client.core.StellarOpsNodeInfo;
 import com.tuhu.stellarops.client.spring.endpoint.StellarOpsOpenApiEndpoint;
 
 import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,34 +59,20 @@ public class PlatformOpenApiController implements PlatformOpenApi {
     @Autowired
     AutoPlatformFactory autoPlatformFactory;
 
-    public class RestParamEntry {
-        String clusterId;
-        String nodeId;
+    @Autowired
+    private ProjectParameterService projectParameterService;
 
-        String taskName;
+    @Autowired
+    ProjectService projectService;
 
-        public RestParamEntry build(String clusterId, String nodeId, String taskName) {
-            this.clusterId = clusterId == null ? "0" : clusterId;
-            this.nodeId = nodeId == null ? "0" : nodeId;
-            this.taskName = taskName == null ? "empty" : taskName;
-            return this;
-        }
+    @Autowired
+    private ProjectClusterService clusterService;
 
-        public RestParamEntry build(Map<String, Object> params) {
-            this.clusterId = (String) params.getOrDefault("clusterId", 0);
-            this.nodeId = (String) params.getOrDefault("nodeId", 0);
-            this.taskName = (String) params.getOrDefault("taskName", "empty");
-            return this;
-        }
+    @Autowired
+    private ProjectNodeService nodeService;
 
-        public String replaceNewString(String restUri) {
-            String result = restUri;
-            result = result.replaceAll("\\{clusterId\\}", clusterId == null ? "0" : clusterId);
-            result = result.replaceAll("\\{nodeId\\}", nodeId == null ? "0" : nodeId);
-            result = result.replaceAll("\\{taskName\\}", taskName == null ? "empty" : taskName);
-            return result;
-        }
-    }
+    @Autowired
+    PlatformRestService platformRestService;
 
     private Result<Map<String, Object>> getResponseWithAppId(String rest, String appId,
             RestParamEntry params) {
@@ -75,21 +83,26 @@ public class PlatformOpenApiController implements PlatformOpenApi {
         BizResponse<Map<String, Object>> result = null;
         switch (pathEnum) {
             case CLUSTER_PARAMS:
-                result = dynamicClient.getClusterCommParam(params.clusterId, params.taskName);
+                result = dynamicClient.getClusterCommParam(params.getClusterId(), params.getTaskName());
+                break;
             case NODE_PARAMS:
-                result = dynamicClient.getNodeCommParam(params.clusterId, params.nodeId, params.taskName);
+                result = dynamicClient.getNodeCommParam(params.getClusterId(), params.getNodeId(),
+                        params.getTaskName());
+                break;
             case TASK_PARAMS:
-                result = dynamicClient.getTaskCommParam(params.clusterId, params.taskName);
+                result = dynamicClient.getTaskCommParam(params.getClusterId(), params.getTaskName());
+                break;
             case ENV_CHECK:
                 result = dynamicClient.checkEnv();
-                // 添加其他路径的处理...
+                break;
+            // 添加其他路径的处理...
             default:
                 result = new BizResponse<>();
                 result.setCode(Status.PLATFORM_UNKNOW_PATH_ARGS.getCode());
                 result.setMessage("Unknown path: " + rest);
         }
 
-        return PlatformRestServiceImpl.mapToResult(result);
+        return PlatformRestService.mapToResult(result);
     }
 
     @Override
@@ -106,18 +119,18 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             }
             if (configMap.containsKey(rest)) {
                 String restUri = (String) configMap.get(rest);
-                return PlatformRestServiceImpl.getRestBizResponse(entry.replaceNewString(restUri),
+                return PlatformRestService.getRestBizResponse(entry.replaceNewString(restUri),
                         StellarOpsClusterInfo.class);
             } else if (configMap.containsKey("baseHost")) {
                 String restUri = (String) configMap.get("baseHost");
-                return PlatformRestServiceImpl.getRestBizResponse(
+                return PlatformRestService.getRestBizResponse(
                         restUri + "/stellarops/cluster/list",
                         StellarOpsClusterInfo.class);
             } else if (configMap.containsKey("appId")) {
                 BizResponse<List<StellarOpsClusterInfo>> bizResponse = autoPlatformFactory
                         .getClient((String) configMap.get("appId"))
                         .getClusterList();
-                return PlatformRestServiceImpl.mapToResult(bizResponse);
+                return PlatformRestService.mapToResult(bizResponse);
             } else {
                 log.error(platform + "getPlatformRest error, rest not found");
                 return Result.errorWithArgs(Status.PLATFORM_UNKNOW_PATH_ARGS, "rest not found");
@@ -135,7 +148,8 @@ public class PlatformOpenApiController implements PlatformOpenApi {
         String config = ApolloConfigUtil.getPlatformConfig(platform);
         String rest = PathEnum.NODE_LIST.getPath();
         Map<String, Object> configMap = new HashMap<>();
-        RestParamEntry entry = new RestParamEntry().build(null, null, null);
+
+        RestParamEntry entry = new RestParamEntry().build(clusterId, null, taskName);
         try {
             configMap = JSONUtils.toObject(config, Map.class);
             if (configMap == null) {
@@ -143,18 +157,19 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             }
             if (configMap.containsKey(rest)) {
                 String restUri = (String) configMap.get(rest);
-                return PlatformRestServiceImpl.getRestBizResponse(entry.replaceNewString(restUri),
+                return PlatformRestService.getRestBizResponse(entry.replaceNewString(restUri),
                         StellarOpsNodeInfo.class);
             } else if (configMap.containsKey("baseHost")) {
                 String restUri = (String) configMap.get("baseHost");
-                return PlatformRestServiceImpl.getRestBizResponse(
+                return PlatformRestService.getRestBizResponse(
                         entry.replaceNewString(restUri) +
                                 "/stellarops/node/list/" + clusterId + "?taskName=" + taskName,
                         StellarOpsNodeInfo.class);
             } else if (configMap.containsKey("appId")) {
                 BizResponse<List<StellarOpsNodeInfo>> bizResponse = autoPlatformFactory
-                        .getClient((String) configMap.get("appId")).getNodeList(clusterId, taskName);
-                return PlatformRestServiceImpl.mapToResult(bizResponse);
+                        .getClient((String) configMap.get("appId"))
+                        .getNodeList(entry.getClusterId(), entry.getTaskName());
+                return PlatformRestService.mapToResult(bizResponse);
             } else {
                 log.error(platform + " getPlatformRest error, rest not found");
                 return Result.errorWithArgs(Status.PLATFORM_UNKNOW_PATH_ARGS, "rest not found");
@@ -182,11 +197,11 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             }
             if (configMap.containsKey(rest)) {
                 String restUri = (String) configMap.get(rest);
-                return PlatformRestServiceImpl.getRestBizResponse(entry.replaceNewString(restUri));
+                return PlatformRestService.getRestBizResponse(entry.replaceNewString(restUri));
             } else if (configMap.containsKey("baseHost")) {
                 // TODO: 根据rest 替换参数，当前没有替换，无法使用
                 String restUri = (String) configMap.get("baseHost");
-                return PlatformRestServiceImpl.getRestBizResponse(entry.replaceNewString(restUri));
+                return PlatformRestService.getRestBizResponse(entry.replaceNewString(restUri));
             } else if (configMap.containsKey("appId")) {
                 return getResponseWithAppId(rest, (String) configMap.get("appId"), entry);
             } else {
@@ -199,4 +214,95 @@ public class PlatformOpenApiController implements PlatformOpenApi {
         }
     }
 
+    @GetMapping("{projectCode}/clusterlist")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_DETAILS_BY_CODE_ERROR)
+    public Result<List<StellarOpsClusterInfo>> queryClusterListByPlatform(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @PathVariable long projectCode) {
+
+        Result<Project> pj = projectService.queryByCode(loginUser, projectCode);
+        if (!pj.isSuccess()) {
+            return Result.errorWithArgs(Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR, "project not found");
+        }
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, pj.getData());
+
+        Result<PageInfo<ProjectParameter>> platformParamList = projectParameterService.queryProjectParameterListPaging(
+                loginUser, projectCode, 100, 1, PlatformConstant.PLATFORM_PARAM_PRIFEX);
+
+        RestParamEntry entry = RestParamEntry.newEntry()
+                .buildRestParamEntiy(platformParamList.getData().getTotalList());
+        Result<List<StellarOpsClusterInfo>> list = platformRestService.getClusterList(entry);
+
+        if (list.isSuccess()) {
+            return list;
+        } else {
+            log.warn("Project:{} cluster list not found.", pj.getData().getName());
+            return new Result<>();
+        }
+    }
+
+    @GetMapping("{projectCode}/nodelist/{clusterId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_DETAILS_BY_CODE_ERROR)
+    public Result<List<StellarOpsNodeInfo>> queryNodeListByPlatform(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @PathVariable long projectCode,
+            @PathVariable String clusterId) {
+
+        Result<Project> pj = projectService.queryByCode(loginUser, projectCode);
+        if (!pj.isSuccess()) {
+            return Result.errorWithArgs(Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR, "project not found");
+        }
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, pj.getData());
+
+        Result<PageInfo<ProjectParameter>> platformParamList = projectParameterService.queryProjectParameterListPaging(
+                loginUser, projectCode, 100, 1, PlatformConstant.PLATFORM_PARAM_PRIFEX);
+
+        RestParamEntry entry = RestParamEntry.newEntry()
+                .build(clusterId + "", null, null)
+                .buildRestParamEntiy(platformParamList.getData().getTotalList());
+
+        Result<List<StellarOpsNodeInfo>> list = platformRestService.getNodeList(entry);
+
+        if (list.isSuccess()) {
+            return list;
+        } else {
+            log.warn("Project:{} cluster list not found.", pj.getData().getName());
+            return new Result<>();
+        }
+    }
+
+    @GetMapping("{projectCode}/rest")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_DETAILS_BY_CODE_ERROR)
+    public Result<Map<String, Object>> restQuery(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @PathVariable long projectCode,
+            @RequestParam(required = true) String rest,
+            @RequestParam(required = false) String clusterId,
+            @RequestParam(required = false) String nodeId,
+            @RequestParam(required = false) String taskName) {
+
+        final Result<Project> pj = projectService.queryByCode(loginUser, projectCode);
+        if (!pj.isSuccess()) {
+            return Result.errorWithArgs(Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR, "project not found");
+        }
+
+        final PathEnum path = PathEnum.fromPath(rest);
+        if (path == PathEnum.NONE) {
+            return Result.errorWithArgs(Status.PLATFORM_UNKNOW_PATH_ARGS, "rest not found");
+        }
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, pj.getData());
+
+        Result<PageInfo<ProjectParameter>> platformParamList = projectParameterService.queryProjectParameterListPaging(
+                loginUser, projectCode, 100, 1, PlatformConstant.PLATFORM_PARAM_PRIFEX);
+
+        RestParamEntry entry = RestParamEntry.newEntry()
+                .build(clusterId, nodeId, taskName)
+                .buildRestParamEntiy(platformParamList.getData().getTotalList());
+
+        return platformRestService.getRest(entry, path);
+    }
 }

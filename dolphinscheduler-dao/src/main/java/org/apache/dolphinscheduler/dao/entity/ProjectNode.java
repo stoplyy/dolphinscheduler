@@ -71,6 +71,12 @@ public class ProjectNode {
     @TableField("node_name")
     private String nodeName;
 
+    /*
+     * auto/manual
+     */
+    @TableField("data_from")
+    private String from;
+
     /**
      * project description
      */

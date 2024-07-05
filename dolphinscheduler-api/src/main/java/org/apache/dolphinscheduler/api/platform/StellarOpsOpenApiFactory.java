@@ -31,14 +31,15 @@ public class StellarOpsOpenApiFactory implements ApplicationContextAware {
         this.client = client;
     }
 
-    public StellarOpsOpenApiEndpoint createClient(String appId) {
+    public StellarOpsOpenApiEndpoint createClient(String baseUrl) {
         Feign.Builder builder = Feign.builder();
         builder.client(client);
         return builder.options(new Request.Options(5 * 1000, 20 * 1000))
                 .encoder(get(Encoder.class))
                 .decoder(get(Decoder.class))
                 .contract(get(Contract.class))
-                .target(StellarOpsOpenApiEndpoint.class, "http://" + appId);
+                .target(StellarOpsOpenApiEndpoint.class,
+                        baseUrl.startsWith("http") ? baseUrl : "http://" + baseUrl);
     }
 
     protected <T> T get(Class<T> type) {

@@ -47,6 +47,11 @@ public class ProjectCluster {
 
     @TableField("cluster_name")
     private String clusterName;
+    /*
+     * auto/manual
+     */
+    @TableField("data_from")
+    private String from;
 
     @TableField("appid")
     private String appId;

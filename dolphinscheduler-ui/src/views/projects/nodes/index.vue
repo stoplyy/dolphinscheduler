@@ -9,19 +9,25 @@
               <NButton type="primary" size="small" @click="refreshClusterData" class='btn-create-project'>刷新集群</NButton>
             </template>
           </NSelect>
-          <NButton type="primary" @click="clusterChanged(projectClusterCode)"
-            :disabled="loadingRef || !hasSelectCluster()" class='btn-create-project'>刷新节点</NButton>
+          <NButton type="primary" @click="nodesRefresh()" :disabled="loadingRef || !hasSelectCluster()"
+            class='btn-create-project'>刷新节点</NButton>
         </NSpace>
         <NSpace>
           <NButton type="primary" @click="addNodeLogic" :disabled="!hasSelectCluster()" class='btn-create-project'>添加节点
           </NButton>
-          <NTooltip>
+          <NPopconfirm @positive-click="syncAllNode">
             <template #trigger>
-              <NButton type="primary" @click="clusterChanged(projectClusterCode)"
-                :disabled="loadingRef || !hasSelectCluster()" class='btn-create-project'>一键同步</NButton>
+              <NTooltip>
+                <template #trigger>
+                  <NButton type="primary" class='btn-create-project'
+                    :disabled="loadingRef || !hasSelectCluster() || hasAnyNoSyncNode()">一键同步
+                  </NButton>
+                </template>
+                <span>完全同步节点列表接口拉取的节点，会清理本地已落库但未在节点列表中的数据！</span>
+              </NTooltip>
             </template>
-            <span>完全同步节点列表接口拉取的节点，会清理本地已落库但未在节点列表中的数据！</span>
-          </NTooltip>
+            是否同步所有节点？
+          </NPopconfirm>
         </NSpace>
       </NSpace>
     </NCard>
@@ -32,7 +38,8 @@
     <NModal v-model:show="showParamModalRef" :show-icon="false" class="custom-card" preset="dialog"
       :title="modalParamMode" @positive-click="confirmParamModal" @negative-click="cancelParamModal" positive-text="确认"
       negative-text="取消">
-      <NForm :model="modalParamInfo" ref="formParamRef_node">
+      <NForm :model="modalParamInfo" ref="formParamRef_node" label-placement="left" label-width="auto"
+        require-mark-placement="right-hanging">
         <NFormItem label="参数名" path="paramName">
           <NInput v-model:value="modalParamInfo.paramName" :disabled="modalParamMode === '查看'" />
         </NFormItem>
@@ -48,7 +55,8 @@
       :title="modalMode" @positive-click="confirmModal" @negative-click="cancelModal" positive-text="确认"
       negative-text="算了">
       <NCard>
-        <NForm :model="modalNodeInfo" ref="formRef_node">
+        <NForm :model="modalNodeInfo" ref="formRef_node" label-placement="left" label-width="auto"
+          require-mark-placement="right-hanging">
           <NFormItem label="集群Id" path="clusterId">
             <NInput v-model:value="modalNodeInfo.clusterId" disabled />
           </NFormItem>
@@ -57,6 +65,10 @@
           </NFormItem>
           <NFormItem label="nodeId" path="nodeId" required>
             <NInput v-model:value="modalNodeInfo.nodeId" :allowInput="trim"
+              :disabled="modalMode === '查看' || modalNodeInfo.from === DataFromEnum.AUTO" />
+          </NFormItem>
+          <NFormItem label="nodeKey" path="nodeKey" required>
+            <NInput v-model:value="modalNodeInfo.nodeKey" :allowInput="trim"
               :disabled="modalMode === '查看' || modalNodeInfo.from === DataFromEnum.AUTO" />
           </NFormItem>
           <NFormItem label="nodeName" path="nodeName" required>
@@ -74,7 +86,8 @@
           <NButton size="small" type="info" @click="refreshParamList" :disabled="loadingParamRef"
             class='btn-create-project'>刷新</NButton>
         </NSpace>
-        <NDataTable :data="nodeParmas" :columns="paramsColumns" :loading="loadingParamRef">
+        <NDataTable :data="nodeParmas" :columns="paramsColumns" :loading="loadingParamRef"
+          :pagination="{ pageSize: 10 }">
         </NDataTable>
       </NCard>
     </NModal>
@@ -84,7 +97,7 @@
 <script lang="ts">
   import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, getPlatformNodeList, getPlatformRest, queryProjectNodeList, queryProjectNodeParametersList, updateProjectNode, updateProjectNodeParameter } from '@/service/modules/project-platform';
   import { PlatformRestEnum, ProjectNodeParameter } from '@/service/modules/project-platform/platform';
-  import { NButton, NCard, NDataTable, NDialog, NDialogProvider, NDynamicTags, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable, NTooltip, SelectOption } from 'naive-ui';
+  import { NButton, NCard, NDataTable, NDialog, NDialogProvider, NPopconfirm, NDynamicTags, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable, NTooltip, SelectOption } from 'naive-ui';
   import { computed, defineComponent, getCurrentInstance, h, reactive, ref, VNode, watch } from 'vue';
   import type { Router } from 'vue-router';
   import { useRouter } from 'vue-router';
@@ -99,6 +112,7 @@
     components: {
       NButton,
       NTooltip,
+      NPopconfirm,
       NFormItemGi,
       NFormItemRow,
       NDynamicTags,
@@ -144,7 +158,6 @@
       const currentRowParam = ref<ProjectNodeParameter>({} as ProjectNodeParameter);
       const modalParamInfo = ref<ProjectNodeParameter>({} as ProjectNodeParameter);
 
-
       watch(projectClusterCode, (val) => {
         if (val) {
           clusterChanged(val);
@@ -176,6 +189,14 @@
 
       const hasSelectCluster = () => {
         return selectedCluster.value && selectedCluster.value.id > 0;
+      }
+
+      const hasAnyNoSyncNode = () => {
+        return nodesList.value.filter((node) => !node.id || node.id <= 0).length === 0;
+      }
+
+      const nodesRefresh = async () => {
+        await clusterChanged(projectClusterCode.value);
       }
 
       const clusterChanged = async (val: string) => {
@@ -224,7 +245,11 @@
         deleteLogic: async (row: OpsNodeInfo) => {
           await deleteProjectNode(projectCode.value, row.clusterCode, row.id).then(() => {
             console.log('删除成功');
-            nodesList.value.splice(nodesList.value.findIndex((item) => item.id === row.id), 1);
+            if (row.from === DataFromEnum.AUTO) {
+              nodesRefresh();
+            } else {
+              nodesList.value.splice(nodesList.value.findIndex((item) => item.id === row.id), 1);
+            }
           });
         },
         editLogic: async (row: OpsNodeInfo) => {
@@ -238,9 +263,40 @@
           showModalRef.value = true;
         },
         syncLogic: async (row) => {
-          console.log('syncLogic', row);
+          await createProjectNode(
+            projectCode.value,
+            selectedCluster.value.id,
+            row.nodeKey,
+            row.nodeName,
+            row.nodeId,
+            '节点同步').then(() => {
+              console.log('同步成功');
+              nodesRefresh();
+            });
         }
       })
+
+      const syncAllNode = async () => {
+        loadingRef.value = true;
+
+        nodesList.value.forEach(async (node) => {
+          if (!(node.id && node.id > 0) as boolean) {
+            await createProjectNode(
+              projectCode.value,
+              selectedCluster.value.id,
+              node.nodeKey,
+              node.nodeName,
+              node.nodeId,
+              '节点同步').then(() => {
+                console.log(node.nodeName + '同步成功');
+              });
+          }
+        }
+        )
+        await nodesRefresh();
+
+        loadingRef.value = false;
+      };
 
       async function refreshParamList() {
         loadingParamRef.value = true;
@@ -290,6 +346,7 @@
           await createProjectNode(
             modalNodeInfo.projectCode,
             modalNodeInfo.clusterCode,
+            modalNodeInfo.nodeKey,
             modalNodeInfo.nodeName,
             modalNodeInfo.nodeId,
             modalNodeInfo.description).then(() => {
@@ -302,11 +359,12 @@
             await createProjectNode(
               modalNodeInfo.projectCode,
               modalNodeInfo.clusterCode,
+              modalNodeInfo.nodeKey,
               modalNodeInfo.nodeName,
               modalNodeInfo.nodeId,
               modalNodeInfo.description).then(() => {
                 console.log('修改成功');
-                clusterChanged(projectClusterCode.value);
+                nodesRefresh();
                 showModalRef.value = false;
               });
           } else {
@@ -314,6 +372,7 @@
               modalNodeInfo.projectCode,
               modalNodeInfo.clusterCode,
               modalNodeInfo.id,
+              modalNodeInfo.nodeKey,
               modalNodeInfo.nodeName,
               modalNodeInfo.nodeId,
               modalNodeInfo.description).then(() => {
@@ -338,7 +397,8 @@
           modalParamMode.value = '修改';
           showParamModalRef.value = true;
         },
-        syncLogic: (row: ProjectNodeParameter) => { }
+        syncLogic: (row: ProjectNodeParameter) => {
+        }
       })
 
       const addParamLogic = () => {
@@ -394,9 +454,11 @@
         nodeColumns,
         hasSelectCluster,
         refreshClusterData,
-        clusterChanged,
+        nodesRefresh,
         renderOption,
         addNodeLogic,
+        hasAnyNoSyncNode,
+        syncAllNode,
         modalNodeInfo,
         modalMode,
         showModalRef,

@@ -141,11 +141,12 @@ export async function queryClusterParameterByCode(projectCode: number, parameter
 }
 
 // 创建项目节点
-export async function createProjectNode(projectCode: number, clusterCode: number, nodeName: string, nodeId: string, description?: string): Promise<ProjectNode> {
+export async function createProjectNode(projectCode: number, clusterCode: number, nodeKey: string, nodeName: string, nodeId: string, description?: string): Promise<ProjectNode> {
   const response = await axios({
     url: `/projects/${projectCode}/project-node/${clusterCode}`,
     method: 'post',
     data: {
+      nodeKey,
       nodeName,
       nodeId,
       description
@@ -155,11 +156,12 @@ export async function createProjectNode(projectCode: number, clusterCode: number
 }
 
 // 更新项目节点
-export async function updateProjectNode(projectCode: number, clusterCode: number, code: number, nodeName: string, nodeId: string, description?: string): Promise<ProjectNode> {
+export async function updateProjectNode(projectCode: number, clusterCode: number, code: number, nodeKey: string, nodeName: string, nodeId: string, description?: string): Promise<ProjectNode> {
   const response = await axios({
     url: `/projects/${projectCode}/project-node/${clusterCode}/${code}`,
     method: 'put',
     data: {
+      nodeKey,
       nodeName,
       nodeId,
       description

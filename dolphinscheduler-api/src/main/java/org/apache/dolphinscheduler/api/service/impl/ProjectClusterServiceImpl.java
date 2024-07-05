@@ -17,18 +17,16 @@
 
 package org.apache.dolphinscheduler.api.service.impl;
 
-import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.PROJECT;
-import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.PROJECT_DELETE;
 import static org.apache.dolphinscheduler.api.service.impl.ProjectServiceImpl.checkDesc;
 
 import java.util.Date;
 import java.util.List;
 
 import org.apache.dolphinscheduler.api.enums.Status;
+import org.apache.dolphinscheduler.api.platform.PlatformRestService;
 import org.apache.dolphinscheduler.api.service.ProjectClusterService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils.CodeGenerateException;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
 import org.apache.dolphinscheduler.dao.entity.User;
@@ -56,6 +54,9 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
 
     @Autowired
     ProjectService projectService;
+
+    @Autowired
+    PlatformRestService platformRestService;
 
     @Override
     public Result<ProjectCluster> createCluster(User loginUser, long projectCode, String name, String clusterId,
@@ -111,7 +112,7 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
     }
 
     @Override
-    public Result<List<ProjectCluster>> queryProjectListPaging(User loginUser, long projectCode) {
+    public Result<List<ProjectCluster>> queryClusterListPaging(User loginUser, long projectCode) {
         Result<List<ProjectCluster>> result = new Result<>();
 
         projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);

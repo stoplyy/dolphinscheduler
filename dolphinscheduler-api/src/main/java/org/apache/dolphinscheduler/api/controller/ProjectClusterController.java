@@ -45,6 +45,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("projects/{projectCode}/project-cluster")
 public class ProjectClusterController extends BaseController {
+
     @Autowired
     private ProjectClusterService service;
 
@@ -64,6 +65,7 @@ public class ProjectClusterController extends BaseController {
     public Result<ProjectCluster> create(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @PathVariable long projectCode,
+            @RequestParam("from") String from,
             @RequestParam("clusterName") String clusterName,
             @RequestParam("clusterId") String clusterId,
             @RequestParam(value = "description", required = false) String description) {
@@ -93,17 +95,17 @@ public class ProjectClusterController extends BaseController {
         return service.update(loginUser, projectCode, clusterCode, clusterName, clusterId, description, appId);
     }
 
-    @Operation(summary = "queryClusterList", description = "QUERY_PROJECT_CLUSTER_LIST")
+    @Operation(summary = "querylist", description = "QUERY_PROJECT_CLUSTER_LIST")
     @Parameters({
             @Parameter(name = "projectCode", description = "PROJECT_CODE", schema = @Schema(implementation = long.class, example = "123456"))
     })
-    @GetMapping
+    @GetMapping("querylist")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_PROJECT_DETAILS_BY_CODE_ERROR)
     public Result<List<ProjectCluster>> queryList(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @PathVariable long projectCode) {
-        return service.queryProjectListPaging(loginUser, projectCode);
+        return service.queryClusterListPaging(loginUser, projectCode);
     }
 
     @Operation(summary = "deleteCluster", description = "DELETE_PROJECT_BY_ID_NOTES")

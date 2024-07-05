@@ -16,8 +16,8 @@ import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.dao.entity.ProjectNodeParameter;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
+import org.apache.dolphinscheduler.dao.entity.ProjectNodeParameter;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -65,10 +65,12 @@ public class ProjectNodeController extends BaseController {
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @PathVariable long projectCode,
             @PathVariable int clusterCode,
+            @RequestParam("from") String from,
+            @RequestParam("nodeKey") String nodeKey,
             @RequestParam("nodeName") String nodeName,
             @RequestParam("nodeId") String nodeId,
             @RequestParam(value = "description", required = false) String description) {
-        return service.createNode(loginUser, projectCode, clusterCode, nodeName, nodeId, description);
+        return service.createNode(loginUser, projectCode, clusterCode, nodeName, nodeKey, nodeId, from, description);
     }
 
     @Operation(summary = "updateNode", description = "UPDATE_PROJECT_CLUSTER")
@@ -88,17 +90,18 @@ public class ProjectNodeController extends BaseController {
             @PathVariable long projectCode,
             @PathVariable int clusterCode,
             @PathVariable("code") int nodeCode,
+            @RequestParam("nodeKey") String nodeKey,
             @RequestParam("nodeName") String nodeName,
             @RequestParam("nodeId") String nodeId,
             @RequestParam(value = "description", required = false) String description) {
-        return service.update(loginUser, projectCode, nodeCode, nodeName, nodeId, description);
+        return service.update(loginUser, projectCode, nodeCode, nodeName, nodeKey, nodeId, description);
     }
 
     @Operation(summary = "queryNodeList", description = "QUERY_PROJECT_CLUSTER_LIST")
     @Parameters({
             @Parameter(name = "projectCode", description = "PROJECT_CODE", schema = @Schema(implementation = long.class, example = "123456"))
     })
-    @GetMapping
+    @GetMapping("querylist")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_PROJECT_DETAILS_BY_CODE_ERROR)
     public Result<List<ProjectNode>> queryList(

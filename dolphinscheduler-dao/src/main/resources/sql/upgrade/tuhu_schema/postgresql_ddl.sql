@@ -6,6 +6,7 @@ CREATE TABLE t_ds_project_cluster (
     project_code BIGINT NOT NULL,
     cluster_id TEXT DEFAULT NULL,
     cluster_name TEXT DEFAULT NULL,
+    data_from TEXT DEFAULT NULL,
     appid TEXT DEFAULT NULL,
     user_id INTEGER DEFAULT NULL,
     des TEXT DEFAULT NULL,
@@ -25,6 +26,7 @@ CREATE TABLE t_ds_project_node (
     node_id TEXT DEFAULT NULL,
     node_key TEXT DEFAULT NULL,
     node_name TEXT DEFAULT NULL,
+    data_from TEXT DEFAULT NULL,
     des TEXT DEFAULT NULL,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP

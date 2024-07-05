@@ -7,13 +7,15 @@
       </NSpace>
     </NCard>
     <NCard>
-      <NDataTable :data="clusterListData" :columns="projectColumns" :loading="loadingRef" :width="tableWidth">
+      <NDataTable :data="clusterListData" :columns="projectColumns" :loading="loadingRef" :width="tableWidth"
+        :pagination="{ pageSize: 10 }">
       </NDataTable>
     </NCard>
     <NModal v-model:show="showParamModalRef" :show-icon="false" class="custom-card" preset="dialog"
       :title="modalParamMode" @positive-click="confirmParamModal" @negative-click="cancelParamModal" positive-text="确认"
       negative-text="取消">
-      <NForm :model="modalParamInfo" ref="formParamRef">
+      <NForm :model="modalParamInfo" ref="formParamRef" label-placement="left" label-width="auto"
+        require-mark-placement="right-hanging">
         <NFormItem label="参数名" path="paramName" :allowInput="trim">
           <NInput v-model:value="modalParamInfo.paramName" :disabled="modalParamMode === '查看'" />
         </NFormItem>
@@ -29,7 +31,8 @@
       :title="modalMode" @positive-click="confirmModal" @negative-click="cancelModal" positive-text="确认"
       negative-text="算了">
       <NCard>
-        <NForm :model="modalClusterInfo" ref="formRef" :rules="formRules">
+        <NForm :model="modalClusterInfo" ref="formRef" :rules="formRules" label-placement="left" label-width="auto"
+          require-mark-placement="right-hanging">
           <NFormItem label="集群Id" path="clusterId" :allowInput="trim">
             <NInput v-model:value="modalClusterInfo.clusterId"
               :disabled="modalMode === '查看' || modalClusterInfo.from === DataFromEnum.AUTO" />
@@ -49,7 +52,8 @@
         <NSpace justify='space-between'>
           <NButton size="small" type="primary" @click="addParamLogic" class='btn-create-project'>添加参数</NButton>
         </NSpace>
-        <NDataTable :data="clusterParmas" :columns="paramsColumns" :loading="loadingParamRef">
+        <NDataTable :data="clusterParmas" :columns="paramsColumns" :loading="loadingParamRef"
+          :pagination="{ pageSize: 10 }">
         </NDataTable>
       </NCard>
     </NModal>
@@ -70,6 +74,7 @@
 
   export default defineComponent({
     name: 'ProjectsCluster',
+    
     components: {
       NButton,
       NFormItemGi,
@@ -90,6 +95,7 @@
       NDataTable,
       NPagination
     },
+
     setup() {
       const columns = ref([
         { title: '集群ID', key: 'clusterId' },
@@ -184,8 +190,6 @@
           refreshClusterData();
         });
       }
-
-
 
       const projectColumns = useClusterTable({
         deleteLogic: deleteClusterLogic,

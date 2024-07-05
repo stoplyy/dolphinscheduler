@@ -25,9 +25,18 @@ import org.apache.dolphinscheduler.dao.entity.User;
 
 public interface ProjectNodeService {
 
+    /**
+     * 同步平台的节点数据（新增、删除）
+     * 
+     * @param loginUser
+     * @param projectCode
+     * @param clusterCode
+     * @return
+     */
+    Result<Boolean> syncNodeFromPlatform(User loginUser, long projectCode, Integer clusterCode);
+
     Result<ProjectNode> createNode(User loginUser, long projectCode, Integer clusterCode, String nodeName,
-            String nodeId,
-            String desc);
+            String nodeKey, String nodeId, String from, String desc);
 
     Result<List<ProjectNode>> queryList(User loginUser, long projectCode, Integer clusterCode);
 
@@ -46,7 +55,7 @@ public interface ProjectNodeService {
      * @param loginUser login user
      * @return update result code
      */
-    Result<ProjectNode> update(User loginUser, long projectCode, Integer code, String nodeName,
+    Result<ProjectNode> update(User loginUser, long projectCode, Integer code, String nodeName, String nodeKey,
             String nodeId, String desc);
 
 }

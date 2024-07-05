@@ -28,6 +28,7 @@ export function useParamsTable(object: DataTableRowOper) {
       {
         title: 'Name',
         key: 'paramName',
+        sorter: (rowA: CommonParameter, rowB: CommonParameter) => rowA.paramName.localeCompare(rowB.paramName),
         ...COLUMN_WIDTH_CONFIG['type']
       },
       {
@@ -117,6 +118,6 @@ export function useParamsTable(object: DataTableRowOper) {
         }
       }
     ]
-
+  
   return columns
 }

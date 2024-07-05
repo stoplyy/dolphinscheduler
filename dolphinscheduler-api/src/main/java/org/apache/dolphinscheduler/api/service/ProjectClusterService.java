@@ -17,10 +17,11 @@
 
 package org.apache.dolphinscheduler.api.service;
 
+import java.util.List;
+
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
 import org.apache.dolphinscheduler.dao.entity.User;
-import java.util.List;
 
 /**
  * project service
@@ -42,7 +43,7 @@ public interface ProjectClusterService {
      *
      * @return project list which the login user have permission to see
      */
-    Result<List<ProjectCluster>> queryProjectListPaging(User loginUser, long projectCode);
+    Result<List<ProjectCluster>> queryClusterListPaging(User loginUser, long projectCode);
 
     /**
      * delete project by code

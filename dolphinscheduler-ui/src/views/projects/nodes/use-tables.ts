@@ -34,27 +34,26 @@ export function useNodeTable(object: DataTableRowOper) {
         ...COLUMN_WIDTH_CONFIG['index'],
         render: (row: any, index: number) => index + 1
       },
-      // {
-      //   title: 'code',
-      //   key: 'id',
-      //   vShow: false,
-      //   ...COLUMN_WIDTH_CONFIG['index']
-      // },
       {
         title: 'ID',
         key: 'nodeId',
         ...COLUMN_WIDTH_CONFIG['index']
       },
       {
+        title: 'Key',
+        key: 'nodeKey',
+        ...COLUMN_WIDTH_CONFIG['name']
+      },
+      {
         title: 'Name',
         key: 'nodeName',
         ...COLUMN_WIDTH_CONFIG['name']
       },
-      {
-        title: "Tags",
-        key: "tags",
-        ...COLUMN_WIDTH_CONFIG['note']
-      },
+      // {
+      //   title: "Tags",
+      //   key: "tags",
+      //   ...COLUMN_WIDTH_CONFIG['note']
+      // },
       {
         title: "描述",
         key: "description",
@@ -71,10 +70,7 @@ export function useNodeTable(object: DataTableRowOper) {
         ...COLUMN_WIDTH_CONFIG['type'],
         render: (row: OpsNodeInfo) => {
           return h(NTag, { type: row.from === DataFromEnum.AUTO ? 'success' : 'info' }, {
-            default: () =>
-              row.from === DataFromEnum.AUTO ?
-                '接口导入' :
-                '手动添加'
+            default: () => row.from === DataFromEnum.AUTO ? '接口导入' : '手动添加'
           })
         }
       },
@@ -125,7 +121,7 @@ export function useNodeTable(object: DataTableRowOper) {
                           h(
                             NButton,
                             {
-                              disabled: row.from === DataFromEnum.AUTO,
+                              disabled: !(hasSync(row)),
                               circle: true,
                               type: 'error',
                               size: 'small'
@@ -134,7 +130,7 @@ export function useNodeTable(object: DataTableRowOper) {
                               icon: () => h(DeleteOutlined)
                             }
                           ),
-                        default: () => row.from === DataFromEnum.AUTO ? '导入不可删除' : '删除'
+                        default: () => hasSync(row) ? '删除' : '不可删除'
                       }
                     ),
                   default: () => '删除'

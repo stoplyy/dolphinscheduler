@@ -16,19 +16,24 @@ public class AutoPlatformFactory {
 
     private static final Map<String, StellarOpsOpenApiEndpoint> endpointCache = new ConcurrentHashMap<>();
 
-    public StellarOpsOpenApiEndpoint getClient(String appId) {
-        StellarOpsOpenApiEndpoint checkClient = endpointCache.get(appId);
+    /**
+     * 
+     * @param baseUrl  appid or baseUrl
+     * @return
+     */
+    public StellarOpsOpenApiEndpoint getClient(String baseUrl) {
+        StellarOpsOpenApiEndpoint checkClient = endpointCache.get(baseUrl);
         if (checkClient != null) {
             return checkClient;
         }
         synchronized (this) {
-            checkClient = endpointCache.get(appId);
+            checkClient = endpointCache.get(baseUrl);
             if (checkClient != null) {
                 return checkClient;
             }
 
-            checkClient = stellarOpsOpenApiFactory.createClient(appId);
-            endpointCache.put(appId, checkClient);
+            checkClient = stellarOpsOpenApiFactory.createClient(baseUrl);
+            endpointCache.put(baseUrl, checkClient);
             return checkClient;
         }
     }

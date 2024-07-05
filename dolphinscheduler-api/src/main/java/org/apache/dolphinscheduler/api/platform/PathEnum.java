@@ -1,6 +1,7 @@
 package org.apache.dolphinscheduler.api.platform;
 
 public enum PathEnum {
+    NONE("none"),
     CLUSTER_LIST("cluster.list.rest"),
     CLUSTER_PARAMS("cluster.params.rest"),
     NODE_LIST("node.list.rest"),
@@ -24,7 +25,6 @@ public enum PathEnum {
                 return value;
             }
         }
-        // 处理未知路径
-        throw new IllegalArgumentException("Unknown path: " + path);
+        return PathEnum.NONE;
     }
 }
