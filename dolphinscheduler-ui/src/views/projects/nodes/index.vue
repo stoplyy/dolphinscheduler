@@ -9,21 +9,22 @@
               <NButton type="primary" size="small" @click="refreshClusterData" class='btn-create-project'>刷新集群</NButton>
             </template>
           </NSelect>
-          <NButton type="primary" @click="nodesRefresh()" :disabled="loadingRef || !hasSelectCluster()"
+          <NButton type="primary" @click="nodesRefresh()" :disabled="loadingRef || !hasSelectedSyncCluster()"
             class='btn-create-project'>刷新节点</NButton>
         </NSpace>
         <NSpace>
-          <NButton type="primary" @click="addNodeLogic" :disabled="!hasSelectCluster()" class='btn-create-project'>添加节点
+          <NButton type="primary" @click="addNodeLogic" :disabled="!hasSelectedSyncCluster()"
+            class='btn-create-project'>添加节点
           </NButton>
           <NPopconfirm @positive-click="syncAllNode">
             <template #trigger>
               <NTooltip>
                 <template #trigger>
                   <NButton type="primary" class='btn-create-project'
-                    :disabled="loadingRef || !hasSelectCluster() || hasAnyNoSyncNode()">一键同步
+                    :disabled="loadingRef || !hasSelectedSyncCluster() || hasAnyNoSyncNode()">一键同步
                   </NButton>
                 </template>
-                <span>完全同步节点列表接口拉取的节点，会清理本地已落库但未在节点列表中的数据！</span>
+                <span>完全同步节点列表接口拉取的节点，会清理来源为导入但是并未在列表接口中的节点！来源为手动的不处理！</span>
               </NTooltip>
             </template>
             是否同步所有节点？
@@ -95,7 +96,7 @@
 </template>
 
 <script lang="ts">
-  import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, getPlatformNodeList, getPlatformRest, queryProjectNodeList, queryProjectNodeParametersList, updateProjectNode, updateProjectNodeParameter } from '@/service/modules/project-platform';
+  import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, getPlatformNodeListByProject, getPlatformRestByProject, queryProjectNodeList, queryProjectNodeParametersList, syncAllNodeData, updateProjectNode, updateProjectNodeParameter } from '@/service/modules/project-platform';
   import { PlatformRestEnum, ProjectNodeParameter } from '@/service/modules/project-platform/platform';
   import { NButton, NCard, NDataTable, NDialog, NDialogProvider, NPopconfirm, NDynamicTags, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable, NTooltip, SelectOption } from 'naive-ui';
   import { computed, defineComponent, getCurrentInstance, h, reactive, ref, VNode, watch } from 'vue';
@@ -167,7 +168,8 @@
       const selectOptions = computed(() => {
         return clusterListData.value?.map(cluster => ({
           label: cluster.clusterName,
-          value: cluster.clusterId
+          value: cluster.clusterId,
+          // disabled: !(cluster.id && cluster.id >= 0)
         })) || [];
       });
 
@@ -187,7 +189,7 @@
         }
       };
 
-      const hasSelectCluster = () => {
+      const hasSelectedSyncCluster = () => {
         return selectedCluster.value && selectedCluster.value.id > 0;
       }
 
@@ -204,7 +206,7 @@
 
         selectedCluster.value = clusterListData.value?.find((item) => item.clusterId === val) || {} as OpsClusterInfo;
 
-        const res = await getPlatformNodeList(projectName.value, val);
+        const res = await getPlatformNodeListByProject(projectCode.value, val);
         const nodeListDataTmp = res.map((item) => {
           return {
             ...item,
@@ -218,7 +220,6 @@
           if (!nodeListDataTmp.find((node) => node.nodeId === item.nodeId)) {
             nodeListDataTmp.push({
               ...item,
-              from: DataFromEnum.MANUAL,
               stellaropsClusterName: selectedCluster.value.clusterName,
             } as OpsNodeInfo);
           } else {
@@ -263,7 +264,12 @@
           showModalRef.value = true;
         },
         syncLogic: async (row) => {
+          if (!hasSelectedSyncCluster()) {
+            window.$message.error('集群尚未同步，无法操作节点信息！');
+            return;
+          }
           await createProjectNode(
+            DataFromEnum.AUTO,
             projectCode.value,
             selectedCluster.value.id,
             row.nodeKey,
@@ -279,21 +285,12 @@
       const syncAllNode = async () => {
         loadingRef.value = true;
 
-        nodesList.value.forEach(async (node) => {
-          if (!(node.id && node.id > 0) as boolean) {
-            await createProjectNode(
-              projectCode.value,
-              selectedCluster.value.id,
-              node.nodeKey,
-              node.nodeName,
-              node.nodeId,
-              '节点同步').then(() => {
-                console.log(node.nodeName + '同步成功');
-              });
+        await syncAllNodeData(projectCode.value, selectedCluster.value.id).then((res: boolean) => {
+          if (res) {
+            console.log('同步成功');
+            nodesRefresh();
           }
-        }
-        )
-        await nodesRefresh();
+        });
 
         loadingRef.value = false;
       };
@@ -305,7 +302,7 @@
           await queryProjectNodeParametersList(projectCode.value, modalNodeInfo.clusterCode, modalNodeInfo.id).then((res) => {
             nodeParams.value = res;
           });
-          await getPlatformRest(projectName.value, PlatformRestEnum.NODE_PARAMS, modalNodeInfo.clusterId, modalNodeInfo.nodeId, '').then((res) => {
+          await getPlatformRestByProject(projectCode.value, PlatformRestEnum.NODE_PARAMS, modalNodeInfo.clusterId, modalNodeInfo.nodeId, '').then((res) => {
             res.forEach((val, key) => {
               nodeParams.value.push({
                 paramName: key,
@@ -333,7 +330,6 @@
         Object.assign(modalNodeInfo, currentRow.value);
         modalMode.value = '创建';
         showModalRef.value = true;
-        console.log('node create init info:', modalNodeInfo);
       }
 
       const cancelModal = () => {
@@ -344,6 +340,7 @@
       const confirmModal = async () => {
         if (modalMode.value === '创建') {
           await createProjectNode(
+            DataFromEnum.MANUAL,
             modalNodeInfo.projectCode,
             modalNodeInfo.clusterCode,
             modalNodeInfo.nodeKey,
@@ -357,6 +354,7 @@
         } else if (modalMode.value === '修改') {
           if (!modalNodeInfo.id || modalNodeInfo.id <= 0) {
             await createProjectNode(
+              DataFromEnum.MANUAL,
               modalNodeInfo.projectCode,
               modalNodeInfo.clusterCode,
               modalNodeInfo.nodeKey,
@@ -452,7 +450,7 @@
         clusterTags,
         tableWidth,
         nodeColumns,
-        hasSelectCluster,
+        hasSelectedSyncCluster,
         refreshClusterData,
         nodesRefresh,
         renderOption,

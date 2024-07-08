@@ -22,10 +22,10 @@ import static org.apache.dolphinscheduler.api.service.impl.ProjectServiceImpl.ch
 import java.util.Date;
 import java.util.List;
 
+import org.apache.dolphinscheduler.api.controller.PlatformOpenApiController;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.platform.PlatformRestService;
 import org.apache.dolphinscheduler.api.platform.enums.DataFrom;
-import org.apache.dolphinscheduler.api.platform.facade.PlatformOpenApi;
 import org.apache.dolphinscheduler.api.service.DataSourceService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
@@ -69,87 +69,13 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
     private ProjectClusterMapper clusterMapper;
 
     @Autowired
-    PlatformOpenApi platformOpenApi;
+    PlatformOpenApiController platformOpenApi;
 
     @Autowired
     private ProjectMapper projectMapper;
 
     @Autowired
     PlatformRestService platformRestService;
-
-    @Override
-    public Result<Boolean> syncNodeFromPlatform(User loginUser, long projectCode, Integer clusterCode) {
-        Result<Boolean> result = new Result<>();
-        result.setData(false);
-
-        Project project = projectMapper.queryByCode(projectCode);
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
-
-        ProjectCluster cluster = clusterMapper.selectById(clusterCode);
-        if (cluster == null) {
-            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, clusterCode);
-            return result;
-        }
-
-        Result<List<StellarOpsNodeInfo>> platFormNodes = platformOpenApi.getPlatformNodeList(
-                project.getName(), cluster.getClusterId(), "");
-
-        if (platFormNodes.getCode() != Status.SUCCESS.getCode()) {
-            putMsg(result, Status.INTERNAL_SERVER_ERROR_ARGS, platFormNodes.getMsg());
-            return result;
-        }
-
-        List<StellarOpsNodeInfo> nodes = platFormNodes.getData();
-        if (nodes == null || nodes.isEmpty()) {
-            putMsg(result, Status.INTERNAL_SERVER_ERROR_ARGS, "No nodes found in platform.");
-            return result;
-        }
-
-        List<ProjectNode> projectList = projectNodeMapper
-                .selectList(new QueryWrapper<ProjectNode>().lambda()
-                        .eq(ProjectNode::getClusterCode, clusterCode)
-                        .eq(ProjectNode::getFrom, DataFrom.AUTO.getValue()));
-        List<ProjectNode> needInserList = new java.util.ArrayList<>();
-        List<ProjectNode> needDeleteList = new java.util.ArrayList<>();
-        for (StellarOpsNodeInfo node : nodes) {
-            ProjectNode projectNode = projectList.stream()
-                    .filter(p -> p.getNodeId().equals(node.getNodeId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (projectNode == null) {
-                needInserList.add(
-                        buildNewProjectNode(loginUser, projectCode, clusterCode, node.getNodeName(), node.getNodeKey(),
-                                node.getNodeId(), DataFrom.AUTO.getValue(), "一键同步", cluster));
-            }
-        }
-
-        for (ProjectNode projectNode : projectList) {
-            StellarOpsNodeInfo node = nodes.stream()
-                    .filter(p -> p.getNodeId().equals(projectNode.getNodeId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (node == null) {
-                needDeleteList.add(projectNode);
-            }
-        }
-
-        log.info("Sync project node from platform, projectCode:{}, clusterCode:{}, needInserList:{}, needDeleteList:{}",
-                projectCode, clusterCode, needInserList.size(), needDeleteList.size());
-
-        if (!needInserList.isEmpty()) {
-            needInserList.forEach(p -> projectNodeMapper.insert(p));
-        }
-
-        if (!needDeleteList.isEmpty()) {
-            needDeleteList.forEach(p -> projectNodeMapper.deleteById(p.getId()));
-        }
-
-        result.setData(true);
-        return result;
-    }
 
     @Override
     public Result<ProjectNode> createNode(User loginUser, long projectCode, Integer clusterCode, String nodeName,
@@ -302,5 +228,79 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
             putMsg(result, Status.UPDATE_PROJECT_ERROR);
         }
         return result;
+    }
+
+    @Override
+    public Result<Boolean> syncNodes(User loginUser, long projectCode, int clusterCode) {
+        Result<Boolean> result = new Result<>();
+        result.setData(false);
+
+        Project project = projectMapper.queryByCode(projectCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
+
+        ProjectCluster cluster = clusterMapper.selectById(clusterCode);
+        if (cluster == null) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, clusterCode);
+            return result;
+        }
+
+        Result<List<StellarOpsNodeInfo>> platFormNodes = platformOpenApi.queryNodeListByPlatform(loginUser,
+                project.getCode(), cluster.getClusterId());
+
+        if (platFormNodes.getCode() != Status.SUCCESS.getCode()) {
+            putMsg(result, Status.INTERNAL_SERVER_ERROR_ARGS, platFormNodes.getMsg());
+            return result;
+        }
+
+        List<StellarOpsNodeInfo> nodes = platFormNodes.getData();
+        if (nodes == null || nodes.isEmpty()) {
+            putMsg(result, Status.INTERNAL_SERVER_ERROR_ARGS, "No nodes found in platform.");
+            return result;
+        }
+
+        List<ProjectNode> projectNodeList = projectNodeMapper
+                .selectList(new QueryWrapper<ProjectNode>().lambda()
+                        .eq(ProjectNode::getClusterCode, clusterCode)
+                        .eq(ProjectNode::getFrom, DataFrom.AUTO.getValue()));
+
+        List<ProjectNode> needInserList = new java.util.ArrayList<>();
+        List<ProjectNode> needDeleteList = new java.util.ArrayList<>();
+        for (StellarOpsNodeInfo node : nodes) {
+            ProjectNode projectNode = projectNodeList.stream()
+                    .filter(p -> p.getNodeId().equals(node.getNodeId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (projectNode == null) {
+                needInserList.add(
+                        buildNewProjectNode(loginUser, projectCode, clusterCode, node.getNodeName(), node.getNodeKey(),
+                                node.getNodeId(), DataFrom.AUTO.getValue(), "一键同步", cluster));
+            }
+        }
+
+        for (ProjectNode projectNode : projectNodeList) {
+            StellarOpsNodeInfo node = nodes.stream()
+                    .filter(p -> p.getNodeId().equals(projectNode.getNodeId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (node == null) {
+                needDeleteList.add(projectNode);
+            }
+        }
+
+        log.info("Sync project node from platform, projectCode:{}, clusterCode:{}, needInserList:{}, needDeleteList:{}",
+                projectCode, clusterCode, needInserList.size(), needDeleteList.size());
+
+        if (!needInserList.isEmpty()) {
+            needInserList.forEach(p -> projectNodeMapper.insert(p));
+        }
+
+        if (!needDeleteList.isEmpty()) {
+            needDeleteList.forEach(p -> projectNodeMapper.deleteById(p.getId()));
+        }
+
+        return Result.success(true);
     }
 }

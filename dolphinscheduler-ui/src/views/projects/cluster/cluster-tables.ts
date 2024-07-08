@@ -6,10 +6,10 @@ import { DeleteOutlined, EditOutlined, SyncOutlined } from '@vicons/antd'
 import {
   COLUMN_WIDTH_CONFIG
 } from '@/common/column-width-config'
-import { getPlatformClusterList, queryProjectClusterList } from "@/service/modules/project-platform";
+import { getPlatformClusterListByProject, queryProjectClusterList } from "@/service/modules/project-platform";
 
 export async function getClusterData(projectName: string, projectCode: number) {
-  const res = await getPlatformClusterList(projectName);
+  const res = await getPlatformClusterListByProject(projectCode);
   const clusterListDataTmp = res.map(item => ({
     ...item,
     from: DataFromEnum.AUTO

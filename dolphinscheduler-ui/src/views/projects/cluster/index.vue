@@ -65,16 +65,16 @@
   import { defineComponent, getCurrentInstance, reactive, ref } from 'vue';
   import type { Router } from 'vue-router';
   import { useRouter } from 'vue-router';
-  import { useClusterTable, getClusterData } from './cluster-tables';
+  import { getClusterData, useClusterTable } from './cluster-tables';
   import { DataFromEnum, OpsClusterInfo } from './types';
 
-  import { createClusterParameter, createProjectCluster, deleteClusterParameter, deleteProjectCluster, getPlatformClusterList, getPlatformRest, queryClusterParametersList, queryProjectClusterList, updateClusterParameter, updateProjectCluster } from '@/service/modules/project-platform';
+  import { createClusterParameter, createProjectCluster, deleteClusterParameter, deleteProjectCluster, getPlatformRestByProject, queryClusterParametersList, updateClusterParameter, updateProjectCluster } from '@/service/modules/project-platform';
   import { PlatformRestEnum, ProjectClusterParameter } from '@/service/modules/project-platform/platform';
   import { useParamsTable } from './params-tables';
 
   export default defineComponent({
     name: 'ProjectsCluster',
-    
+
     components: {
       NButton,
       NFormItemGi,
@@ -157,7 +157,7 @@
         await queryClusterParametersList(projectCode.value, modalClusterInfo.id).then((res) => {
           clusterParmas.value = res;
         });
-        await getPlatformRest(projectName.value, PlatformRestEnum.CLUSTER_PARAMS, modalClusterInfo.clusterId, '', '').then((res) => {
+        await getPlatformRestByProject(projectCode.value, PlatformRestEnum.CLUSTER_PARAMS, modalClusterInfo.clusterId, '', '').then((res) => {
           res.forEach((val, key) => {
             clusterParmas.value.push({
               paramName: key,
@@ -185,7 +185,7 @@
       }
 
       const syncClusterLogic = async (row: OpsClusterInfo) => {
-        await createProjectCluster(projectCode.value, row.clusterName, row.clusterId, row.description).then(() => {
+        await createProjectCluster(DataFromEnum.AUTO, projectCode.value, row.clusterName, row.clusterId, row.description).then(() => {
           //弹窗提示成功
           refreshClusterData();
         });
@@ -205,14 +205,14 @@
       const confirmModal = async () => {
         Object.assign(currentRowCluster.value, modalClusterInfo);
         if (modalMode.value === '创建') {
-          await createProjectCluster(projectCode.value, modalClusterInfo.clusterName, modalClusterInfo.clusterId, modalClusterInfo.description).then(() => {
+          await createProjectCluster(DataFromEnum.MANUAL, projectCode.value, modalClusterInfo.clusterName, modalClusterInfo.clusterId, modalClusterInfo.description).then(() => {
             console.log('创建成功');
             showModalRef.value = false;
             refreshClusterData();
           });
         } else if (modalMode.value === '修改') {
           if (!modalClusterInfo.id) {
-            await createProjectCluster(projectCode.value, modalClusterInfo.clusterName, modalClusterInfo.clusterId, modalClusterInfo.description).then(() => {
+            await createProjectCluster(DataFromEnum.MANUAL, projectCode.value, modalClusterInfo.clusterName, modalClusterInfo.clusterId, modalClusterInfo.description).then(() => {
               console.log('修改成功');
               showModalRef.value = false;
               refreshClusterData();

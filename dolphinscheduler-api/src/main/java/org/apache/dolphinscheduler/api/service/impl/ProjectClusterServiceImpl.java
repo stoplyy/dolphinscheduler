@@ -59,7 +59,8 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
     PlatformRestService platformRestService;
 
     @Override
-    public Result<ProjectCluster> createCluster(User loginUser, long projectCode, String name, String clusterId,
+    public Result<ProjectCluster> createCluster(User loginUser, String from, long projectCode, String name,
+            String clusterId,
             String desc) {
         Result<ProjectCluster> result = new Result<>();
 
@@ -89,6 +90,7 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
                     .clusterName(name)
                     .projectCode(projectCode)
                     .description(desc)
+                    .from(from)
                     .userId(loginUser.getId())
                     .userName(loginUser.getUserName())
                     .createTime(now)

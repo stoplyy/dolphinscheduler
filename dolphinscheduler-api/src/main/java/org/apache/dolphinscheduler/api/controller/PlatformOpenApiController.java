@@ -2,6 +2,7 @@ package org.apache.dolphinscheduler.api.controller;
 
 import static org.apache.dolphinscheduler.api.enums.Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +17,6 @@ import org.apache.dolphinscheduler.api.platform.common.JSONUtils;
 import org.apache.dolphinscheduler.api.platform.common.PlatformConstant;
 import org.apache.dolphinscheduler.api.platform.common.RestParamEntry;
 import org.apache.dolphinscheduler.api.platform.facade.PlatformOpenApi;
-import org.apache.dolphinscheduler.api.service.ProjectClusterService;
-import org.apache.dolphinscheduler.api.service.ProjectNodeService;
 import org.apache.dolphinscheduler.api.service.ProjectParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
@@ -37,15 +36,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tuhu.boot.common.facade.response.BizResponse;
+import com.tuhu.dolphin.common.JsonUtils;
 import com.tuhu.stellarops.client.core.StellarOpsClusterInfo;
 import com.tuhu.stellarops.client.core.StellarOpsNodeInfo;
 import com.tuhu.stellarops.client.spring.endpoint.StellarOpsOpenApiEndpoint;
 
 import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,12 +61,6 @@ public class PlatformOpenApiController implements PlatformOpenApi {
 
     @Autowired
     ProjectService projectService;
-
-    @Autowired
-    private ProjectClusterService clusterService;
-
-    @Autowired
-    private ProjectNodeService nodeService;
 
     @Autowired
     PlatformRestService platformRestService;
@@ -238,7 +229,7 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             return list;
         } else {
             log.warn("Project:{} cluster list not found.", pj.getData().getName());
-            return new Result<>();
+            return Result.success(new ArrayList<>());
         }
     }
 
@@ -251,6 +242,7 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             @PathVariable String clusterId) {
 
         Result<Project> pj = projectService.queryByCode(loginUser, projectCode);
+
         if (!pj.isSuccess()) {
             return Result.errorWithArgs(Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR, "project not found");
         }
@@ -268,8 +260,8 @@ public class PlatformOpenApiController implements PlatformOpenApi {
         if (list.isSuccess()) {
             return list;
         } else {
-            log.warn("Project:{} cluster list not found.", pj.getData().getName());
-            return new Result<>();
+            log.warn("Project:{} cluster:{} node list not found.", pj.getData().getName(), clusterId);
+            return Result.success(new ArrayList<>());
         }
     }
 
@@ -303,6 +295,12 @@ public class PlatformOpenApiController implements PlatformOpenApi {
                 .build(clusterId, nodeId, taskName)
                 .buildRestParamEntiy(platformParamList.getData().getTotalList());
 
-        return platformRestService.getRest(entry, path);
+        Result<Map<String, Object>> result = platformRestService.getRest(entry, path);
+        if (result.isSuccess()) {
+            return result;
+        } else {
+            log.warn("request rest:{} failed. result:{}", rest, JsonUtils.toJson(result));
+            return Result.success(new HashMap<>());
+        }
     }
 }

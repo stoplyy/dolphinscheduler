@@ -1,9 +1,21 @@
 
 import { axios } from '@/service/service'
 import { PlatformRestEnum, ProjectCluster, ProjectClusterParameter, ProjectNode, ProjectNodeParameter, StellarOpsClusterInfo, StellarOpsNodeInfo } from './platform'
+import { DataFromEnum } from '@/views/projects/cluster/types';
 
 
-export async function getPlatformClusterList(platform: String): Promise<StellarOpsClusterInfo[]> {
+
+
+// 查询项目群集列表
+export async function getPlatformClusterListByProject(projectCode: number): Promise<StellarOpsClusterInfo[]> {
+  const data = await axios({
+    url: `/platform/${projectCode}/clusterlist`,
+    method: 'get'
+  });
+  return data as unknown as StellarOpsClusterInfo[];
+}
+
+export async function getPlatformClusterList1(platform: String): Promise<StellarOpsClusterInfo[]> {
   const response = await axios({
     url: `/platform/${platform}/cluster/list`,
     method: 'get'
@@ -11,7 +23,18 @@ export async function getPlatformClusterList(platform: String): Promise<StellarO
   return response as unknown as StellarOpsClusterInfo[];
 }
 
-export async function getPlatformNodeList(platform: String, clusterId: String, taskName?: String): Promise<StellarOpsNodeInfo[]> {
+export async function getPlatformNodeListByProject(projectCode: number, clusterId: String, taskName?: String): Promise<StellarOpsNodeInfo[]> {
+  const response = await axios({
+    url: `/platform/${projectCode}/nodelist/${clusterId}`,
+    method: 'get',
+    params: {
+      taskName
+    }
+  })
+  return response as unknown as StellarOpsNodeInfo[];
+}
+
+export async function getPlatformNodeList1(platform: String, clusterId: String, taskName?: String): Promise<StellarOpsNodeInfo[]> {
   const response = await axios({
     url: `/platform/${platform}/node/list/${clusterId}`,
     method: 'get',
@@ -22,7 +45,22 @@ export async function getPlatformNodeList(platform: String, clusterId: String, t
   return response as unknown as StellarOpsNodeInfo[];
 }
 
-export async function getPlatformRest(platform: String, rest: PlatformRestEnum, clusterId?: String, nodeId?: String, taskType?: String): Promise<Map<string, Object>> {
+export async function getPlatformRestByProject(projectCode: number, rest: PlatformRestEnum, clusterId?: String, nodeId?: String, taskType?: String): Promise<Map<string, Object>> {
+  const response = await axios({
+    url: `/platform/${projectCode}/rest`,
+    method: 'get',
+    params: {
+      rest,
+      clusterId,
+      nodeId,
+      taskType
+    }
+  })
+  return new Map(Object.entries(response == null ? {} : response));
+}
+
+
+export async function getPlatformRest1(platform: String, rest: PlatformRestEnum, clusterId?: String, nodeId?: String, taskType?: String): Promise<Map<string, Object>> {
   const response = await axios({
     url: `/platform/${platform}/rest/${rest}`,
     method: 'get',
@@ -36,11 +74,12 @@ export async function getPlatformRest(platform: String, rest: PlatformRestEnum, 
 }
 
 // 创建项目群集
-export async function createProjectCluster(projectCode: number, clusterName: string, clusterId: string, description?: string): Promise<ProjectCluster> {
+export async function createProjectCluster(from: DataFromEnum, projectCode: number, clusterName: string, clusterId: string, description?: string): Promise<ProjectCluster> {
   const data = await axios({
     url: `/projects/${projectCode}/project-cluster`,
     method: 'post',
     data: {
+      from,
       clusterName,
       clusterId,
       description
@@ -62,7 +101,7 @@ export async function updateProjectCluster(projectCode: number, clusterInfo?: Pr
 // 查询项目群集列表
 export async function queryProjectClusterList(projectCode: number): Promise<ProjectCluster[]> {
   const data = await axios({
-    url: `/projects/${projectCode}/project-cluster`,
+    url: `/projects/${projectCode}/project-cluster/querylist`,
     method: 'get'
   });
   return data as unknown as ProjectCluster[];
@@ -140,12 +179,21 @@ export async function queryClusterParameterByCode(projectCode: number, parameter
   return data as unknown as ProjectClusterParameter;
 }
 
+export async function syncAllNodeData(projectCode: number, clusterCode: number): Promise<boolean> {
+  const data = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/all/sync`,
+    method: 'post'
+  });
+  return data as unknown as boolean;
+}
+
 // 创建项目节点
-export async function createProjectNode(projectCode: number, clusterCode: number, nodeKey: string, nodeName: string, nodeId: string, description?: string): Promise<ProjectNode> {
+export async function createProjectNode(from: DataFromEnum, projectCode: number, clusterCode: number, nodeKey: string, nodeName: string, nodeId: string, description?: string): Promise<ProjectNode> {
   const response = await axios({
     url: `/projects/${projectCode}/project-node/${clusterCode}`,
     method: 'post',
     data: {
+      from,
       nodeKey,
       nodeName,
       nodeId,
@@ -181,8 +229,11 @@ export async function deleteProjectNode(projectCode: number, clusterCode: number
 
 // 查询项目节点列表
 export async function queryProjectNodeList(projectCode: number, clusterCode: number): Promise<ProjectNode[]> {
+  if (!clusterCode || clusterCode == null) {
+    return [];
+  }
   const response = await axios({
-    url: `/projects/${projectCode}/project-node/${clusterCode}`,
+    url: `/projects/${projectCode}/project-node/${clusterCode}/querylist`,
     method: 'get'
   });
   return response as unknown as ProjectNode[];

@@ -69,7 +69,7 @@ public class ProjectClusterController extends BaseController {
             @RequestParam("clusterName") String clusterName,
             @RequestParam("clusterId") String clusterId,
             @RequestParam(value = "description", required = false) String description) {
-        return service.createCluster(loginUser, projectCode, clusterName, clusterId, description);
+        return service.createCluster(loginUser, from, projectCode, clusterName, clusterId, description);
     }
 
     @Operation(summary = "updateCluster", description = "UPDATE_PROJECT_CLUSTER")

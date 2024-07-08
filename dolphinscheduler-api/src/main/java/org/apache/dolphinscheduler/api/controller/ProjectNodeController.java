@@ -228,4 +228,15 @@ public class ProjectNodeController extends BaseController {
             @PathVariable("code") Integer parameterCode) {
         return paramService.queryParameterByCode(loginUser, projectCode, parameterCode);
     }
+
+    @PostMapping(value = "/all/sync")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<Boolean> syncNodes(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode) {
+        return service.syncNodes(loginUser, projectCode, clusterCode);
+    }
+
 }
