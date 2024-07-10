@@ -348,8 +348,7 @@ public class TaskConstants {
     /**
      * hadoop.security.authentication
      */
-    public static final String HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE =
-            "hadoop.security.authentication.startup.state";
+    public static final String HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE = "hadoop.security.authentication.startup.state";
 
     /**
      * hdfs/s3 configuration
@@ -379,6 +378,15 @@ public class TaskConstants {
     public static final Set<String> TASK_TYPE_SET_K8S = Sets.newHashSet("K8S", "KUBEFLOW");
 
     public static final String TASK_TYPE_BLOCKING = "BLOCKING";
+
+    /**
+     * resource.storage.type: jfrog
+     */
+    public static String JFROG_REPO_NAME = "resource.jfrog.repo.name";
+    public static String JFROG_URL = "resource.jfrog.url";
+    public static String JFROG_USERNAME = "resource.jfrog.user";
+    public static String JFROG_DIR_PREFIX = "resource.jfrog.dir.prefix";
+    public static String JFROG_PASSWORD = "resource.jfrog.password";
 
     /**
      * azure config

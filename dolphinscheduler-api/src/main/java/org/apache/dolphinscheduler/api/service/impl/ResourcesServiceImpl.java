@@ -109,20 +109,20 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * create directory
      *
-     * @param loginUser   login user
-     * @param name        alias
-     * @param type        type
-     * @param pid         parent id
-     * @param currentDir  current directory
+     * @param loginUser  login user
+     * @param name       alias
+     * @param type       type
+     * @param pid        parent id
+     * @param currentDir current directory
      * @return create directory result
      */
     @Override
     @Transactional
     public Result<Object> createDirectory(User loginUser,
-                                          String name,
-                                          ResourceType type,
-                                          int pid,
-                                          String currentDir) {
+            String name,
+            ResourceType type,
+            int pid,
+            String currentDir) {
         Result<Object> result = new Result<>();
         if (FileUtils.directoryTraversal(name)) {
             log.warn("Parameter name is invalid, name:{}.", RegexUtils.escapeNRT(name));
@@ -183,10 +183,10 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     @Override
     @Transactional
     public Result<Object> createResource(User loginUser,
-                                         String name,
-                                         ResourceType type,
-                                         MultipartFile file,
-                                         String currentDir) {
+            String name,
+            ResourceType type,
+            MultipartFile file,
+            String currentDir) {
         Result<Object> result = new Result<>();
 
         User user = userMapper.selectById(loginUser.getId());
@@ -266,23 +266,25 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * update resource
      *
-     * @param loginUser  login user
+     * @param loginUser        login user
      * @param resourceFullName resource full name
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
-     * @param name       name
-     * @param type       resource type
-     * @param file       resource file
+     * @param resTenantCode    tenantCode in the request field "resTenantCode" for
+     *                         tenant code owning the resource,
+     *                         can be different from the login user in the case of
+     *                         logging in as admin users.
+     * @param name             name
+     * @param type             resource type
+     * @param file             resource file
      * @return update result code
      */
     @Override
     @Transactional
     public Result<Object> updateResource(User loginUser,
-                                         String resourceFullName,
-                                         String resTenantCode,
-                                         String name,
-                                         ResourceType type,
-                                         MultipartFile file) {
+            String resourceFullName,
+            String resTenantCode,
+            String name,
+            ResourceType type,
+            MultipartFile file) {
         Result<Object> result = new Result<>();
 
         User user = userMapper.selectById(loginUser.getId());
@@ -323,7 +325,8 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
         String originFullName = resource.getFullName();
         String originResourceName = resource.getAlias();
 
-        // the format of hdfs folders in the implementation has a "/" at the very end, we need to remove it.
+        // the format of hdfs folders in the implementation has a "/" at the very end,
+        // we need to remove it.
         originFullName = originFullName.endsWith("/") ? StringUtils.chop(originFullName) : originFullName;
         name = name.endsWith("/") ? StringUtils.chop(name) : name;
         // updated fullName
@@ -439,7 +442,8 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
                 return result;
             }
 
-            // If resource type is UDF, only jar packages are allowed to be uploaded, and the suffix must be .jar
+            // If resource type is UDF, only jar packages are allowed to be uploaded, and
+            // the suffix must be .jar
             if (Constants.UDF.equals(type.name()) && !JAR.equalsIgnoreCase(fileSuffix)) {
                 log.warn(Status.UDF_RESOURCE_SUFFIX_NOT_JAR.getMsg());
                 putMsg(result, Status.UDF_RESOURCE_SUFFIX_NOT_JAR);
@@ -459,21 +463,23 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * query resources list paging
      *
-     * @param loginUser login user
-     * @param fullName resource full name
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
-     * @param type      resource type
-     * @param searchVal search value
-     * @param pageNo    page number
-     * @param pageSize  page size
+     * @param loginUser     login user
+     * @param fullName      resource full name
+     * @param resTenantCode tenantCode in the request field "resTenantCode" for
+     *                      tenant code owning the resource,
+     *                      can be different from the login user in the case of
+     *                      logging in as admin users.
+     * @param type          resource type
+     * @param searchVal     search value
+     * @param pageNo        page number
+     * @param pageSize      page size
      * @return resource list page
      */
     @Override
     public Result<PageInfo<StorageEntity>> queryResourceListPaging(User loginUser, String fullName,
-                                                                   String resTenantCode,
-                                                                   ResourceType type, String searchVal, Integer pageNo,
-                                                                   Integer pageSize) {
+            String resTenantCode,
+            ResourceType type, String searchVal, Integer pageNo,
+            Integer pageSize) {
         Result<PageInfo<StorageEntity>> result = new Result<>();
         PageInfo<StorageEntity> pageInfo = new PageInfo<>(pageNo, pageSize);
         if (storageOperate == null) {
@@ -523,11 +529,11 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     }
 
     private List<StorageEntity> queryStorageEntityList(User loginUser, String fullName, ResourceType type,
-                                                       String tenantCode, boolean recursive) {
+            String tenantCode, boolean recursive) {
         String defaultPath = "";
         List<StorageEntity> resourcesList = new ArrayList<>();
-        String resourceStorageType =
-                PropertyUtils.getString(Constants.RESOURCE_STORAGE_TYPE, ResUploadType.LOCAL.name());
+        String resourceStorageType = PropertyUtils.getString(Constants.RESOURCE_STORAGE_TYPE,
+                ResUploadType.LOCAL.name());
         if (isAdmin(loginUser) && StringUtils.isBlank(fullName)) {
             // list all tenants' resources to admin users in the root directory
             List<User> userList = userMapper.selectList(null);
@@ -589,7 +595,8 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
      */
     private void createDirectory(User loginUser, String fullName, ResourceType type, Result<Object> result) {
         String tenantCode = tenantMapper.queryById(loginUser.getTenantId()).getTenantCode();
-        // String directoryName = storageOperate.getFileName(type, tenantCode, fullName);
+        // String directoryName = storageOperate.getFileName(type, tenantCode,
+        // fullName);
         String resourceRootPath = storageOperate.getDir(type, tenantCode);
         try {
             if (!storageOperate.exists(resourceRootPath)) {
@@ -766,17 +773,19 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * delete resource
      *
-     * @param loginUser  login user
-     * @param fullName resource full name
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
+     * @param loginUser     login user
+     * @param fullName      resource full name
+     * @param resTenantCode tenantCode in the request field "resTenantCode" for
+     *                      tenant code owning the resource,
+     *                      can be different from the login user in the case of
+     *                      logging in as admin users.
      * @return delete result code
      * @throws IOException exception
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Result<Object> delete(User loginUser, String fullName,
-                                 String resTenantCode) throws IOException {
+            String resTenantCode) throws IOException {
         Result<Object> result = new Result<>();
 
         User user = userMapper.selectById(loginUser.getId());
@@ -888,15 +897,18 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * verify resource by full name or pid and type
      *
-     * @param fileName resource file name
-     * @param type     resource type
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
-     * @return true if the resource full name or pid not exists, otherwise return false
+     * @param fileName      resource file name
+     * @param type          resource type
+     * @param resTenantCode tenantCode in the request field "resTenantCode" for
+     *                      tenant code owning the resource,
+     *                      can be different from the login user in the case of
+     *                      logging in as admin users.
+     * @return true if the resource full name or pid not exists, otherwise return
+     *         false
      */
     @Override
     public Result<Object> queryResourceByFileName(User loginUser, String fileName, ResourceType type,
-                                                  String resTenantCode) {
+            String resTenantCode) {
         Result<Object> result = new Result<>();
         if (StringUtils.isBlank(fileName)) {
             putMsg(result, Status.REQUEST_PARAMS_NOT_VALID_ERROR);
@@ -939,14 +951,17 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
 
     /**
      * get resource by id
-     * @param fullName resource full name
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
+     * 
+     * @param fullName      resource full name
+     * @param resTenantCode tenantCode in the request field "resTenantCode" for
+     *                      tenant code owning the resource,
+     *                      can be different from the login user in the case of
+     *                      logging in as admin users.
      * @return resource
      */
     @Override
     public Result<Object> queryResourceByFullName(User loginUser, String fullName, String resTenantCode,
-                                                  ResourceType type) throws IOException {
+            ResourceType type) throws IOException {
         Result<Object> result = new Result<>();
 
         User user = userMapper.selectById(loginUser.getId());
@@ -986,15 +1001,15 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * view resource file online
      *
-     * @param fullName  resource fullName
-     * @param resTenantCode  owner's tenant code of the resource
-     * @param skipLineNum skip line number
-     * @param limit       limit
+     * @param fullName      resource fullName
+     * @param resTenantCode owner's tenant code of the resource
+     * @param skipLineNum   skip line number
+     * @param limit         limit
      * @return resource content
      */
     @Override
     public Result<Object> readResource(User loginUser, String fullName, String resTenantCode,
-                                       int skipLineNum, int limit) {
+            int skipLineNum, int limit) {
         Result<Object> result = new Result<>();
 
         User user = userMapper.selectById(loginUser.getId());
@@ -1066,7 +1081,7 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     @Override
     @Transactional
     public Result<Object> onlineCreateResource(User loginUser, ResourceType type, String fileName, String fileSuffix,
-                                               String content, String currentDir) {
+            String content, String currentDir) {
         Result<Object> result = new Result<>();
 
         User user = userMapper.selectById(loginUser.getId());
@@ -1109,7 +1124,7 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
         if (!currentDir.contains(userResRootPath)) {
             fullName = userResRootPath + name;
         } else {
-            fullName = currentDir + name;
+            fullName = (currentDir.endsWith(FOLDER_SEPARATOR) ? currentDir : currentDir + FOLDER_SEPARATOR) + name;
         }
 
         result = verifyResourceName(fullName, type, loginUser);
@@ -1127,7 +1142,7 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     @Override
     @Transactional
     public StorageEntity createOrUpdateResource(String userName, String filepath,
-                                                String resourceContent) throws Exception {
+            String resourceContent) throws Exception {
         User user = userMapper.queryByUserNameAccurately(userName);
         int suffixLabelIndex = filepath.indexOf(PERIOD);
         if (suffixLabelIndex == -1) {
@@ -1148,16 +1163,18 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     /**
      * updateProcessInstance resource
      *
-     * @param fullName resource full name
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
-     * @param content    content
+     * @param fullName      resource full name
+     * @param resTenantCode tenantCode in the request field "resTenantCode" for
+     *                      tenant code owning the resource,
+     *                      can be different from the login user in the case of
+     *                      logging in as admin users.
+     * @param content       content
      * @return update result cod
      */
     @Override
     @Transactional
     public Result<Object> updateResourceContent(User loginUser, String fullName, String resTenantCode,
-                                                String content) {
+            String content) {
         Result<Object> result = new Result<>();
         User user = userMapper.selectById(loginUser.getId());
         if (user == null) {
@@ -1212,9 +1229,9 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     }
 
     /**
-     * @param fullName resource full name
-     * @param tenantCode   tenant code
-     * @param content      content
+     * @param fullName   resource full name
+     * @param tenantCode tenant code
+     * @param content    content
      * @return result
      */
     private Result<Object> uploadContentToStorage(User loginUser, String fullName, String tenantCode, String content) {
@@ -1260,11 +1277,12 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
 
     /**
      * download file
+     * 
      * @return resource content
      */
     @Override
     public org.springframework.core.io.Resource downloadResource(User loginUser,
-                                                                 String fullName) {
+            String fullName) {
         if (fullName.endsWith("/")) {
             log.error("resource id {} is directory,can't download it", fullName);
             throw new ServiceException("can't download directory");
@@ -1472,20 +1490,24 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
     }
 
     /**
-     * check permission by comparing login user's tenantCode with tenantCode in the request
+     * check permission by comparing login user's tenantCode with tenantCode in the
+     * request
      *
-     * @param isAdmin is the login user admin
+     * @param isAdmin        is the login user admin
      * @param userTenantCode loginUser's tenantCode
-     * @param resTenantCode tenantCode in the request field "resTenantCode" for tenant code owning the resource,
-     *                      can be different from the login user in the case of logging in as admin users.
+     * @param resTenantCode  tenantCode in the request field "resTenantCode" for
+     *                       tenant code owning the resource,
+     *                       can be different from the login user in the case of
+     *                       logging in as admin users.
      * @return isValid
      */
     private boolean isUserTenantValid(boolean isAdmin, String userTenantCode,
-                                      String resTenantCode) throws ServiceException {
+            String resTenantCode) throws ServiceException {
         if (!isAdmin) {
             resTenantCode = resTenantCode == null ? "" : resTenantCode;
             if (!StringUtils.isBlank(resTenantCode) && !resTenantCode.equals(userTenantCode)) {
-                // if an ordinary user directly send a query API with a different tenantCode and fullName "",
+                // if an ordinary user directly send a query API with a different tenantCode and
+                // fullName "",
                 // still he/she does not have read permission.
                 return false;
             }

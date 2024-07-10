@@ -33,6 +33,7 @@ public interface StorageOperate {
 
     /**
      * if the resource of tenant 's exist, the resource of folder will be created
+     * 
      * @param tenantCode
      * @throws Exception
      */
@@ -40,6 +41,7 @@ public interface StorageOperate {
 
     /**
      * get the resource directory of tenant
+     * 
      * @param tenantCode
      * @return
      */
@@ -47,6 +49,7 @@ public interface StorageOperate {
 
     /**
      * return the udf directory of tenant
+     * 
      * @param tenantCode
      * @return
      */
@@ -54,6 +57,7 @@ public interface StorageOperate {
 
     /**
      * create the directory that the path of tenant wanted to create
+     * 
      * @param tenantCode
      * @param path
      * @return
@@ -63,6 +67,7 @@ public interface StorageOperate {
 
     /**
      * get the path of the resource file (fullName)
+     * 
      * @param tenantCode
      * @param fileName
      * @return
@@ -79,7 +84,8 @@ public interface StorageOperate {
             return filenameReplaceResDir;
         }
 
-        // Replace resource dir not effective in case of run workflow with different tenant from resource file's.
+        // Replace resource dir not effective in case of run workflow with different
+        // tenant from resource file's.
         // this is backup solution to get related path, by split with RESOURCE_TYPE_FILE
         return filenameReplaceResDir.contains(RESOURCE_TYPE_FILE)
                 ? filenameReplaceResDir.split(String.format("%s/", RESOURCE_TYPE_FILE))[1]
@@ -88,6 +94,7 @@ public interface StorageOperate {
 
     /**
      * get the path of the file
+     * 
      * @param resourceType
      * @param tenantCode
      * @param fileName
@@ -96,7 +103,8 @@ public interface StorageOperate {
     String getFileName(ResourceType resourceType, String tenantCode, String fileName);
 
     /**
-     * predicate  if the resource of tenant exists
+     * predicate if the resource of tenant exists
+     * 
      * @param fullName
      * @return
      * @throws IOException
@@ -104,8 +112,10 @@ public interface StorageOperate {
     boolean exists(String fullName) throws IOException;
 
     /**
-     * delete the resource of  filePath
-     * todo if the filePath is the type of directory ,the files in the filePath need to be deleted at all
+     * delete the resource of filePath
+     * todo if the filePath is the type of directory ,the files in the filePath need
+     * to be deleted at all
+     * 
      * @param filePath
      * @param recursive
      * @return
@@ -117,6 +127,7 @@ public interface StorageOperate {
 
     /**
      * copy the file from srcPath to dstPath
+     * 
      * @param srcPath
      * @param dstPath
      * @param deleteSource if need to delete the file of srcPath
@@ -128,6 +139,7 @@ public interface StorageOperate {
 
     /**
      * get the root path of the tenant with resourceType
+     * 
      * @param resourceType
      * @param tenantCode
      * @return
@@ -136,6 +148,7 @@ public interface StorageOperate {
 
     /**
      * upload the local srcFile to dstPath
+     * 
      * @param tenantCode
      * @param srcFile
      * @param dstPath
@@ -145,7 +158,7 @@ public interface StorageOperate {
      * @throws IOException
      */
     boolean upload(String tenantCode, String srcFile, String dstPath, boolean deleteSource,
-                   boolean overwrite) throws IOException;
+            boolean overwrite) throws IOException;
 
     /**
      * download the srcPath to local
@@ -159,6 +172,7 @@ public interface StorageOperate {
 
     /**
      * vim the context of filePath
+     * 
      * @param tenantCode
      * @param filePath
      * @param skipLineNums
@@ -185,19 +199,19 @@ public interface StorageOperate {
 
     /**
      * return files and folders in the current directory and subdirectories
-     * */
+     */
     List<StorageEntity> listFilesStatusRecursively(String path, String defaultPath, String tenantCode,
-                                                   ResourceType type);
+            ResourceType type);
 
     /**
-    * return files and folders in the current directory
-    * */
+     * return files and folders in the current directory
+     */
     List<StorageEntity> listFilesStatus(String path, String defaultPath, String tenantCode,
-                                        ResourceType type) throws Exception;
+            ResourceType type) throws Exception;
 
     /**
      * return a file status
-     * */
+     */
     StorageEntity getFileStatus(String path, String defaultPath, String tenantCode,
-                                ResourceType type) throws Exception;
+            ResourceType type) throws Exception;
 }

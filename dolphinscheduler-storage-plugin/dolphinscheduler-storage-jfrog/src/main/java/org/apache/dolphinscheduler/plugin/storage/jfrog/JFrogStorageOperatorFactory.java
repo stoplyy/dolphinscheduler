@@ -15,11 +15,26 @@
  * limitations under the License.
  */
 
-package org.apache.dolphinscheduler.common.enums;
+package org.apache.dolphinscheduler.plugin.storage.jfrog;
 
-/**
- * data base types
- */
-public enum ResUploadType {
-    LOCAL, HDFS, S3, OSS, GCS, ABS, OBS, JFROG
+import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
+import org.apache.dolphinscheduler.plugin.storage.api.StorageOperateFactory;
+import org.apache.dolphinscheduler.plugin.storage.api.StorageType;
+
+import com.google.auto.service.AutoService;
+
+@AutoService(StorageOperateFactory.class)
+public class JFrogStorageOperatorFactory implements StorageOperateFactory {
+
+    @Override
+    public StorageOperate createStorageOperate() {
+        JFrogStorageOperator jFrogStorageOperator = new JFrogStorageOperator();
+        jFrogStorageOperator.init();
+        return jFrogStorageOperator;
+    }
+
+    @Override
+    public StorageType getStorageOperate() {
+        return StorageType.JFROG;
+    }
 }
