@@ -64,9 +64,9 @@ export function useEdit(state: any) {
 }
 
 export const useIsDetailPageStore = defineStore("isDetailPage", {
-  state:() => {
+  state: () => {
     return {
-      isDetailPage:false
+      isDetailPage: false
     }
   },
   getters: {
@@ -82,9 +82,9 @@ export const useIsDetailPageStore = defineStore("isDetailPage", {
 })
 
 export const isEmpty = (string: any): boolean => {
-    if(string === '' || string === undefined || string === null){
-        return true
-    }else{
-        return false
-    }
+  if (string === '' || string === undefined || string === null) {
+    return true
+  } else {
+    return false
+  }
 }
