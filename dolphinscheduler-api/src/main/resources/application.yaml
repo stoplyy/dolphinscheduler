@@ -16,6 +16,7 @@
 #
 spring.main.allow-bean-definition-overriding: true
 spring.main.allow-circular-references: true
+apollo.bootstrap.namespaces: RD.tuhu-spring-cloud-public
 
 datasource.plugin: mysql
 

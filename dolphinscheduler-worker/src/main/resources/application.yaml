@@ -17,6 +17,7 @@
 
 dolphin.enable: false
 sudo.enable: false
+apollo.bootstrap.namespaces: RD.tuhu-spring-cloud-public
 
 spring:
   cloud.kubernetes.enabled: false
