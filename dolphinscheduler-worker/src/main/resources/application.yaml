@@ -21,6 +21,7 @@ apollo.bootstrap.enabled: true
 apollo.bootstrap.namespaces: RD.tuhu-spring-cloud-cover,RD.tuhu-spring-cloud-public,application
 apollo.bootstrap.eagerLoad.enabled: true
 apollo.autoUpdateInjectedSpringProperties: true
+poseidon.soter.enabled: false
 
 spring:
   cloud.kubernetes.enabled: false

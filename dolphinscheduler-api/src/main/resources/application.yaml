@@ -23,6 +23,8 @@ apollo.autoUpdateInjectedSpringProperties: true
 
 datasource.plugin: mysql
 
+poseidon.soter.enabled: false
+
 server:
   port: 12345
   servlet:
