@@ -141,7 +141,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
                 .clusterId(clsuter.getClusterId())
                 .clusterCode(clusterCode)
                 .nodeKey(nodeKey)
-                .from(DataFrom.of(from).getValue())
+                .dataFrom(DataFrom.of(from).getValue())
                 .nodeId(nodeId)
                 .nodeName(nodeName)
                 .description(desc)
@@ -262,7 +262,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         List<ProjectNode> projectNodeList = projectNodeMapper
                 .selectList(new QueryWrapper<ProjectNode>().lambda()
                         .eq(ProjectNode::getClusterCode, clusterCode)
-                        .eq(ProjectNode::getFrom, DataFrom.AUTO.getValue()));
+                        .eq(ProjectNode::getDataFrom, DataFrom.AUTO.getValue()));
 
         List<ProjectNode> needInserList = new java.util.ArrayList<>();
         List<ProjectNode> needDeleteList = new java.util.ArrayList<>();

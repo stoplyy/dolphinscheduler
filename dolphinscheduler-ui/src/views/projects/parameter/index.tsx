@@ -22,7 +22,8 @@ import {
   NPagination,
   NSpace,
   NButton,
-  NAlert
+  NAlert,
+  NTag
 } from 'naive-ui'
 import { defineComponent, onMounted, toRefs, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -103,9 +104,9 @@ export default defineComponent({
       onCancelModal
     } = this
 
-    const renderAlert = this.tableData && !this.tableData.some((item: { paramName: string }) => item.paramName ==="appid") && (
-      <NAlert type="error">
-        This project data does not contain 【appid】 parameter.
+    const renderAlert = this.tableData &&  (
+      <NAlert type="info">
+        You can set parameters starting with <NTag>platform_</NTag> to help the backend fetch project data. For example, <NTag>platform_appid</NTag>, <NTag>platform_baseUrl</NTag>, <NTag>platform_cluster.list.rest</NTag>...
       </NAlert>
     );
 

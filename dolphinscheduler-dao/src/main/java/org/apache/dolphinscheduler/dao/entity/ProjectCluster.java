@@ -51,7 +51,19 @@ public class ProjectCluster {
      * auto/manual
      */
     @TableField("data_from")
+    private String dataFrom;
+
+    @TableField(exist = false)
     private String from;
+
+    public String getFrom() {
+        return dataFrom;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+        this.dataFrom = from;
+    }
 
     @TableField("appid")
     private String appId;

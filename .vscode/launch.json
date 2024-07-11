@@ -32,7 +32,7 @@
       "name": "Mysql-Api",
       "request": "launch",
       "mainClass": "org.apache.dolphinscheduler.api.ApiApplicationServer",
-      "vmArgs": "-Dspring.profiles.active=mysql -Denv=FAT -server -Djava._appid_=int-service-arch-stellarops-portal-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-portal-api",
+      "vmArgs": "-Dspring.profiles.active=mysql -Denv=FAT -server -Djava._appid_=iint-service-arch-stellarops-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-portal-api",
       "projectName": "dolphinscheduler-api"
     },
     {
@@ -40,7 +40,7 @@
       "name": "Api-Work",
       "request": "launch",
       "mainClass": "org.apache.dolphinscheduler.api.ApiApplicationServer",
-      "vmArgs": "-Dspring.profiles.active=test -Denv=FAT -server -Djava._appid_=int-service-arch-stellarops-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-api",
+      "vmArgs": "-Dspring.profiles.active=test -Denv=FAT -Djfrog.dir.prefix=test -server -Djava._appid_=int-service-arch-stellarops-api -Djava._environment_=work -Dapollo.meta=http://apollo.tuhu.work:8090 -Dspring.application.name=int-service-arch-stellarops-api",
       "projectName": "dolphinscheduler-api"
     },
     {

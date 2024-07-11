@@ -75,7 +75,19 @@ public class ProjectNode {
      * auto/manual
      */
     @TableField("data_from")
+    private String dataFrom;
+
+    @TableField(exist = false)
     private String from;
+
+    public void setFrom(String from) {
+        this.from = dataFrom;
+        this.dataFrom = from;
+    }
+
+    public String getFrom() {
+        return dataFrom;
+    }
 
     /**
      * project description

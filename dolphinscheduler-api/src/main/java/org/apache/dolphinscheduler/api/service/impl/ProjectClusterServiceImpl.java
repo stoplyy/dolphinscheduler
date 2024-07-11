@@ -90,7 +90,7 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
                     .clusterName(name)
                     .projectCode(projectCode)
                     .description(desc)
-                    .from(from)
+                    .dataFrom(from)
                     .userId(loginUser.getId())
                     .userName(loginUser.getUserName())
                     .createTime(now)
