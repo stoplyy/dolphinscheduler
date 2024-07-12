@@ -215,7 +215,7 @@ security:
           authorizationUri: "https://sso.tuhu.cn/connect/authorize?scope=openid email"
           redirectUri: "https://stellarops-api.tuhuyun.cn/dolphinscheduler/redirect/login/oauth2"
           clientId: "int-service-arch-stellarops-api"
-          clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
+          clientSecret: "RVTKLGXSi+wIedYI70Ghlf7NJoVm/22ZYb0KfCcLa9k="
           tokenUri: "https://sso.tuhu.cn/connect/token"
           userInfoUri: "https://sso.tuhu.cn/connect/userinfo"
           callbackUrl: "https://stellarops-web.tuhuyun.cn/login"
