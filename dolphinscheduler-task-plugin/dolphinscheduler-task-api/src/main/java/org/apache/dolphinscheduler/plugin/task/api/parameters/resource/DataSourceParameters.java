@@ -37,8 +37,6 @@ public class DataSourceParameters extends AbstractResourceParameters {
     @JsonProperty(value = "DATASOURCE")
     private String resourceType;
 
-    // contains secret information, should not be exposed to the client
-    @JsonIgnore
     private String connectionParams;
 
     public DbType getType() {
