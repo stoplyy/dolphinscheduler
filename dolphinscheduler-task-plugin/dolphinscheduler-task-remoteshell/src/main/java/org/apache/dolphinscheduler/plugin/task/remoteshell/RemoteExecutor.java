@@ -71,6 +71,7 @@ public class RemoteExecutor implements AutoCloseable {
             return session;
         }
         try {
+            log.info("SSH connection params:{}", sshConnectionParam);
             session = SSHUtils.getSession(sshClient, sshConnectionParam);
             if (session == null || !session.auth().verify().isSuccess()) {
                 throw new TaskException("SSH connection failed");
@@ -85,6 +86,7 @@ public class RemoteExecutor implements AutoCloseable {
         try {
             // only run task if no exist same task
             String pid = getTaskPid(taskId);
+            log.info("Remote shell task pid: {}", pid);
             if (StringUtils.isEmpty(pid)) {
                 saveCommand(taskId, localFile);
                 String runCommand = String.format(COMMAND.RUN_COMMAND, getRemoteShellHome(), taskId,
@@ -143,8 +145,8 @@ public class RemoteExecutor implements AutoCloseable {
     }
 
     public void cleanData(String taskId) {
-        String cleanCommand =
-                String.format(COMMAND.CLEAN_COMMAND, getRemoteShellHome(), taskId, getRemoteShellHome(), taskId);
+        String cleanCommand = String.format(COMMAND.CLEAN_COMMAND, getRemoteShellHome(), taskId, getRemoteShellHome(),
+                taskId);
         try {
             runRemote(cleanCommand);
         } catch (Exception e) {
