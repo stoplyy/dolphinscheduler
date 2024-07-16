@@ -140,7 +140,6 @@ public class RemoteExecutor implements AutoCloseable {
             }
         }
         cleanData(taskId);
-        log.error("Remote shell task failed");
         return exitCode;
     }
 
