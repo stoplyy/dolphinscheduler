@@ -71,6 +71,7 @@ const Navbar = defineComponent({
     return { handleMenuClick, handleUISettingClick, menuKey, t }
   },
   render() {
+    const conditionToShowButton = false
     return (
       <div class={styles.container}>
         <Logo />
@@ -82,17 +83,19 @@ const Navbar = defineComponent({
             onUpdateValue={this.handleMenuClick}
           />
         </div>
-        <div class={styles.settings}>
-          <NButton quaternary onClick={this.handleUISettingClick}>
-            {{
-              icon: () => (
-                <NIcon size='16'>
-                  <SettingOutlined />
-                </NIcon>
-              ),
-              default: this.t('menu.ui_setting')
-            }}
-          </NButton>
+        <div class={styles.settings}  >
+          {conditionToShowButton && (
+            <NButton quaternary onClick={this.handleUISettingClick}>
+              {{
+                icon: () => (
+                  <NIcon size='16'>
+                    <SettingOutlined />
+                  </NIcon>
+                ),
+                default: this.t('menu.ui_setting'),
+              }}
+            </NButton>
+          )}
           <Theme />
           <Locales localesOptions={this.localesOptions} />
           <Timezone timezoneOptions={this.timezoneOptions} />
