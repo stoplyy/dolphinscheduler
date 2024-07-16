@@ -18,10 +18,10 @@
 export default {
   home: '首页',
   project: '项目管理',
-  resources: '资源中心',
-  datasource: '源中心',
-  monitor: '监控中心',
-  security: '安全中心',
+  resources: '资源文件',
+  datasource: '源',
+  monitor: '监控',
+  security: '安全',
   ui_setting: '界面设置',
   project_overview: '项目概览',
   project_parameter: '项目级别参数',
@@ -60,7 +60,7 @@ export default {
   task_group_manage: '任务组管理',
   task_group_option: '任务组配置',
   task_group_queue: '任务组队列',
-  data_quality: '数据质量',
+  data_quality: '数据',
   task_result: '任务结果',
   rule: '规则管理'
 }
