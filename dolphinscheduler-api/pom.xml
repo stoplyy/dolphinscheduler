@@ -79,7 +79,10 @@
             <artifactId>micrometer-core</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
@@ -89,6 +92,7 @@
             <groupId>com.tuhu.poseidon</groupId>
             <artifactId>tuhu-spring-cloud-starter-poseidon</artifactId>
         </dependency>
+
         <!-- <dependency>
             <groupId>com.tuhu.boot.oidc</groupId>
             <artifactId>tuhu-boot-starter-oidc</artifactId>

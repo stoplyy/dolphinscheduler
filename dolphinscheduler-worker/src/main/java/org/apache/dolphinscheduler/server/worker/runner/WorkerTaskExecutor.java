@@ -82,12 +82,12 @@ public abstract class WorkerTaskExecutor implements Runnable {
     protected @Nullable AbstractTask task;
 
     protected WorkerTaskExecutor(
-                                 @NonNull TaskExecutionContext taskExecutionContext,
-                                 @NonNull WorkerConfig workerConfig,
-                                 @NonNull WorkerMessageSender workerMessageSender,
-                                 @NonNull TaskPluginManager taskPluginManager,
-                                 @Nullable StorageOperate storageOperate,
-                                 @NonNull WorkerRegistryClient workerRegistryClient) {
+            @NonNull TaskExecutionContext taskExecutionContext,
+            @NonNull WorkerConfig workerConfig,
+            @NonNull WorkerMessageSender workerMessageSender,
+            @NonNull TaskPluginManager taskPluginManager,
+            @Nullable StorageOperate storageOperate,
+            @NonNull WorkerRegistryClient workerRegistryClient) {
         this.taskExecutionContext = taskExecutionContext;
         this.workerConfig = workerConfig;
         this.workerMessageSender = workerMessageSender;
@@ -188,18 +188,18 @@ public abstract class WorkerTaskExecutor implements Runnable {
     }
 
     protected void initializeTask() {
-        log.info("Begin to initialize task");
+        log.info("[work] Begin to initialize task");
 
         long taskStartTime = System.currentTimeMillis();
         taskExecutionContext.setStartTime(taskStartTime);
-        log.info("Set task startTime: {}", taskStartTime);
+        log.info("[work] Set task startTime: {}", taskStartTime);
 
         String taskAppId = String.format("%s_%s", taskExecutionContext.getProcessInstanceId(),
                 taskExecutionContext.getTaskInstanceId());
         taskExecutionContext.setTaskAppId(taskAppId);
-        log.info("Set task appId: {}", taskAppId);
+        log.info("[work] Set task appId: {}", taskAppId);
 
-        log.info("End initialize task {}", JSONUtils.toPrettyJsonString(taskExecutionContext));
+        log.info("[work] End initialize task {}", JSONUtils.toPrettyJsonString(taskExecutionContext));
     }
 
     protected void beforeExecute() {
@@ -219,10 +219,10 @@ public abstract class WorkerTaskExecutor implements Runnable {
         TaskExecutionContextUtils.createTaskInstanceWorkingDirectory(taskExecutionContext);
         log.info("WorkflowInstanceExecDir: {} check successfully", taskExecutionContext.getExecutePath());
 
-        TaskChannel taskChannel =
-                Optional.ofNullable(taskPluginManager.getTaskChannelMap().get(taskExecutionContext.getTaskType()))
-                        .orElseThrow(() -> new TaskPluginException(taskExecutionContext.getTaskType()
-                                + " task plugin not found, please check the task type is correct."));
+        TaskChannel taskChannel = Optional
+                .ofNullable(taskPluginManager.getTaskChannelMap().get(taskExecutionContext.getTaskType()))
+                .orElseThrow(() -> new TaskPluginException(taskExecutionContext.getTaskType()
+                        + " task plugin not found, please check the task type is correct."));
 
         log.info("Create TaskChannel: {} successfully", taskChannel.getClass().getName());
 
@@ -252,7 +252,8 @@ public abstract class WorkerTaskExecutor implements Runnable {
             return;
         }
 
-        // todo: We need to send the alert to the master rather than directly send to the alert server
+        // todo: We need to send the alert to the master rather than directly send to
+        // the alert server
         Optional<Host> alertServerAddressOptional = workerRegistryClient.getAlertServerAddress();
         if (!alertServerAddressOptional.isPresent()) {
             log.error("Cannot get alert server address, please check the alert server is running");

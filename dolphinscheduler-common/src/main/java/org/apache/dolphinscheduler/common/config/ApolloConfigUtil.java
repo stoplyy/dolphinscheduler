@@ -1,4 +1,4 @@
-package org.apache.dolphinscheduler.api.platform.common;
+package org.apache.dolphinscheduler.common.config;
 
 import java.util.Set;
 
@@ -21,17 +21,7 @@ public class ApolloConfigUtil {
         return config.getProperty(key, "");
     }
 
-    /**
-     * 获取sre token
-     * 
-     * @return
-     */
-    public static String getStellarOpsPlatformAuthToken() {
-        return config.getProperty("stellarops.auth.head", "X-SRE-SEC: xxxxx");
-    }
-
-    /* platform 配置数据 */
-    public static String getPlatformConfig(String platformString) {
-        return config.getProperty("maintenance.platform.config." + platformString, "{}");
+    public static String getProperty(String key, String defaultValue) {
+        return config.getProperty(key, defaultValue);
     }
 }

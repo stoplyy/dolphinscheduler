@@ -43,8 +43,8 @@ public abstract class MasterTaskExecutor implements Runnable {
     protected ILogicTask logicTask;
 
     public MasterTaskExecutor(TaskExecutionContext taskExecutionContext,
-                              LogicTaskPluginFactoryBuilder logicTaskPluginFactoryBuilder,
-                              LogicTaskInstanceExecutionEventSenderManager logicTaskInstanceExecutionEventSenderManager) {
+            LogicTaskPluginFactoryBuilder logicTaskPluginFactoryBuilder,
+            LogicTaskInstanceExecutionEventSenderManager logicTaskInstanceExecutionEventSenderManager) {
         this.taskExecutionContext = taskExecutionContext;
         this.logicTaskPluginFactoryBuilder = logicTaskPluginFactoryBuilder;
         this.logicTaskInstanceExecutionEventSenderManager = logicTaskInstanceExecutionEventSenderManager;
@@ -120,18 +120,18 @@ public abstract class MasterTaskExecutor implements Runnable {
     }
 
     protected void initializeTask() {
-        log.info("Begin to initialize task");
+        log.info("[master] Begin to initialize task");
 
         long taskStartTime = System.currentTimeMillis();
         taskExecutionContext.setStartTime(taskStartTime);
-        log.info("Set task startTime: {}", taskStartTime);
+        log.info("[master] Set task startTime: {}", taskStartTime);
 
         String taskAppId = String.format("%s_%s", taskExecutionContext.getProcessInstanceId(),
                 taskExecutionContext.getTaskInstanceId());
         taskExecutionContext.setTaskAppId(taskAppId);
-        log.info("Set task appId: {}", taskAppId);
+        log.info("[master] Set task appId: {}", taskAppId);
 
-        log.info("End initialize task {}", JSONUtils.toPrettyJsonString(taskExecutionContext));
+        log.info("[master] End initialize task {}", JSONUtils.toPrettyJsonString(taskExecutionContext));
     }
 
     protected void beforeExecute() throws LogicTaskFactoryNotFoundException, LogicTaskInitializeException {

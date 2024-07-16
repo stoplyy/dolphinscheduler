@@ -110,6 +110,9 @@ mybatis-plus:
       id-type: auto
     banner: false
 
+metrics:
+  enabled: true
+
 management:
   endpoints:
     web:
@@ -179,9 +182,6 @@ api:
     # Close each active connection of socket server if python program not active after x milliseconds. Define value is
     # (0 = infinite), and socket server would never close even though no requests accept
     read-timeout: 0
-
-metrics:
-  enabled: true
 
 security:
   authentication:
