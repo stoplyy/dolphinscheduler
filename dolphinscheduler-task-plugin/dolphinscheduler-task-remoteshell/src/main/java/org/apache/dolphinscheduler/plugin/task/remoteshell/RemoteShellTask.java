@@ -192,11 +192,9 @@ public class RemoteShellTask extends AbstractTask {
     public void initRemoteExecutor() {
         DataSourceParameters dbSource = (DataSourceParameters) taskExecutionContext.getResourceParametersHelper()
                 .getResourceParameters(ResourceType.DATASOURCE, remoteShellParameters.getDatasource());
-        log.info("data source id:{} name: {}, type: {}", remoteShellParameters.getDatasource(),
+        log.info("data source id:{} connectionParams: {}, type: {}", remoteShellParameters.getDatasource(),
                 dbSource.getConnectionParams(),
                 dbSource.getType());
-        taskExecutionContext.getResourceParametersHelper().getResourceParameters(ResourceType.DATASOURCE,
-                remoteShellParameters.getDatasource());
         SSHConnectionParam sshConnectionParam = (SSHConnectionParam) DataSourceUtils.buildConnectionParams(
                 DbType.valueOf(remoteShellParameters.getType()),
                 dbSource.getConnectionParams());

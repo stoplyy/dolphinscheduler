@@ -12,7 +12,7 @@ import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.platform.AutoPlatformFactory;
 import org.apache.dolphinscheduler.api.platform.PathEnum;
 import org.apache.dolphinscheduler.api.platform.PlatformRestService;
-import org.apache.dolphinscheduler.api.platform.common.ApolloConfigUtil;
+import org.apache.dolphinscheduler.api.platform.common.PlatformApolloConfigUtil;
 import org.apache.dolphinscheduler.api.platform.common.JSONUtils;
 import org.apache.dolphinscheduler.api.platform.common.PlatformConstant;
 import org.apache.dolphinscheduler.api.platform.common.RestParamEntry;
@@ -98,7 +98,7 @@ public class PlatformOpenApiController implements PlatformOpenApi {
 
     @Override
     public Result<List<StellarOpsClusterInfo>> getPlatformClusterList(@PathVariable String platform) {
-        String config = ApolloConfigUtil.getPlatformConfig(platform);
+        String config = PlatformApolloConfigUtil.getPlatformConfig(platform);
         String rest = PathEnum.CLUSTER_LIST.getPath();
         Map<String, Object> configMap = new HashMap<>();
 
@@ -136,7 +136,7 @@ public class PlatformOpenApiController implements PlatformOpenApi {
     public Result<List<StellarOpsNodeInfo>> getPlatformNodeList(@PathVariable String platform,
             @PathVariable String clusterId,
             @RequestParam(required = false) String taskName) {
-        String config = ApolloConfigUtil.getPlatformConfig(platform);
+        String config = PlatformApolloConfigUtil.getPlatformConfig(platform);
         String rest = PathEnum.NODE_LIST.getPath();
         Map<String, Object> configMap = new HashMap<>();
 
@@ -177,7 +177,7 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             @PathVariable String platform,
             @RequestParam(required = false) String clusterId, @RequestParam(required = false) String nodeId,
             @RequestParam(required = false) String taskName) {
-        String config = ApolloConfigUtil.getPlatformConfig(platform);
+        String config = PlatformApolloConfigUtil.getPlatformConfig(platform);
 
         Map<String, Object> configMap = new HashMap<>();
         RestParamEntry entry = new RestParamEntry().build(clusterId, nodeId, taskName);

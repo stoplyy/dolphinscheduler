@@ -34,6 +34,7 @@
 
     <modules>
         <module>dolphinscheduler-bom</module>
+        <!-- <module>stellarops-bom</module> -->
         <module>dolphinscheduler-alert</module>
         <module>dolphinscheduler-spi</module>
         <module>dolphinscheduler-registry</module>
@@ -51,7 +52,7 @@
         <module>dolphinscheduler-meter</module>
         <module>dolphinscheduler-master</module>
         <module>dolphinscheduler-worker</module>
-        <module>dolphinscheduler-tools</module>
+        <!-- <module>dolphinscheduler-tools</module> -->
         <!-- <module>dolphinscheduler-ui</module> -->
         <module>dolphinscheduler-scheduler-plugin</module>
         <module>dolphinscheduler-storage-plugin</module>

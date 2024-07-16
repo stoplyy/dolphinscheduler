@@ -17,6 +17,8 @@
 
 package org.apache.dolphinscheduler.plugin.datasource.ssh;
 
+import org.apache.dolphinscheduler.common.config.ApolloConfigUtil;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.plugin.datasource.ssh.param.SSHConnectionParam;
 
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +51,7 @@ public class SSHUtils {
         // add public key identity
         String publicKey = connectionParam.getPublicKey();
         if (StringUtils.isNotEmpty(publicKey)) {
+            publicKey = loadSystemPrivateKey(publicKey);
             try {
                 KeyPairResourceLoader loader = SecurityUtils.getKeyPairResourceParser();
                 Collection<KeyPair> keyPairCollection = loader.loadKeyPairs(null, null, null, publicKey);
@@ -61,5 +64,14 @@ public class SSHUtils {
         }
         session.setSessionHeartbeat(SessionHeartbeatController.HeartbeatType.RESERVED, Duration.ofSeconds(3));
         return session;
+    }
+
+    public static String loadSystemPrivateKey(String configPubKey) {
+        if (Constants.DATASOURCE_PUBLIC_KEY_FLAG.equalsIgnoreCase(configPubKey)) {
+            return ApolloConfigUtil.getProperty(Constants.DATASOURCE_PUBLIC_KEY_IDENTITY,
+                    "NOT CONFIG " + Constants.DATASOURCE_PUBLIC_KEY_IDENTITY);
+        } else {
+            return configPubKey;
+        }
     }
 }

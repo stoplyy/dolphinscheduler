@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.api.enums.Status;
-import org.apache.dolphinscheduler.api.platform.common.ApolloConfigUtil;
+import org.apache.dolphinscheduler.api.platform.common.PlatformApolloConfigUtil;
 import org.apache.dolphinscheduler.api.platform.common.JSONUtils;
 import org.apache.dolphinscheduler.api.platform.common.RestParamEntry;
 import org.apache.dolphinscheduler.api.utils.Result;
@@ -127,7 +127,7 @@ public class PlatformRestService {
 
     static Request.Builder baseRequestBuilder = new Request.Builder()
             .addHeader("content-type", "application/json")
-            .addHeader("Authorization", ApolloConfigUtil.getStellarOpsPlatformAuthToken());
+            .addHeader("Authorization", PlatformApolloConfigUtil.getStellarOpsPlatformAuthToken());
 
     public static Result<Map<String, Object>> getRestBizResponse(String rest) {
         try {
