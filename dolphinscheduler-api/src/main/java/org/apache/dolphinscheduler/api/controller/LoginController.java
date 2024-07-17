@@ -237,10 +237,14 @@ public class LoginController extends BaseController {
             userInfoRequestHeaders.put("Authorization", "Bearer " + accessToken);
             String userInfoJsonStr = OkHttpUtils.get(oAuth2ClientProperties.getUserInfoUri(), userInfoRequestHeaders,
                     userInfoQueryMap);
-            String username = JSONUtils.getNodeString(userInfoJsonStr, "email");
+            String userEmail = JSONUtils.getNodeString(userInfoJsonStr, "email");
+            String username = userEmail;
+            if (userEmail.contains("@")) {
+                username = username.split("@")[0];
+            }
             User user = usersService.getUserByUserName(username);
             if (user == null) {
-                user = usersService.createUser(UserType.GENERAL_USER, username, null);
+                user = usersService.createUser(UserType.GENERAL_USER, username, userEmail);
             }
             Session session = sessionService.createSessionIfAbsent(user);
             response.setStatus(HttpStatus.SC_MOVED_TEMPORARILY);
