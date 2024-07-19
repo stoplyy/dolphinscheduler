@@ -18,7 +18,7 @@ datasource.plugin: mysql
 elk.enable: false
 
 dolphin.force.master.mapper-packages: org.apache.dolphinscheduler
-
+spring.main.allow-circular-references: true
 poseidon.soter.enabled: false
 
 spring:
