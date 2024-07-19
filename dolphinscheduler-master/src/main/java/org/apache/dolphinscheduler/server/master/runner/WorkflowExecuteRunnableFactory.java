@@ -37,7 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.tuhu.dolphin.spring.annotation.DolphinForceMaster;
+
 @Slf4j
+@DolphinForceMaster
 @Component
 public class WorkflowExecuteRunnableFactory {
 
@@ -77,10 +80,11 @@ public class WorkflowExecuteRunnableFactory {
     @Autowired
     private TaskGroupCoordinator taskGroupCoordinator;
 
-    public Optional<WorkflowExecuteRunnable> createWorkflowExecuteRunnable(Command command) throws WorkflowCreateException {
+    public Optional<WorkflowExecuteRunnable> createWorkflowExecuteRunnable(Command command)
+            throws WorkflowCreateException {
         try {
-            Optional<IWorkflowExecuteContext> workflowExecuteRunnableContextOptional =
-                    workflowExecuteContextFactory.createWorkflowExecuteRunnableContext(command);
+            Optional<IWorkflowExecuteContext> workflowExecuteRunnableContextOptional = workflowExecuteContextFactory
+                    .createWorkflowExecuteRunnableContext(command);
             return workflowExecuteRunnableContextOptional.map(iWorkflowExecuteContext -> new WorkflowExecuteRunnable(
                     iWorkflowExecuteContext,
                     commandService,
