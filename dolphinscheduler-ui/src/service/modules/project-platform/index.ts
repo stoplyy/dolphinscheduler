@@ -4,7 +4,14 @@ import { PlatformRestEnum, ProjectCluster, ProjectClusterParameter, ProjectNode,
 import { DataFromEnum } from '@/views/projects/cluster/types';
 
 
-
+//查询平台公钥
+export async function getPlatformPublicKey(projectCode: number): Promise<string> {
+  const data = await axios({
+    url: `/platform/${projectCode}/publicKey`,
+    method: 'get'
+  });
+  return data as unknown as string;
+}
 
 // 查询项目群集列表
 export async function getPlatformClusterListByProject(projectCode: number): Promise<StellarOpsClusterInfo[]> {

@@ -7,6 +7,10 @@ import org.apache.dolphinscheduler.common.config.ApolloConfigUtil;
  */
 public class PlatformApolloConfigUtil {
 
+    public static String getPublicKey() {
+        return ApolloConfigUtil.getProperty("datasource.pubKey", "public key not found");
+    }
+
     /**
      * 获取sre token
      * 
