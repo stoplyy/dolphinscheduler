@@ -318,4 +318,10 @@ public class PlatformOpenApiController implements PlatformOpenApi {
 
         return Result.success(pubKey);
     }
+
+    @GetMapping("/getAppidList")
+    @ResponseStatus(HttpStatus.OK)
+    public Result<List<String>> getAppidList() {
+        return Result.success(null);
+    }
 }
