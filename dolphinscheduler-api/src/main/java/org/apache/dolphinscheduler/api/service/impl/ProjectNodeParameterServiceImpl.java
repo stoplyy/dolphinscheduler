@@ -1,7 +1,5 @@
 package org.apache.dolphinscheduler.api.service.impl;
 
-import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.PROJECT;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +13,6 @@ import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
 import org.apache.dolphinscheduler.dao.entity.ProjectNodeParameter;
@@ -269,6 +266,24 @@ public class ProjectNodeParameterServiceImpl extends BaseServiceImpl implements 
         }
 
         result.setData(projectParameter);
+        putMsg(result, Status.SUCCESS);
+        return result;
+    }
+
+    @Override
+    public Result<Boolean> deleteParametersByNodeCode(User loginUser, long projectCode, Integer nodeCode) {
+        Result<Boolean> result = new Result<>();
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        List<ProjectNodeParameter> parameterList = parameterMapper
+                .selectList(new QueryWrapper<ProjectNodeParameter>()
+                        .lambda().eq(ProjectNodeParameter::getProjectCode, projectCode)
+                        .eq(ProjectNodeParameter::getNodeCode, nodeCode));
+
+        for (ProjectNodeParameter parameter : parameterList) {
+            parameterMapper.deleteById(parameter.getId());
+        }
         putMsg(result, Status.SUCCESS);
         return result;
     }

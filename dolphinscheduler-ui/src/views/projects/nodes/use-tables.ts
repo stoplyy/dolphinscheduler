@@ -1,30 +1,23 @@
 import { h, reactive, vShow } from "vue";
 import { NButton, NTag, NSpace, NTooltip, NPopconfirm } from "naive-ui";
-import type { OpsNodeInfo, DataTableRowOper } from "./types";
-import { DeleteOutlined, EditOutlined, SyncOutlined } from '@vicons/antd'
+import { OpsNodeInfo } from "./types";
+import { DeleteOutlined, DisconnectOutlined, LoadingOutlined, EditOutlined, SyncOutlined } from '@vicons/antd'
 import {
   COLUMN_WIDTH_CONFIG
 } from '@/common/column-width-config'
 import { DataFromEnum } from "../cluster/types";
 
-export function useNodeTable(object: DataTableRowOper) {
+export type operRow = (row: OpsNodeInfo) => void
 
-  const handleEdit = (row: OpsNodeInfo) => {
-    object.editLogic(row);
-  }
-
-  const handleDelete = (row: OpsNodeInfo) => {
-    object.deleteLogic(row);
-  }
-
-  const handleSync = (row: OpsNodeInfo) => {
-    object.syncLogic(row);
-  }
+export function useNodeTable(handleEdit: operRow, handleDelete: operRow, handleSync: operRow, handleSyncSourceLogic: operRow) {
 
   const hasSync = (row: OpsNodeInfo) => {
     return (row.id && row.id > 0) as boolean;
   }
 
+  const notSyncDataSource = (row: OpsNodeInfo) => {
+    return (row.dataSourceCode === null || row.dataSourceCode === undefined)
+  }
 
   const nodeColumns =
     [
@@ -37,7 +30,7 @@ export function useNodeTable(object: DataTableRowOper) {
       {
         title: 'ID',
         key: 'nodeId',
-        ...COLUMN_WIDTH_CONFIG['index']
+        ...COLUMN_WIDTH_CONFIG['version']
       },
       {
         title: 'Key',
@@ -49,6 +42,16 @@ export function useNodeTable(object: DataTableRowOper) {
         key: 'nodeName',
         ...COLUMN_WIDTH_CONFIG['name']
       },
+      {
+        title: "来源",
+        key: "from",
+        ...COLUMN_WIDTH_CONFIG['type'],
+        render: (row: OpsNodeInfo) => {
+          return h(NTag, { type: row.from === DataFromEnum.MANUAL ? 'info' : 'success' }, {
+            default: () => row.from === DataFromEnum.MANUAL ? '手动添加' : (row.from + '导入')
+          })
+        }
+      },
       // {
       //   title: "Tags",
       //   key: "tags",
@@ -59,21 +62,11 @@ export function useNodeTable(object: DataTableRowOper) {
         key: "description",
         ...COLUMN_WIDTH_CONFIG['note']
       },
-      {
-        title: '更新时间',
-        key: 'updateTime',
-        ...COLUMN_WIDTH_CONFIG['time']
-      },
-      {
-        title: "来源",
-        key: "from",
-        ...COLUMN_WIDTH_CONFIG['type'],
-        render: (row: OpsNodeInfo) => {
-          return h(NTag, { type: row.from === DataFromEnum.AUTO ? 'success' : 'info' }, {
-            default: () => row.from === DataFromEnum.AUTO ? '接口导入' : '手动添加'
-          })
-        }
-      },
+      // {
+      //   title: '更新时间',
+      //   key: 'updateTime',
+      //   ...COLUMN_WIDTH_CONFIG['time']
+      // },
       {
         title: '操作',
         key: 'operation',
@@ -140,7 +133,7 @@ export function useNodeTable(object: DataTableRowOper) {
                 NPopconfirm,
                 {
                   onPositiveClick: () => {
-                    handleSync(row)
+                    handleSyncSourceLogic(row)
                   }
                 },
                 {
@@ -153,19 +146,27 @@ export function useNodeTable(object: DataTableRowOper) {
                           h(
                             NButton,
                             {
-                              disabled: hasSync(row),
+                              disabled: !notSyncDataSource(row),
                               circle: true,
-                              type: 'success',
+                              type: calculateButtonColor(row),
                               size: 'small'
                             },
                             {
-                              icon: () => h(SyncOutlined)
+                              icon: () => h(DisconnectOutlined)
                             }
                           ),
-                        default: () => hasSync(row) ? '已同步' : '同步(同步到当前系统)'
+                        default: () => {
+                          if (row.dataSourceCode === undefined || row.dataSourceCode === null) {
+                            return '创建源(点击创建源）'
+                          } else if (row.isConnected === undefined || row.isConnected === null) {
+                            return "源联通状态未知（请进行连接测试）"
+                          } else {
+                            return row.isConnected ? '源已连通' : ('无法连接，请确认源是否正常！' + row.dataSourceCode)
+                          }
+                        }
                       }
                     ),
-                  default: () => '同步'
+                  default: () => '创建源'
                 }
               )
             ]
@@ -175,4 +176,11 @@ export function useNodeTable(object: DataTableRowOper) {
     ]
 
   return nodeColumns
+
+  function calculateButtonColor(row: OpsNodeInfo) {
+    if (row.dataSourceCode === undefined || row.dataSourceCode === null) {
+      return 'info'
+    }
+    return (row.isConnected === undefined || row.isConnected === null) ? 'warning' : (row.isConnected ? 'success' : "error");
+  }
 }

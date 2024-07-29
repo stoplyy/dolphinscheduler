@@ -36,6 +36,8 @@ public interface ProjectNodeParameterService {
 
     Result<Boolean> deleteParametersByCode(User loginUser, long projectCode, Integer nodeCode, Integer code);
 
+    Result<Boolean> deleteParametersByNodeCode(User loginUser, long projectCode, Integer nodeCode);
+
     Result<Boolean> batchDeleteParametersByCodes(User loginUser, long projectCode, Integer nodeCode, String codes);
 
     Result<List<ProjectNodeParameter>> queryParameterList(User loginUser, long projectCode, Integer nodeCode);

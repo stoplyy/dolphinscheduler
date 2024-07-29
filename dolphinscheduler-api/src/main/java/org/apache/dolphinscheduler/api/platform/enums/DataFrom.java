@@ -2,8 +2,9 @@ package org.apache.dolphinscheduler.api.platform.enums;
 
 public enum DataFrom {
     NONE("none"),
-    AUTO("auto"),
-    MANUAL("manual");
+    AUTO("auto"), // stellarops-sdk 接口导入
+    HALLEY("halley"), // halley 接口导入
+    MANUAL("manual"); // 手动导入
 
     private String value;
 
@@ -17,7 +18,7 @@ public enum DataFrom {
 
     public static DataFrom of(String value) {
         for (DataFrom dataFrom : DataFrom.values()) {
-            if (dataFrom.getValue().equals(value)) {
+            if (dataFrom.getValue().equalsIgnoreCase(value)) {
                 return dataFrom;
             }
         }

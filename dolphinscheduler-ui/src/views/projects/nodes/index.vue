@@ -10,30 +10,88 @@
             </template>
           </NSelect>
           <NButton type="primary" @click="nodesRefresh()" :disabled="loadingRef || !hasSelectedSyncCluster()"
-            class='btn-create-project'>刷新节点</NButton>
+            class='btn-create-project'>刷新</NButton>
         </NSpace>
         <NSpace>
-          <NButton type="primary" @click="addNodeLogic" :disabled="!hasSelectedSyncCluster()"
-            class='btn-create-project'>添加节点
+          <NButton type="primary" @click="addNodeLogic" :disabled="!hasSelectedSyncCluster()" round
+            class='btn-create-project'>
+            <template #icon>
+              <NIcon>
+                <PlusOutlined />
+              </NIcon>
+            </template>添加节点
           </NButton>
+          <NTooltip>
+            <template #trigger>
+              <NButton type="success" class='btn-create-project' @click="syncHalleyNode" round
+                :disabled="loadingRef || !hasSelectedSyncClusterAppId()">
+                <template #icon>
+                  <NIcon>
+                    <SyncOutlined />
+                  </NIcon>
+                </template>Halley同步
+              </NButton>
+            </template>
+            <span>通过Halley接口同步节点（需要集群关联AppId;会删除同为halley导入但是不在halley接口中的节点）</span>
+          </NTooltip>
           <NPopconfirm @positive-click="syncAllNode">
             <template #trigger>
               <NTooltip>
                 <template #trigger>
-                  <NButton type="primary" class='btn-create-project'
-                    :disabled="loadingRef || !hasSelectedSyncCluster() || hasAnyNoSyncNode()">一键同步
+                  <NButton type="success" class='btn-create-project' round
+                    :disabled="loadingRef || !hasSelectedSyncCluster()">
+                    <template #icon>
+                      <NIcon>
+                        <SyncOutlined />
+                      </NIcon>
+                    </template>同步
                   </NButton>
                 </template>
-                <span>完全同步节点列表接口拉取的节点，会清理来源为导入但是并未在列表接口中的节点！来源为手动的不处理！</span>
+                <span>通过配置的接口地址同步节点（需要项目配置platform_xx;会删除同为auto导入但是不在接口中的节点）</span>
               </NTooltip>
             </template>
             是否同步所有节点？
+          </NPopconfirm>
+          <NButton type="primary" @click="testConnectivity()" round
+            :disabled="loadingRef || !hasSelectedSyncCluster() || testComploading" class='btn-create-project'>
+            <template #icon>
+              <NIcon>
+                <DisconnectOutlined />
+              </NIcon>
+            </template>连接检测
+          </NButton>
+          <NPopconfirm @positive-click="createALlNodeSource">
+            <template #trigger>
+              <NTooltip>
+                <template #trigger>
+                  <NButton type="warning" class='btn-create-project' round
+                    :disabled="loadingRef || !hasSelectedSyncCluster() || !hasAnyNoSyncSourceNode()">
+                    <template #icon>
+                      <NIcon>
+                        <DisconnectOutlined />
+                      </NIcon>
+                    </template>创建源
+                  </NButton>
+                </template>
+                <span>当前列表中的Key作为源IP，快速创建 SSH源。</span>
+              </NTooltip>
+            </template>
+            是否确认快速创建源？
           </NPopconfirm>
         </NSpace>
       </NSpace>
     </NCard>
     <NCard>
       <NDataTable :data="nodesList" :columns="nodeColumns" :loading="loadingRef" :width="tableWidth">
+        <template #empty>
+          <NEmpty description="你什么也找不到">
+            <template #extra>
+              <NButton size="small">
+                看看别的
+              </NButton>
+            </template>
+          </NEmpty>
+        </template>
       </NDataTable>
     </NCard>
     <NModal v-model:show="showParamModalRef" :show-icon="false" class="custom-card" preset="dialog"
@@ -96,9 +154,9 @@
 </template>
 
 <script lang="ts">
-  import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, getPlatformNodeListByProject, getPlatformRestByProject, queryProjectNodeList, queryProjectNodeParametersList, syncAllNodeData, updateProjectNode, updateProjectNodeParameter } from '@/service/modules/project-platform';
+  import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, testConnectivityByHalley, createSourceWithAllNode, getPlatformRestByProject, queryProjectNodeList, queryProjectNodeParametersList, syncAllNodeData, syncNodesByHalley, syncSourceNodeData, updateProjectNode, updateProjectNodeParameter } from '@/service/modules/project-platform';
   import { PlatformRestEnum, ProjectNodeParameter } from '@/service/modules/project-platform/platform';
-  import { NButton, NCard, NDataTable, NDialog, NDialogProvider, NPopconfirm, NDynamicTags, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable, NTooltip, SelectOption } from 'naive-ui';
+  import { NButton, NCard, NEmpty, NDataTable, NDialog, NDialogProvider, NPopconfirm, NDynamicTags, NIcon, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable, NTooltip, SelectOption, NDropdown, NMenu } from 'naive-ui';
   import { computed, defineComponent, getCurrentInstance, h, reactive, ref, VNode, watch } from 'vue';
   import type { Router } from 'vue-router';
   import { useRouter } from 'vue-router';
@@ -107,12 +165,14 @@
   import { DataFromEnum, OpsClusterInfo } from '../cluster/types';
   import { OpsNodeInfo } from './types';
   import { useNodeTable } from './use-tables';
+  import { CopyOutlined, DisconnectOutlined, PlusOutlined, SyncOutlined, MoreOutlined } from '@vicons/antd'
 
   export default defineComponent({
     name: 'ProjectsNodes',
     components: {
       NButton,
       NTooltip,
+      NEmpty,
       NPopconfirm,
       NFormItemGi,
       NFormItemRow,
@@ -130,7 +190,9 @@
       NSelect,
       NSpace,
       NDataTable,
-      NPagination
+      NPagination,
+      MoreOutlined,
+      NIcon, DisconnectOutlined, SyncOutlined, PlusOutlined, CopyOutlined
     },
     setup() {
       const router: Router = useRouter()
@@ -138,6 +200,7 @@
       const clusterListData = ref<OpsClusterInfo[]>();
       const clusterTags = ref<string[]>([]);
       const tableWidth = ref<number>(1600);
+      const testComploading = ref(false);
 
       const loadingRef = ref(false);
       const nodesList = ref<OpsNodeInfo[]>([] as OpsNodeInfo[]);
@@ -193,27 +256,52 @@
         return selectedCluster.value && selectedCluster.value.id > 0;
       }
 
-      const hasAnyNoSyncNode = () => {
-        return nodesList.value.filter((node) => !node.id || node.id <= 0).length === 0;
+      const hasSelectedSyncClusterAppId = () => {
+        return selectedCluster.value && selectedCluster.value.appId && selectedCluster.value.appId !== '';
+      }
+
+      const hasAnyNoSyncSourceNode = () => {
+        return nodesList.value.filter((node) => node.dataSourceCode === null || node.dataSourceCode === 0).length > 0;
       }
 
       const nodesRefresh = async () => {
         await clusterChanged(projectClusterCode.value);
       }
 
+      const disabledPubKey = () => {
+        return nodesList.value.filter((node) => node.isConnected === false).length === 0;
+      }
+
+      const testConnectivity = async () => {
+        loadingRef.value = true;
+        await testConnectivityByHalley(projectCode.value, selectedCluster.value.id).then((res: Map<String, Boolean>) => {
+          //objec 转map
+          const resMap = new Map(Object.entries(res));
+          nodesList.value.forEach((node) => {
+            if (resMap.has(node.id.toString())) {
+              node.isConnected = resMap.get(node.id.toString()) == true;
+            }
+          });
+        }).finally(() => {
+          loadingRef.value = false;
+        });
+      }
+
+      const createALlNodeSource = async () => {
+        loadingRef.value = true;
+        await createSourceWithAllNode(projectCode.value, selectedCluster.value.id).then(() => {
+          console.log('创建成功');
+          nodesRefresh();
+        }).finally(() => {
+          loadingRef.value = false;
+        });
+      }
+
       const clusterChanged = async (val: string) => {
         loadingRef.value = true;
 
         selectedCluster.value = clusterListData.value?.find((item) => item.clusterId === val) || {} as OpsClusterInfo;
-
-        const res = await getPlatformNodeListByProject(projectCode.value, val);
-        const nodeListDataTmp = res.map((item) => {
-          return {
-            ...item,
-            from: DataFromEnum.AUTO,
-            stellaropsClusterName: selectedCluster.value.clusterName,
-          } as OpsNodeInfo;
-        });
+        const nodeListDataTmp = [] as OpsNodeInfo[];
 
         const manuallyNodes = await queryProjectNodeList(projectCode.value, selectedCluster.value.id);
         manuallyNodes.map((item) => {
@@ -242,18 +330,8 @@
         loadingRef.value = false;
       };
 
-      const nodeColumns = useNodeTable({
-        deleteLogic: async (row: OpsNodeInfo) => {
-          await deleteProjectNode(projectCode.value, row.clusterCode, row.id).then(() => {
-            console.log('删除成功');
-            if (row.from === DataFromEnum.AUTO) {
-              nodesRefresh();
-            } else {
-              nodesList.value.splice(nodesList.value.findIndex((item) => item.id === row.id), 1);
-            }
-          });
-        },
-        editLogic: async (row: OpsNodeInfo) => {
+      const nodeColumns = useNodeTable(
+        async (row: OpsNodeInfo) => {
           if (modalNodeInfo.id != row.id) {
             currentRow.value = row;
             currentRow.value.stellaropsClusterName = selectedCluster.value.clusterName;
@@ -263,7 +341,17 @@
           modalMode.value = '修改';
           showModalRef.value = true;
         },
-        syncLogic: async (row) => {
+        async (row: OpsNodeInfo) => {
+          await deleteProjectNode(projectCode.value, row.clusterCode, row.id).then(() => {
+            console.log('删除成功');
+            if (row.from === DataFromEnum.AUTO) {
+              nodesRefresh();
+            } else {
+              nodesList.value.splice(nodesList.value.findIndex((item) => item.id === row.id), 1);
+            }
+          });
+        },
+        async (row) => {
           if (!hasSelectedSyncCluster()) {
             window.$message.error('集群尚未同步，无法操作节点信息！');
             return;
@@ -279,8 +367,30 @@
               console.log('同步成功');
               nodesRefresh();
             });
-        }
-      })
+        },
+        async (row) => {
+          if (!hasSelectedSyncCluster()) {
+            window.$message.error('集群尚未同步，无法操作节点信息！');
+            return;
+          }
+          await syncSourceNodeData(projectCode.value, selectedCluster.value.id, row.id).then(() => {
+            console.log('源创建成功');
+            nodesRefresh();
+          });
+        },
+      )
+
+      const syncHalleyNode = async () => {
+        loadingRef.value = true;
+        //ToDo：通过Halley接口同步节点
+        await syncNodesByHalley(projectCode.value, selectedCluster.value.id).then((res: boolean) => {
+          if (res) {
+            console.log('同步成功');
+            nodesRefresh();
+          }
+          loadingRef.value = false;
+        });
+      }
 
       const syncAllNode = async () => {
         loadingRef.value = true;
@@ -451,20 +561,25 @@
         tableWidth,
         nodeColumns,
         hasSelectedSyncCluster,
+        hasSelectedSyncClusterAppId,
         refreshClusterData,
         nodesRefresh,
+        testConnectivity,
+        testComploading,
         renderOption,
         addNodeLogic,
-        hasAnyNoSyncNode,
+        hasAnyNoSyncSourceNode,
         syncAllNode,
         modalNodeInfo,
         modalMode,
         showModalRef,
         showParamModalRef, cancelModal,
         refreshParamList,
-        confirmModal, trim,
+        confirmModal, trim, SyncOutlined,
         DataFromEnum, nodeParmas: nodeParams, paramsColumns,
-        loadingParamRef, addParamLogic, modalParamMode, confirmParamModal, modalParamInfo, cancelParamModal
+        loadingParamRef, addParamLogic, modalParamMode, confirmParamModal, modalParamInfo, cancelParamModal,
+        disabledPubKey,
+        syncHalleyNode, createALlNodeSource
       }
     },
     mounted() {

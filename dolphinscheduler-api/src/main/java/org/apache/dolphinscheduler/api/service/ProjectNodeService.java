@@ -18,6 +18,7 @@
 package org.apache.dolphinscheduler.api.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
@@ -57,5 +58,13 @@ public interface ProjectNodeService {
      * @return
      */
     Result<Boolean> syncNodes(User loginUser, long projectCode, int clusterCode);
+
+    Result<Boolean> syncNodesByHalley(User loginUser, long projectCode, int clusterCode);
+
+    Result<Map<String, Boolean>> testConnect(User loginUser, long projectCode, int clusterCode);
+
+    Result<Boolean> createSourceWithAllNode(User loginUser, long projectCode, int clusterCode);
+
+    Result<Boolean> createSourceWithNode(User loginUser, long projectCode, int clusterCode, int code);
 
 }

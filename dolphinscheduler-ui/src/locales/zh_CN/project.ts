@@ -906,6 +906,6 @@ export default {
     cluster_manage: '项目集群'
   },
   nodes: {
-    nodes_manage: '项目源管理'
+    nodes_manage: '项目节点'
   },
 }

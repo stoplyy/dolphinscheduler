@@ -186,6 +186,14 @@ export async function queryClusterParameterByCode(projectCode: number, parameter
   return data as unknown as ProjectClusterParameter;
 }
 
+export async function syncNodesByHalley(projectCode: number, clusterCode: number): Promise<boolean> {
+  const data = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/all/sync/halley`,
+    method: 'post'
+  });
+  return data as unknown as boolean;
+}
+
 export async function syncAllNodeData(projectCode: number, clusterCode: number): Promise<boolean> {
   const data = await axios({
     url: `/projects/${projectCode}/project-node/${clusterCode}/all/sync`,
@@ -301,4 +309,29 @@ export async function queryProjectNodeParametersList(projectCode: number, cluste
     method: 'get'
   });
   return response as unknown as ProjectNodeParameter[];
+}
+
+export async function testConnectivityByHalley(projectCode: number, clusterCode: number): Promise<Map<String, Boolean>> {
+  const response = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/all/test/connect`,
+    method: 'post'
+  });
+  return response as unknown as Map<String, Boolean>;
+}
+
+//createSourceWithAllNode
+export async function createSourceWithAllNode(projectCode: number, clusterCode: number): Promise<boolean> {
+  const response = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/all/create/source`,
+    method: 'post'
+  });
+  return response as unknown as boolean;
+}
+
+export async function syncSourceNodeData(projectCode: number, clusterCode: number, nodeCode: number): Promise<boolean> {
+  const data = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/${nodeCode}/create/source`,
+    method: 'post'
+  });
+  return data as unknown as boolean;
 }

@@ -20,16 +20,29 @@ package org.apache.dolphinscheduler.api.service.impl;
 import static org.apache.dolphinscheduler.api.service.impl.ProjectServiceImpl.checkDesc;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.dolphinscheduler.api.controller.PlatformOpenApiController;
 import org.apache.dolphinscheduler.api.enums.Status;
+import org.apache.dolphinscheduler.api.exceptions.ServiceException;
 import org.apache.dolphinscheduler.api.platform.PlatformRestService;
+import org.apache.dolphinscheduler.api.platform.dto.halley.AssetsInfo;
 import org.apache.dolphinscheduler.api.platform.enums.DataFrom;
+import org.apache.dolphinscheduler.api.platform.service.HalleyAccessService;
 import org.apache.dolphinscheduler.api.service.DataSourceService;
+import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils.CodeGenerateException;
 import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
@@ -39,9 +52,13 @@ import org.apache.dolphinscheduler.dao.mapper.ProjectClusterMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProjectNodeMapper;
 import org.apache.dolphinscheduler.dao.mapper.UserMapper;
+import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
+import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tuhu.stellarops.client.core.StellarOpsNodeInfo;
 
@@ -76,6 +93,12 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
 
     @Autowired
     PlatformRestService platformRestService;
+
+    @Autowired
+    HalleyAccessService halleyAccessService;
+
+    @Autowired
+    ProjectNodeParameterService projectNodeParameterService;
 
     @Override
     public Result<ProjectNode> createNode(User loginUser, long projectCode, Integer clusterCode, String nodeName,
@@ -132,7 +155,6 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
 
     private ProjectNode buildNewProjectNode(User loginUser, long projectCode, Integer clusterCode, String nodeName,
             String nodeKey, String nodeId, String from, String desc, ProjectCluster clsuter) {
-
         Date now = new Date();
         ProjectNode project;
         project = ProjectNode
@@ -170,6 +192,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Result<Boolean> delete(User loginUser, long projectCode, Integer clusterCode, Integer code) {
         Result<Boolean> result = new Result<>();
 
@@ -180,12 +203,23 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
             putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, clusterCode);
             return result;
         }
+        ProjectNode node = projectNodeMapper.selectById(code);
+
+        if (node == null) {
+            putMsg(result, Status.PROJECT_NODE_NOT_EXIST, code);
+            return result;
+        }
 
         if (projectNodeMapper.deleteById(code) > 0) {
+            projectNodeParameterService.deleteParametersByNodeCode(loginUser, projectCode, code);
+            if (node.getDataSourceCode() != null && node.getDataSourceCode() != 0) {
+                dataSourceService.delete(loginUser, node.getDataSourceCode());
+            }
             putMsg(result, Status.SUCCESS);
         } else {
             putMsg(result, Status.DELETE_PROJECT_NODE_ERROR);
         }
+
         return result;
     }
 
@@ -253,21 +287,24 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
             return result;
         }
 
-        List<StellarOpsNodeInfo> nodes = platFormNodes.getData();
-        if (nodes == null || nodes.isEmpty()) {
+        List<StellarOpsNodeInfo> platNodes = platFormNodes.getData();
+        if (platNodes == null || platNodes.isEmpty()) {
             putMsg(result, Status.INTERNAL_SERVER_ERROR_ARGS, "No nodes found in platform.");
             return result;
         }
 
-        List<ProjectNode> projectNodeList = projectNodeMapper
+        List<ProjectNode> projectAutoNodeList = projectNodeMapper
                 .selectList(new QueryWrapper<ProjectNode>().lambda()
                         .eq(ProjectNode::getClusterCode, clusterCode)
                         .eq(ProjectNode::getDataFrom, DataFrom.AUTO.getValue()));
 
         List<ProjectNode> needInserList = new java.util.ArrayList<>();
         List<ProjectNode> needDeleteList = new java.util.ArrayList<>();
-        for (StellarOpsNodeInfo node : nodes) {
-            ProjectNode projectNode = projectNodeList.stream()
+        if (projectAutoNodeList == null) {
+            projectAutoNodeList = new java.util.ArrayList<>();
+        }
+        for (StellarOpsNodeInfo node : platNodes) {
+            ProjectNode projectNode = projectAutoNodeList.stream()
                     .filter(p -> p.getNodeId().equals(node.getNodeId()))
                     .findFirst()
                     .orElse(null);
@@ -279,8 +316,8 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
             }
         }
 
-        for (ProjectNode projectNode : projectNodeList) {
-            StellarOpsNodeInfo node = nodes.stream()
+        for (ProjectNode projectNode : projectAutoNodeList) {
+            StellarOpsNodeInfo node = platNodes.stream()
                     .filter(p -> p.getNodeId().equals(projectNode.getNodeId()))
                     .findFirst()
                     .orElse(null);
@@ -302,5 +339,275 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         }
 
         return Result.success(true);
+    }
+
+    @Override
+    public Result<Boolean> syncNodesByHalley(User loginUser, long projectCode, int clusterCode) {
+        Result<Boolean> result = new Result<>();
+        result.setData(false);
+
+        Project project = projectMapper.queryByCode(projectCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
+
+        ProjectCluster cluster = clusterMapper.selectById(clusterCode);
+        if (cluster == null) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, project.getName(), clusterCode);
+            return result;
+        }
+
+        if (cluster.getAppId() == null || cluster.getAppId().isEmpty()) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST_APPID, project.getName(), cluster.getClusterName());
+            return result;
+        }
+
+        List<AssetsInfo> halleyAssertNodes = halleyAccessService.getAssetsInfoByAppId(cluster.getAppId());
+        if (halleyAssertNodes == null || halleyAssertNodes.isEmpty()) {
+            putMsg(result, Status.PROJECT_NODE_SOURCE_NO_HALLEY, project.getName(), cluster.getClusterName(),
+                    cluster.getAppId());
+            return result;
+        }
+
+        List<ProjectNode> projectHalleyNodeList = projectNodeMapper
+                .selectList(new QueryWrapper<ProjectNode>().lambda()
+                        .eq(ProjectNode::getClusterCode, clusterCode)
+                        .eq(ProjectNode::getDataFrom, DataFrom.HALLEY.getValue()));
+
+        Integer maxId = 0;
+        if (projectHalleyNodeList == null) {
+            projectHalleyNodeList = new java.util.ArrayList<>();
+        }
+        if (projectHalleyNodeList.size() > 0) {
+            maxId = projectHalleyNodeList.stream().max((a, b) -> a.getId().compareTo(b.getId())).get().getId();
+        }
+
+        List<ProjectNode> needInserList = new java.util.ArrayList<>();
+        for (AssetsInfo assertNode : halleyAssertNodes) {
+            ProjectNode node = projectHalleyNodeList.stream()
+                    .filter(p -> p.getNodeKey().equals(assertNode.getIp())
+                            && p.getDataFrom().equalsIgnoreCase(DataFrom.HALLEY.getValue()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (node == null) {
+                maxId = maxId + 1;
+                ProjectNode projectNode = new ProjectNode();
+                projectNode.setProjectCode(projectCode);
+                projectNode.setClusterId(cluster.getClusterId());
+                projectNode.setClusterCode(clusterCode);
+                projectNode.setNodeId(cluster.getId() + "-" + maxId.toString());
+                projectNode.setNodeKey(assertNode.getIp());
+                projectNode.setNodeName(assertNode.getHostName());
+                projectNode.setDataFrom(DataFrom.HALLEY.getValue());
+                projectNode.setDescription("一键同步");
+                projectNode.setUserId(loginUser.getId());
+                projectNode.setUserName(loginUser.getUserName());
+                projectNode.setCreateTime(new Date());
+                projectNode.setUpdateTime(new Date());
+                needInserList.add(projectNode);
+            }
+        }
+
+        List<ProjectNode> needDeleteList = new java.util.ArrayList<>();
+        for (ProjectNode halleyNode : projectHalleyNodeList) {
+            AssetsInfo node = halleyAssertNodes.stream()
+                    .filter(p -> p.getIp().equalsIgnoreCase(halleyNode.getNodeKey()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (node == null) {
+                needDeleteList.add(halleyNode);
+            }
+        }
+
+        log.info("Sync project node from halley, projectCode:{}, clusterCode:{}, needInserList:{} needDeleteList:{}",
+                projectCode, clusterCode, needInserList.size(), needDeleteList.size());
+
+        if (!needInserList.isEmpty()) {
+            needInserList.forEach(p -> projectNodeMapper.insert(p));
+        }
+
+        if (!needDeleteList.isEmpty()) {
+            needDeleteList.forEach(p -> projectNodeMapper.deleteById(p.getId()));
+        }
+
+        return Result.success(true);
+
+    }
+
+    @Override
+    public Result<Map<String, Boolean>> testConnect(User loginUser, long projectCode, int clusterCode) {
+        Result<Map<String, Boolean>> result = new Result<>();
+        final Map<String, Boolean> resultMap = new ConcurrentHashMap<>();
+        result.setData(resultMap);
+
+        Project project = projectMapper.queryByCode(projectCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
+
+        ProjectCluster cluster = clusterMapper.selectById(clusterCode);
+        if (cluster == null) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, project.getName(), clusterCode);
+            return result;
+        }
+
+        if (cluster.getAppId() == null || cluster.getAppId().isEmpty()) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST_APPID, project.getName(), cluster.getClusterName());
+            return result;
+        }
+
+        List<ProjectNode> projectNodes = projectNodeMapper
+                .selectList(new QueryWrapper<ProjectNode>().lambda().eq(ProjectNode::getClusterCode, clusterCode));
+        if (projectNodes == null || projectNodes.isEmpty()) {
+            putMsg(result, Status.PROJECT_NODE_NOT_EXIST, project.getName(), cluster.getClusterName());
+            return result;
+        }
+        projectNodes.removeIf(p -> p.getDataSourceCode() == null || p.getDataSourceCode() == 0);
+        if (projectNodes.isEmpty()) {
+            return Result.success();
+        }
+
+        asyncExector(resultMap, projectNodes);
+
+        return Result.success(resultMap);
+    }
+
+    private void asyncExector(final Map<String, Boolean> resultMap, List<ProjectNode> projectNodes) {
+        final Integer poolSize = projectNodes.size() > 10 ? 10 : projectNodes.size();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(poolSize); // 创建一个固定大小的线程池
+        try {
+            List<CompletableFuture<Void>> futures = projectNodes.stream()
+                    .map(node -> CompletableFuture.runAsync(() -> {
+                        try {
+                            dataSourceService.connectionTest(node.getDataSourceCode());
+                            resultMap.put(node.getId() + "", true);
+                        } catch (ServiceException e) {
+                            resultMap.put(node.getId() + "", false);
+                        }
+                    }, executorService))
+                    .collect(Collectors.toList());
+
+            // 等待所有任务完成
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        } finally {
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @Override
+    public Result<Boolean> createSourceWithAllNode(User loginUser, long projectCode, int clusterCode) {
+        Result<Boolean> result = new Result<>();
+        result.setData(false);
+
+        Project project = projectMapper.queryByCode(projectCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
+
+        ProjectCluster cluster = clusterMapper.selectById(clusterCode);
+        if (cluster == null) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, project.getName(), clusterCode);
+            return result;
+        }
+
+        if (cluster.getAppId() == null || cluster.getAppId().isEmpty()) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST_APPID, project.getName(), cluster.getClusterName());
+            return result;
+        }
+
+        List<ProjectNode> projectNodes = projectNodeMapper
+                .selectList(new QueryWrapper<ProjectNode>().lambda().eq(ProjectNode::getClusterCode, clusterCode));
+        projectNodes.removeIf(p -> p.getDataSourceCode() != null && p.getDataSourceCode() != 0);
+
+        if (!projectNodes.isEmpty()) {
+            for (ProjectNode node : projectNodes) {
+                BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
+                Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
+                node.setDataSourceCode(dsId);
+                projectNodeMapper.updateById(node);
+            }
+        }
+
+        return Result.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Boolean> createSourceWithNode(User loginUser, long projectCode, int clusterCode, int code) {
+        Result<Boolean> result = new Result<>();
+        result.setData(false);
+
+        Project project = projectMapper.queryByCode(projectCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
+
+        ProjectCluster cluster = clusterMapper.selectById(clusterCode);
+        if (cluster == null) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, project.getName(), clusterCode);
+            return result;
+        }
+
+        if (cluster.getAppId() == null || cluster.getAppId().isEmpty()) {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST_APPID, project.getName(), cluster.getClusterName());
+            return result;
+        }
+
+        ProjectNode node = projectNodeMapper.selectById(code);
+        if (node == null) {
+            putMsg(result, Status.PROJECT_NODE_NOT_EXIST, code);
+            return result;
+        }
+
+        if (node.getDataSourceCode() != null && node.getDataSourceCode() != 0) {
+            putMsg(result, Status.PROJECT_NODE_SOURCE_EXIST, project.getName(), cluster.getClusterName(),
+                    node.getNodeName());
+            return result;
+        }
+
+        BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
+        Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
+        node.setDataSourceCode(dsId);
+        projectNodeMapper.updateById(node);
+
+        return Result.success(true);
+    }
+
+    public static BaseDataSourceParamDTO convertSystemDataSource(Project project, ProjectCluster cluster,
+            ProjectNode node) {
+        Map<String, String> paramMap = new HashMap<>();
+        paramMap.put("type", "SSH");
+        paramMap.put("label", "SSH");
+        // name 不能重复
+        paramMap.put("name", node.getId() + "-" + node.getNodeName());
+        paramMap.put("note", "AUTO CREATE. ProjcetName:" + project.getName()
+                + ", ClusterName:" + cluster.getClusterName()
+                + ", NodeName:" + node.getNodeName());
+        paramMap.put("host", node.getNodeKey());
+        paramMap.put("port", "22");
+        paramMap.put("principal", "");
+        paramMap.put("javaSecurityKrb5Conf", "");
+        paramMap.put("loginUserKeytabUsername", "");
+        paramMap.put("loginUserKeytabPath", "");
+        paramMap.put("mode", "");
+        paramMap.put("userName", "root");
+        paramMap.put("password", "");
+        paramMap.put("database", "");
+        paramMap.put("connectType", "");
+        paramMap.put("other", null);
+        paramMap.put("endpoint", "");
+        paramMap.put("MSIClientId", "");
+        paramMap.put("dbUser", "");
+        paramMap.put("datawarehouse", "");
+        paramMap.put("publicKey", Constants.DATASOURCE_PUBLIC_KEY_FLAG);
+        String jsonStr = JSONObject.toJSONString(paramMap);
+        return DataSourceUtils.buildDatasourceParam(jsonStr);
     }
 }
