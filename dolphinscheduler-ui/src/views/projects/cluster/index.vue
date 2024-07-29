@@ -61,6 +61,7 @@
 </template>
 
 <script lang="ts">
+  import FirecrawlApp from '@mendable/firecrawl-js';
   import { NButton, NCard, NDataTable, NDialog, NDialogProvider, NDynamicTags, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable } from 'naive-ui';
   import { defineComponent, getCurrentInstance, reactive, ref } from 'vue';
   import type { Router } from 'vue-router';
@@ -286,7 +287,6 @@
           loadingRef.value = false;
         }
       };
-
 
       return {
         loadingRef,

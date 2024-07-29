@@ -1,28 +1,29 @@
 import { ProjectCluster, ProjectNodeParameter, StellarOpsClusterInfo } from "@/service/modules/project-platform/platform"
 
 enum DataFromEnum {
-    AUTO = 'auto',
-    MANUAL = 'manual'
+  AUTO = 'Auto',
+  HALLEY = 'Halley',
+  MANUAL = 'manual'
 }
 
 interface OpsClusterInfo extends ProjectCluster, StellarOpsClusterInfo {
 
-    paramList?: ProjectNodeParameter[]
+  paramList?: ProjectNodeParameter[]
 
-    from: DataFromEnum,
+  from: DataFromEnum,
 
-    clusterId: string; // Rename the clusterId property to match the other interface
-    clusterName: string; // Rename the clusterId property to match the other interface
+  clusterId: string; // Rename the clusterId property to match the other interface
+  clusterName: string; // Rename the clusterId property to match the other interface
 
-    stellaropsClusterName: string;
+  stellaropsClusterName: string;
 }
 
 interface DataTableRowOper {
-    syncLogic(row: any): void;
-    deleteLogic: (row: any) => void;
-    editLogic: (row: any) => void;
+  syncLogic(row: any): void;
+  deleteLogic: (row: any) => void;
+  editLogic: (row: any) => void;
 }
 
 export {
-    OpsClusterInfo, DataFromEnum, DataTableRowOper
+  OpsClusterInfo, DataFromEnum, DataTableRowOper
 }

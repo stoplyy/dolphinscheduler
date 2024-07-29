@@ -60,7 +60,7 @@ public class ProjectNode {
     private Integer clusterCode;
 
     @TableField("data_source_code")
-    private Long dataSourceCode;
+    private Integer dataSourceCode;
 
     @TableField("node_id")
     private String nodeId;

@@ -19,6 +19,7 @@ import {
   defineComponent,
   getCurrentInstance,
   PropType,
+  ref,
   toRefs,
   watch
 } from 'vue'
@@ -32,13 +33,22 @@ import {
   NInputNumber,
   NRadioGroup,
   NRadio,
-  NSpace
+  NSpace,
+  NGrid,
+  NGi,
+  NLayout,
+  NTooltip,
+  NAlert
 } from 'naive-ui'
 import Modal from '@/components/modal'
 import { useI18n } from 'vue-i18n'
 import { useForm, datasourceType } from './use-form'
 import { useDetail } from './use-detail'
 import styles from './index.module.scss'
+import { useMessage } from 'naive-ui'
+import { getPlatformPublicKey } from '@/service/modules/project-platform'
+import utils from '@/utils'
+
 
 const props = {
   show: {
@@ -92,6 +102,34 @@ const DetailModal = defineComponent({
       testConnect()
     }
 
+    const publicKey = ref('')
+    const message = useMessage()
+    const onShowPublicKey = async () => {
+      if (publicKey.value === '') {
+        await getPlatformPublicKey(1).then((res) => {
+          publicKey.value = res
+          if (res) {
+            copyPub()
+          } else {
+            message.error('获取平台公钥失败，请 @管理员');
+          }
+        })
+      } else {
+        copyPub()
+      }
+    }
+    const copyPub = () => {
+      navigator.clipboard.writeText(publicKey.value)
+        .then(() => {
+          // 成功复制后的回调
+          message.success(`复制成功！`);
+        })
+        .catch(err => {
+          // 复制失败的回调
+          message.error('复制失败，请手动复制。');
+        });
+    }
+
     const onChangeType = changeType
     const onChangePort = changePort
 
@@ -141,7 +179,8 @@ const DetailModal = defineComponent({
       onTest,
       onCancel,
       trim,
-      handleSourceModalOpen
+      handleSourceModalOpen,
+      onShowPublicKey
     }
   },
   render() {
@@ -173,7 +212,8 @@ const DetailModal = defineComponent({
       onCancel,
       onTest,
       onSubmit,
-      handleSourceModalOpen
+      handleSourceModalOpen,
+      onShowPublicKey
     } = this
     return (
       <Modal
@@ -194,8 +234,9 @@ const DetailModal = defineComponent({
               <NForm
                 rules={rules}
                 ref='detailFormRef'
-                require-mark-placement='left'
+                // require-mark-placement='left'
                 label-align='left'
+                label-placement="left" label-width="auto"
               >
                 <NFormItem
                   label={t('datasource.datasource')}
@@ -323,8 +364,8 @@ const DetailModal = defineComponent({
                       detailForm.type === 'REDSHIFT'
                         ? redShiftModeOptions
                         : detailForm.type === 'SAGEMAKER'
-                        ? sagemakerModeOption
-                        : modeOptions
+                          ? sagemakerModeOption
+                          : modeOptions
                     }
                   ></NSelect>
                 </NFormItem>
@@ -667,16 +708,41 @@ const DetailModal = defineComponent({
                 </NFormItem>
                 <NFormItem
                   v-show={showPublicKey}
-                  label='PublicKey'
+                  label='PKeyIdentity'
                   path='publicKey'
                 >
-                  <NInput
-                    v-model={[detailForm.publicKey, 'value']}
-                    type='textarea'
-                    autosize={{
-                      minRows: 4
-                    }}
-                  />
+                  <NSpace vertical style="width: 100%;">
+                    <NGrid >
+                      <NGi span={24}>
+                        <NTooltip trigger='hover' placement='top'>
+
+                          {{
+                            default: () => `公钥请配置在目标机器的 /root/.ssh/authorized_keys 文件中,PKeyIdentity配置为：USE_SYSTEM_PRIVATE_KEY`,
+                            trigger: () => (
+                              <NButton
+                                class='btn-public-key'
+                                type='primary'
+                                size='small'
+                                onClick={onShowPublicKey}
+                                v-text={'复制平台公钥'}
+                              />
+                            )
+                          }}
+                        </NTooltip>
+                      </NGi>
+                    </NGrid>
+                    <NGrid cols={1}>
+                      <NGi>
+                        <NInput
+                          v-model={[detailForm.publicKey, 'value']}
+                          type='textarea'
+                          autosize={{
+                            minRows: 4
+                          }}
+                        />
+                      </NGi>
+                    </NGrid>
+                  </NSpace>
                 </NFormItem>
               </NForm>
             </NSpin>

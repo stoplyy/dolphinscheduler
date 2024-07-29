@@ -10,6 +10,7 @@ import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_PROJECT_ERROR;
 import static org.apache.dolphinscheduler.api.enums.Status.UPDATE_PROJECT_PARAMETER_ERROR;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
@@ -237,6 +238,47 @@ public class ProjectNodeController extends BaseController {
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable int clusterCode) {
         return service.syncNodes(loginUser, projectCode, clusterCode);
+    }
+
+    @PostMapping(value = "/all/sync/halley")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<Boolean> syncNodesByHalley(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode) {
+        return service.syncNodesByHalley(loginUser, projectCode, clusterCode);
+    }
+
+    @PostMapping(value = "/all/test/connect")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<Map<String, Boolean>> testConnect(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode) {
+        return service.testConnect(loginUser, projectCode, clusterCode);
+    }
+
+    @PostMapping(value = "/all/create/source")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<Boolean> createSourceWithAllNode(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode) {
+        return service.createSourceWithAllNode(loginUser, projectCode, clusterCode);
+    }
+
+    @PostMapping(value = "/{code}/create/source")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<Boolean> createSourceWithNode(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
+            @PathVariable int code) {
+        return service.createSourceWithNode(loginUser, projectCode, clusterCode, code);
     }
 
 }

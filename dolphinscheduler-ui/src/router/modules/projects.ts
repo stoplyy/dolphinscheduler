@@ -91,7 +91,7 @@ export default {
       name: 'projects-nodes',
       component: () => import('@/views/projects/nodes/index.vue'),
       meta: {
-        title: '项目源管理',
+        title: '项目节点',
         activeMenu: 'projects',
         showSide: true,
         auth: []

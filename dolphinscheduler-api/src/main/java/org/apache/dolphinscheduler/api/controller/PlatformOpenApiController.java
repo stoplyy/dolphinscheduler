@@ -303,4 +303,25 @@ public class PlatformOpenApiController implements PlatformOpenApi {
             return Result.success(new HashMap<>());
         }
     }
+
+    @GetMapping("{projectCode}/publicKey")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_DETAILS_BY_CODE_ERROR)
+    public Result<String> getPublicKey(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @PathVariable long projectCode) {
+
+        String pubKey = PlatformApolloConfigUtil.getPublicKey();
+        if (pubKey == null) {
+            return Result.errorWithArgs(Status.QUERY_PROJECT_DETAILS_BY_CODE_ERROR, "public key not found");
+        }
+
+        return Result.success(pubKey);
+    }
+
+    @GetMapping("/getAppidList")
+    @ResponseStatus(HttpStatus.OK)
+    public Result<List<String>> getAppidList() {
+        return Result.success(null);
+    }
 }

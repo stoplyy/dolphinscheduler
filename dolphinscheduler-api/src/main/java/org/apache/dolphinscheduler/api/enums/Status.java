@@ -325,6 +325,13 @@ public enum Status {
     UPDATE_PROJECT_NODE_PARAMETER_ERROR(104018, "update project node parameter error", "更新项目集群节点参数错误"),
     PROJECT_NODE_PARAMETER_ALREADY_EXISTS(104019, "project {0} clusterId {1} nodeId {2} parameter {3} already exists",
             "项目id[{0}]集群id[{1}]节点id[{2}]参数[{3}]已存在"),
+    PROJECT_CLUSTER_NOT_EXIST_APPID(104020, "project {0} cluster {1} not exists appid", "项目[{0}]集群[{1}]未设置AppId"),
+    PROJECT_NODE_SOURCE_NO_HALLEY(104021,
+            "project {0} cluster {1} appid {2} not find nodes from halley", "项目[{0}] 集群[{1}] AppId[{2}] 未从Halley找到节点"),
+    PROJECT_NODE_SOURCE_ALL_EXIST(104022, "project {0} cluster {1} all nodes exist",
+            "项目[{0}] 集群[{1}] 所有节点已存在"),
+    PROJECT_NODE_SOURCE_EXIST(104023, "project {0} cluster {1} node {2} exist",
+            "项目[{0}] 集群[{1}] 节点[{2}] 数据源已存在"),
 
     UDF_FUNCTION_NOT_EXIST(20001, "UDF function not found", "UDF函数不存在"),
     UDF_FUNCTION_EXISTS(20002, "UDF function already exists", "UDF函数已存在"),
