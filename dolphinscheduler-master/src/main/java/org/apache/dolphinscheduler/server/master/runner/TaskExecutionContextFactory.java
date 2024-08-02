@@ -28,7 +28,18 @@ import static org.apache.dolphinscheduler.plugin.task.api.utils.DataQualityConst
 import static org.apache.dolphinscheduler.plugin.task.api.utils.DataQualityConstants.TARGET_CONNECTOR_TYPE;
 import static org.apache.dolphinscheduler.plugin.task.api.utils.DataQualityConstants.TARGET_DATASOURCE_ID;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.common.constants.PlatformConstant;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 import org.apache.dolphinscheduler.dao.entity.DataSource;
@@ -43,6 +54,7 @@ import org.apache.dolphinscheduler.plugin.task.api.DataQualityTaskExecutionConte
 import org.apache.dolphinscheduler.plugin.task.api.K8sTaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.TaskPluginManager;
+import org.apache.dolphinscheduler.plugin.task.api.enums.ResourceType;
 import org.apache.dolphinscheduler.plugin.task.api.enums.dp.ConnectorType;
 import org.apache.dolphinscheduler.plugin.task.api.enums.dp.ExecuteSqlType;
 import org.apache.dolphinscheduler.plugin.task.api.model.JdbcInfo;
@@ -66,22 +78,12 @@ import org.apache.dolphinscheduler.service.process.ProcessService;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.DefaultConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.zaxxer.hikari.HikariDataSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -102,21 +104,32 @@ public class TaskExecutionContextFactory {
     @Autowired(required = false)
     private HikariDataSource hikariDataSource;
 
-    public TaskExecutionContext createTaskExecutionContext(TaskInstance taskInstance) throws TaskExecutionContextCreateException {
+    public TaskExecutionContext createTaskExecutionContext(TaskInstance taskInstance)
+            throws TaskExecutionContextCreateException {
         ProcessInstance workflowInstance = taskInstance.getProcessInstance();
 
-        ResourceParametersHelper resources =
-                Optional.ofNullable(taskPluginManager.getTaskChannel(taskInstance.getTaskType()))
-                        .map(taskChannel -> taskChannel.getResources(taskInstance.getTaskParams()))
-                        .orElse(null);
-        setTaskResourceInfo(resources);
-
+        // pre build business params
         Map<String, Property> businessParamsMap = curingParamsService.preBuildBusinessParams(workflowInstance);
 
+        // get task parameters
         AbstractParameters baseParam = taskPluginManager.getParameters(ParametersNode.builder()
                 .taskType(taskInstance.getTaskType()).taskParams(taskInstance.getTaskParams()).build());
-        Map<String, Property> propertyMap =
-                curingParamsService.paramParsingPreparation(taskInstance, baseParam, workflowInstance);
+        Map<String, Property> propertyMap = curingParamsService.paramParsingPreparation(taskInstance, baseParam,
+                workflowInstance);
+        // get task resource
+        ResourceParametersHelper resources = Optional
+                .ofNullable(taskPluginManager.getTaskChannel(taskInstance.getTaskType()))
+                .map(taskChannel -> taskChannel.getResources(taskInstance.getTaskParams()))
+                .orElse(null);
+
+        if (propertyMap.containsKey(PlatformConstant.DATASOURCE_PARAM_NAME)) {
+            Property property = propertyMap.get(PlatformConstant.DATASOURCE_PARAM_NAME);
+            List<String> loadResourceWithTaskParam = loadResourceWithTaskParam(property);
+            loadResourceWithTaskParam.forEach(
+                    datasourceId -> resources.put(ResourceType.DATASOURCE, Integer.parseInt(datasourceId)));
+        }
+        setTaskResourceInfo(resources);
+
         TaskExecutionContext taskExecutionContext = TaskExecutionContextBuilder.get()
                 .buildWorkflowInstanceHost(masterConfig.getMasterAddress())
                 .buildTaskInstanceRelatedInfo(taskInstance)
@@ -133,8 +146,33 @@ public class TaskExecutionContextFactory {
         return taskExecutionContext;
     }
 
+    /**
+     * put datasource resource with task param
+     * 1. use PlatformConstant.DATASOURCE_PARAM_NAME param to specify the datasource
+     * 2. if has multiple datasource,
+     * use PlatformConstant.DATASOURCE_PARAM_NAME_SEPARATOR to separate
+     * 3. the param value is datasource id
+     * 
+     * @param resources
+     */
+    private List<String> loadResourceWithTaskParam(Property platformDataSourceProperty) {
+        Set<String> localDatasource = new HashSet<>();
+        String stringValue = platformDataSourceProperty.getValue();
+        if (stringValue != null && !stringValue.isEmpty()) {
+            if (stringValue.contains(PlatformConstant.DATASOURCE_PARAM_NAME_SEPARATOR)) {
+                String[] values = stringValue.split(PlatformConstant.DATASOURCE_PARAM_NAME_SEPARATOR);
+                for (String value : values) {
+                    localDatasource.add(value);
+                }
+            } else {
+                localDatasource.add(stringValue);
+            }
+        }
+        return new ArrayList<>(localDatasource);
+    }
+
     public void setDataQualityTaskExecutionContext(TaskExecutionContext taskExecutionContext, TaskInstance taskInstance,
-                                                   String tenantCode) {
+            String tenantCode) {
         // TODO to be optimized
         DataQualityTaskExecutionContext dataQualityTaskExecutionContext = null;
         if (TASK_TYPE_DATA_QUALITY.equalsIgnoreCase(taskInstance.getTaskType())) {
@@ -191,16 +229,16 @@ public class TaskExecutionContextFactory {
         List<UdfFunc> udfFuncList = processService.queryUdfFunListByIds(map.keySet().toArray(new Integer[map.size()]));
 
         udfFuncList.forEach(udfFunc -> {
-            UdfFuncParameters udfFuncParameters =
-                    JSONUtils.parseObject(JSONUtils.toJsonString(udfFunc), UdfFuncParameters.class);
+            UdfFuncParameters udfFuncParameters = JSONUtils.parseObject(JSONUtils.toJsonString(udfFunc),
+                    UdfFuncParameters.class);
             map.put(udfFunc.getId(), udfFuncParameters);
         });
     }
 
     private void setDataQualityTaskRelation(DataQualityTaskExecutionContext dataQualityTaskExecutionContext,
-                                            TaskInstance taskInstance, String tenantCode) {
-        DataQualityParameters dataQualityParameters =
-                JSONUtils.parseObject(taskInstance.getTaskParams(), DataQualityParameters.class);
+            TaskInstance taskInstance, String tenantCode) {
+        DataQualityParameters dataQualityParameters = JSONUtils.parseObject(taskInstance.getTaskParams(),
+                DataQualityParameters.class);
         if (dataQualityParameters == null) {
             return;
         }
@@ -247,13 +285,13 @@ public class TaskExecutionContextFactory {
         switch (taskInstance.getTaskType()) {
             case "K8S":
             case "KUBEFLOW":
-                K8sTaskParameters k8sTaskParameters =
-                        JSONUtils.parseObject(taskInstance.getTaskParams(), K8sTaskParameters.class);
+                K8sTaskParameters k8sTaskParameters = JSONUtils.parseObject(taskInstance.getTaskParams(),
+                        K8sTaskParameters.class);
                 namespace = k8sTaskParameters.getNamespace();
                 break;
             case "SPARK":
-                SparkParameters sparkParameters =
-                        JSONUtils.parseObject(taskInstance.getTaskParams(), SparkParameters.class);
+                SparkParameters sparkParameters = JSONUtils.parseObject(taskInstance.getTaskParams(),
+                        SparkParameters.class);
                 if (StringUtils.isNotEmpty(sparkParameters.getNamespace())) {
                     namespace = sparkParameters.getNamespace();
                 }
@@ -266,8 +304,8 @@ public class TaskExecutionContextFactory {
             String clusterName = JSONUtils.toMap(namespace).get(CLUSTER);
             String configYaml = processService.findConfigYamlByName(clusterName);
             if (configYaml != null) {
-                k8sTaskExecutionContext =
-                        new K8sTaskExecutionContext(configYaml, JSONUtils.toMap(namespace).get(NAMESPACE_NAME));
+                k8sTaskExecutionContext = new K8sTaskExecutionContext(configYaml,
+                        JSONUtils.toMap(namespace).get(NAMESPACE_NAME));
             }
         }
         return k8sTaskExecutionContext;
@@ -281,7 +319,7 @@ public class TaskExecutionContextFactory {
      * @param config
      */
     private void setSourceConfig(DataQualityTaskExecutionContext dataQualityTaskExecutionContext,
-                                 Map<String, String> config) {
+            Map<String, String> config) {
         if (StringUtils.isNotEmpty(config.get(SRC_DATASOURCE_ID))) {
             DataSource dataSource = processService.findDataSourceById(Integer.parseInt(config.get(SRC_DATASOURCE_ID)));
             if (dataSource != null) {
@@ -305,9 +343,9 @@ public class TaskExecutionContextFactory {
      * @param executeSqlList
      */
     private void setComparisonParams(DataQualityTaskExecutionContext dataQualityTaskExecutionContext,
-                                     Map<String, String> config,
-                                     List<DqRuleInputEntry> ruleInputEntryList,
-                                     List<DqRuleExecuteSql> executeSqlList) {
+            Map<String, String> config,
+            List<DqRuleInputEntry> ruleInputEntryList,
+            List<DqRuleExecuteSql> executeSqlList) {
         if (config.get(COMPARISON_TYPE) != null) {
             int comparisonTypeId = Integer.parseInt(config.get(COMPARISON_TYPE));
             // comparison type id 1 is fixed value ,do not need set param
@@ -353,10 +391,10 @@ public class TaskExecutionContextFactory {
      * @param config
      */
     private void setTargetConfig(DataQualityTaskExecutionContext dataQualityTaskExecutionContext,
-                                 Map<String, String> config) {
+            Map<String, String> config) {
         if (StringUtils.isNotEmpty(config.get(TARGET_DATASOURCE_ID))) {
-            DataSource dataSource =
-                    processService.findDataSourceById(Integer.parseInt(config.get(TARGET_DATASOURCE_ID)));
+            DataSource dataSource = processService
+                    .findDataSourceById(Integer.parseInt(config.get(TARGET_DATASOURCE_ID)));
             if (dataSource != null) {
                 ConnectorType targetConnectorType = ConnectorType.of(
                         DbType.of(Integer.parseInt(config.get(TARGET_CONNECTOR_TYPE))).isHive() ? 1 : 0);
@@ -412,6 +450,7 @@ public class TaskExecutionContextFactory {
     /**
      * The StatisticsValueWriterConfig will be used in DataQualityApplication that
      * writes the statistics value into dolphin scheduler datasource
+     * 
      * @param dataQualityTaskExecutionContext
      */
     private void setStatisticsValueWriterConfig(DataQualityTaskExecutionContext dataQualityTaskExecutionContext) {
