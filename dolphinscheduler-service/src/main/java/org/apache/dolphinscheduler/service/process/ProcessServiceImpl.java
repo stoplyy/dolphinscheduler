@@ -2086,7 +2086,8 @@ public class ProcessServiceImpl implements ProcessService {
     protected void deleteCommandWithCheck(int commandId) {
         int delete = this.commandMapper.deleteById(commandId);
         if (delete != 1) {
-            throw new ServiceException("delete command fail, id:" + commandId);
+            log.error("delete command fail, id:{}", commandId);
+            // throw new ServiceException("delete command fail, id:" + commandId);
         }
     }
 
