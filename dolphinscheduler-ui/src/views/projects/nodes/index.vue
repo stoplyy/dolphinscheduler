@@ -238,7 +238,16 @@
 
       const renderOption = ({ node, option }: { node: VNode; option: SelectOption; }) => h(NTooltip, null, {
         trigger: () => node,
-        default: () => clusterListData?.value?.find((item) => item.clusterId === option.value)?.description || ''
+        default: () => {
+          if (clusterListData === undefined || clusterListData.value === undefined) {
+            return '';
+          }
+          let cur = clusterListData.value.findLast((item) => item.clusterId === option.value);
+          if (cur === undefined || cur === null) {
+            return '';
+          }
+          return cur.clusterName + " " + cur.description;
+        }
       });
 
       const refreshClusterData = async () => {

@@ -19,6 +19,15 @@ package org.apache.dolphinscheduler.plugin.task.remoteshell;
 
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.dolphinscheduler.common.constants.PlatformConstant;
 import org.apache.dolphinscheduler.common.utils.FileUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
@@ -33,14 +42,6 @@ import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.DataSourceParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.dolphinscheduler.spi.enums.DbType;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.SystemUtils;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,23 +77,24 @@ public class RemoteShellTask extends AbstractTask {
 
     @Override
     public void init() {
+        final Map<String, String> paramsStringMap = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
         log.info("shell task params {}", taskExecutionContext.getTaskParams());
+        log.info("prepareParamsMap string map: {}", paramsStringMap);
 
         remoteShellParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(),
                 RemoteShellParameters.class);
         if (CollectionUtils.isNotEmpty(remoteShellParameters.localParams)) {
-            for (Property parameter : remoteShellParameters.localParams) {
-                String value = parameter.getValue();
-                Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
-                value = ParameterUtils.convertParameterPlaceholders(value, ParameterUtils.convert(paramsMap));
-                parameter.setValue(value);
+            for (Property remoteLocalP : remoteShellParameters.localParams) {
+                String remoteLocalP_V = remoteLocalP.getValue();
+                remoteLocalP_V = ParameterUtils.convertParameterPlaceholders(remoteLocalP_V, paramsStringMap);
+                remoteLocalP.setValue(remoteLocalP_V);
                 // if the parameter is a datasource parameter,
                 // set the datasource id with the value
-                if (parameter.getProp().equalsIgnoreCase("datasource")) {
+                if (remoteLocalP.getProp().equalsIgnoreCase(PlatformConstant.REMOTESHELL_DATASOURCE_PARAM_NAME)) {
                     try {
-                        remoteShellParameters.setDatasource(Integer.parseInt(value));
+                        remoteShellParameters.setDatasource(Integer.parseInt(remoteLocalP_V));
                     } catch (NumberFormatException e) {
-                        throw new TaskException("source parameter is not a number: " + value);
+                        throw new TaskException("source parameter is not a number: " + remoteLocalP_V);
                     }
                 }
             }
