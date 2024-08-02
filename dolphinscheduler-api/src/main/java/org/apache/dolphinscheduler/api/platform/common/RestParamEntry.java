@@ -4,17 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.platform.PathEnum;
-import org.apache.dolphinscheduler.api.platform.PlatformRestService;
-import org.apache.dolphinscheduler.api.utils.Result;
+import org.apache.dolphinscheduler.common.constants.PlatformConstant;
 import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
-
-import com.tuhu.stellarops.client.core.StellarOpsClusterInfo;
-import com.tuhu.stellarops.client.core.StellarOpsNodeInfo;
 
 import lombok.Data;
 

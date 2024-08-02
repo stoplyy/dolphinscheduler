@@ -124,11 +124,11 @@
                 <artifactId>dolphinscheduler-alert-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
+            <!-- <dependency>
                 <groupId>org.apache.dolphinscheduler</groupId>
                 <artifactId>dolphinscheduler-standalone-server</artifactId>
                 <version>${project.version}</version>
-            </dependency>
+            </dependency> -->
             <dependency>
                 <groupId>org.apache.dolphinscheduler</groupId>
                 <artifactId>dolphinscheduler-ui</artifactId>

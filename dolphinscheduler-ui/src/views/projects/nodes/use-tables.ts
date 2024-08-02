@@ -58,6 +58,11 @@ export function useNodeTable(handleEdit: operRow, handleDelete: operRow, handleS
       //   ...COLUMN_WIDTH_CONFIG['note']
       // },
       {
+        title: '源Id',
+        key: 'dataSourceCode',
+        ...COLUMN_WIDTH_CONFIG['name']
+      },
+      {
         title: "描述",
         key: "description",
         ...COLUMN_WIDTH_CONFIG['note']
@@ -179,8 +184,8 @@ export function useNodeTable(handleEdit: operRow, handleDelete: operRow, handleS
 
   function calculateButtonColor(row: OpsNodeInfo) {
     if (row.dataSourceCode === undefined || row.dataSourceCode === null) {
-      return 'info'
+      return 'warning'
     }
-    return (row.isConnected === undefined || row.isConnected === null) ? 'warning' : (row.isConnected ? 'success' : "error");
+    return (row.isConnected === undefined || row.isConnected === null) ? 'info' : (row.isConnected ? 'success' : "error");
   }
 }
