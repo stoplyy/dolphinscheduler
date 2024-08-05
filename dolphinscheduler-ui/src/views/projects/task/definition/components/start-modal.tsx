@@ -160,7 +160,7 @@ export default defineComponent({
         onConfirm={this.handleStart}
         confirmLoading={this.saving}
       >
-        <NForm ref='startFormRef' model={this.startForm}>
+        <NForm label-placement="left" label-width="auto" ref='startFormRef' model={this.startForm}>
           <NFormItem label={t('project.task.task_name')} path='task_name'>
             <div title={this.row.taskName}>{this.row.taskName}</div>
           </NFormItem>
