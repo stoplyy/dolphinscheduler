@@ -242,7 +242,7 @@ export default defineComponent({
         onConfirm={this.handleStart}
         confirmLoading={this.saving}
       >
-        <NForm ref='startFormRef' model={this.startForm} rules={this.rules}>
+        <NForm label-placement="left" label-width="auto" ref='startFormRef' model={this.startForm} rules={this.rules}>
           <NFormItem
             label={t('project.workflow.workflow_name')}
             path='workflow_name'
@@ -493,6 +493,23 @@ export default defineComponent({
                 </NFormItem>
               </NSpace>
             )}
+          <NFormItem
+              label="Stellarops源"
+              path='isPlatform'
+            >
+            <NCheckbox
+              checkedValue="1"
+              uncheckedValue="0"
+              v-model:checked={this.startForm.isPlatform}
+            >
+              使用Platform源
+            </NCheckbox>
+          </NFormItem>
+
+          {this.startForm.isPlatform && this.startForm.isPlatform==="1" &&(
+              <NSpace vertical class={styles['width-100']}>
+              TODO: LOAD  Source With Cluster
+            </NSpace>)}
           <NFormItem
             label={t('project.workflow.startup_parameter')}
             path='startup_parameter'

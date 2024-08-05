@@ -44,10 +44,10 @@
                       <NIcon>
                         <SyncOutlined />
                       </NIcon>
-                    </template>同步
+                    </template>API同步
                   </NButton>
                 </template>
-                <span>通过配置的接口地址同步节点（需要项目配置platform_xx;会删除同为auto导入但是不在接口中的节点）</span>
+                <span>通过配置的API接口地址同步节点（需要项目配置platform_xx;会删除同为auto导入但是不在API接口中的节点）</span>
               </NTooltip>
             </template>
             是否同步所有节点？
@@ -236,7 +236,9 @@
         })) || [];
       });
 
-      const renderOption = ({ node, option }: { node: VNode; option: SelectOption; }) => h(NTooltip, null, {
+      const renderOption = ({ node, option }: { node: VNode; option: SelectOption; }) => h(NTooltip, {
+        placement: 'left',
+      }, {
         trigger: () => node,
         default: () => {
           if (clusterListData === undefined || clusterListData.value === undefined) {

@@ -84,7 +84,7 @@ const Navbar = defineComponent({
         </div>
         <div class={styles.settings}  >
 
-          <NButton style="padding:2px" quaternary onClick={this.handleUISettingClick}>
+          <NButton style="padding:2px" quaternary onClick={() => this.handleUISettingClick}>
             {{
               icon: () => (
                 <NIcon size='16'>
