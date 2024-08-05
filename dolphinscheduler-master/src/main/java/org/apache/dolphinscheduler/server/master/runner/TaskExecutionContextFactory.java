@@ -120,7 +120,7 @@ public class TaskExecutionContextFactory {
         ResourceParametersHelper resources = Optional
                 .ofNullable(taskPluginManager.getTaskChannel(taskInstance.getTaskType()))
                 .map(taskChannel -> taskChannel.getResources(taskInstance.getTaskParams()))
-                .orElse(null);
+                .orElse(new ResourceParametersHelper());
 
         if (propertyMap.containsKey(PlatformConstant.DATASOURCE_PARAM_NAME)) {
             Property property = propertyMap.get(PlatformConstant.DATASOURCE_PARAM_NAME);

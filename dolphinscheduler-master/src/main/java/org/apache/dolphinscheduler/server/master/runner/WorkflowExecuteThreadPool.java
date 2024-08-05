@@ -34,11 +34,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import com.tuhu.dolphin.spring.annotation.DolphinForceMaster;
+
 /**
  * Used to execute {@link WorkflowExecuteRunnable}.
  */
 @Component
 @Slf4j
+@DolphinForceMaster
 public class WorkflowExecuteThreadPool extends ThreadPoolTaskExecutor {
 
     @Autowired
@@ -67,8 +70,8 @@ public class WorkflowExecuteThreadPool extends ThreadPoolTaskExecutor {
      * submit state event
      */
     public void submitStateEvent(StateEvent stateEvent) {
-        WorkflowExecuteRunnable workflowExecuteThread =
-                processInstanceExecCacheManager.getByProcessInstanceId(stateEvent.getProcessInstanceId());
+        WorkflowExecuteRunnable workflowExecuteThread = processInstanceExecCacheManager
+                .getByProcessInstanceId(stateEvent.getProcessInstanceId());
         if (workflowExecuteThread == null) {
             log.warn("Submit state event error, cannot from workflowExecuteThread from cache manager, stateEvent:{}",
                     stateEvent);
@@ -85,8 +88,7 @@ public class WorkflowExecuteThreadPool extends ThreadPoolTaskExecutor {
         if (!workflowExecuteThread.isStart() || workflowExecuteThread.eventSize() == 0) {
             return;
         }
-        IWorkflowExecuteContext workflowExecuteRunnableContext =
-                workflowExecuteThread.getWorkflowExecuteContext();
+        IWorkflowExecuteContext workflowExecuteRunnableContext = workflowExecuteThread.getWorkflowExecuteContext();
         Integer workflowInstanceId = workflowExecuteRunnableContext.getWorkflowInstance().getId();
 
         if (multiThreadFilterMap.containsKey(workflowInstanceId)) {

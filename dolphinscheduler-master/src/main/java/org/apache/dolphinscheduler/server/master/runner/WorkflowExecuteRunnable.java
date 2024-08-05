@@ -122,7 +122,6 @@ import lombok.extern.slf4j.Slf4j;
  * Workflow execute task, used to execute a workflow instance.
  */
 @Slf4j
-@DolphinForceMaster
 public class WorkflowExecuteRunnable implements IWorkflowExecuteRunnable {
 
     private final ProcessService processService;
