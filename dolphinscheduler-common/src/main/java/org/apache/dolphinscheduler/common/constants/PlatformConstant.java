@@ -22,4 +22,7 @@ public class PlatformConstant {
      * task 任务的 datasource 参数名称 分隔符
      */
     public static final String DATASOURCE_PARAM_NAME_SEPARATOR = ",";
+
+    // dynamic节点 LIST 参数分隔符
+    public static final String DYNAMIC_LIST_SEPAROTOR = "LIST";
 }
