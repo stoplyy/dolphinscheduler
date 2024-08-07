@@ -84,7 +84,12 @@ enum PlatformRestEnum {
   ENV_CHECK = "env.check.rest"
 }
 
+enum PlatformConst {
+  PlatformSourceParamName = "platform.datasource"
+}
+
 export {
+  PlatformConst,
   PlatformRestEnum, BizResponse, StellarOpsClusterInfo,
   StellarOpsNodeInfo, ProjectCluster, ProjectNodeParameter, ProjectNode, ProjectClusterParameter, CommonParameter
 }
