@@ -40,6 +40,7 @@ import {
   NSpace,
   NSwitch,
   NTag,
+  NText,
   NTooltip
 } from 'naive-ui'
 import {
@@ -55,6 +56,7 @@ import {
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { platformDef } from './platform-source'
 import styles from '../index.module.scss'
 import { IDefinitionData } from '../types'
 import { IParam } from './types'
@@ -83,9 +85,11 @@ export default defineComponent({
     const parallelismRef = ref(false)
     const { t } = useI18n()
     const route = useRoute()
+
     const { startState } = useForm()
 
-    let projectSources: CascaderOption[];
+    const { generalProjectSources,loadingSource } = platformDef()
+
     const showSourceModal = ref(false)
     const sourceModalSelectedIds = ref<Array<string | number>>([])
     const setPlatsourceParams = ref<Map<IParam, (number | string)[]>>(new Map())
@@ -108,15 +112,6 @@ export default defineComponent({
 
     const handleStart = () => {
       handleStartDefinition(props.row.code, props.row.version)
-    }
-
-    const generalProjectSources = () => {
-      if (projectSources == null) {
-        projectSources = []
-        projectSources.push(
-          { label: 'Platform', value: 0, children: [{ label: 'Node-1', value: 10 }, { label: 'Node-1', value: 11 }] })
-      }
-      return projectSources;
     }
 
     const confirmSourceModal = () => {
@@ -277,6 +272,7 @@ export default defineComponent({
       generalWarningTypeListOptions,
       generalPriorityList,
       generalProjectSources,
+      loadingSource,
       renderLabel,
       updateWorkerGroup,
       removeStartParams,
@@ -662,9 +658,20 @@ export default defineComponent({
           onCancel={() => { this.showSourceModal = false }}
           onConfirm={this.confirmSourceModal}>
           <NCascader multiple clearable
+            onLoad={this.loadingSource}
             checkStrategy="child"
             value={this.sourceModalSelectedIds}
-            options={this.generalProjectSources()}
+            filterable
+            maxTagCount={5}
+            themeOverrides={{ columnWidth: "400px", optionFontSize: "13px" }}
+            renderLabel={(option: CascaderOption, checked: boolean) => 
+              h(NTooltip, {}, 
+                {
+                  trigger: () => h(NText, { type: checked ? 'primary' : 'default', style: "min-width:400px" }, { default: () => option.label }),
+                  default: () => option.disabled ? (option.label + ' 节点未关联源，不可选择！') : (option.value + ":" + option.label)
+                })
+            }
+            options={this.generalProjectSources(this.projectCode)}
             onUpdateValue={this.updateSourceModal}
             placeholder="Load Source from project" />
         </Modal>
