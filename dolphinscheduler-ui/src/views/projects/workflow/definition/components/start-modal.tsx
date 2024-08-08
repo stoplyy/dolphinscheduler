@@ -15,45 +15,53 @@
  * limitations under the License.
  */
 
-import {
-  defineComponent,
-  PropType,
-  toRefs,
-  h,
-  onMounted,
-  ref,
-  watch,
-  getCurrentInstance,
-  computed
-} from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
 import Modal from '@/components/modal'
-import { useForm } from './use-form'
-import { useModal } from './use-modal'
-import {
-  NForm,
-  NFormItem,
-  NButton,
-  NIcon,
-  NInput,
-  NSpace,
-  NRadio,
-  NRadioGroup,
-  NSelect,
-  NSwitch,
-  NCheckbox,
-  NDatePicker,
-  NRadioButton
-} from 'naive-ui'
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   DeleteOutlined,
+  LinkOutlined,
   PlusCircleOutlined
 } from '@vicons/antd'
-import { IDefinitionData } from '../types'
+import {
+  CascaderOption,
+  NButton,
+  NCascader,
+  NCheckbox,
+  NDatePicker,
+  NForm,
+  NFormItem,
+  NIcon,
+  NInput,
+  NRadio,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
+  NSpace,
+  NSwitch,
+  NTag,
+  NText,
+  NTooltip
+} from 'naive-ui'
+import {
+  computed,
+  defineComponent,
+  getCurrentInstance,
+  h,
+  onMounted,
+  PropType,
+  ref,
+  toRefs,
+  watch
+} from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import { platformDef } from './platform-source'
 import styles from '../index.module.scss'
+import { IDefinitionData } from '../types'
+import { IParam } from './types'
+import { useForm } from './use-form'
+import { useModal } from './use-modal'
 
 const props = {
   row: {
@@ -77,7 +85,17 @@ export default defineComponent({
     const parallelismRef = ref(false)
     const { t } = useI18n()
     const route = useRoute()
+
     const { startState } = useForm()
+
+    const { generalProjectSources,loadingSource } = platformDef()
+
+    const showSourceModal = ref(false)
+    const sourceModalSelectedIds = ref<Array<string | number>>([])
+    const setPlatsourceParams = ref<Map<IParam, (number | string)[]>>(new Map())
+    let modelSourceParam: IParam;
+    const taskPlatformSourceParam = ref("")
+
     const {
       variables,
       handleStartDefinition,
@@ -94,6 +112,39 @@ export default defineComponent({
 
     const handleStart = () => {
       handleStartDefinition(props.row.code, props.row.version)
+    }
+
+    const confirmSourceModal = () => {
+      modelSourceParam.value = sourceModalSelectedIds.value.join(",")
+
+      setPlatsourceParams.value.set(modelSourceParam, sourceModalSelectedIds.value);
+      const selectedIds: (string | number)[] = []
+      setPlatsourceParams.value.forEach((value, key) => { 
+        value.forEach((item: string | number) => { 
+          if (selectedIds.indexOf(item) === -1) {
+            selectedIds.push(item)
+          }
+        })
+      })
+      taskPlatformSourceParam.value = selectedIds.join(",")
+      startState.startForm.platformSource = taskPlatformSourceParam.value
+      showSourceModal.value = false
+    }
+
+    const updateSourceModal = (value: Array<string|number>) => {
+      sourceModalSelectedIds.value=value
+    }
+
+    const handleSourceModal = (param: IParam) => {
+      console.log("handleSourceModal:" + param)
+      modelSourceParam = param
+
+      if (setPlatsourceParams.value.has(param)) { 
+        sourceModalSelectedIds.value = setPlatsourceParams.value.get(param) || []
+      } else {
+        sourceModalSelectedIds.value = []
+      }
+      showSourceModal.value = true
     }
 
     const generalWarningTypeListOptions = () => [
@@ -189,7 +240,7 @@ export default defineComponent({
     }
 
     const removeStartParams = (index: number) => {
-      variables.startParamsList.splice(index, 1)
+      let param = variables.startParamsList.splice(index, 1)
     }
 
     const trim = getCurrentInstance()?.appContext.config.globalProperties.trim
@@ -220,6 +271,8 @@ export default defineComponent({
       handleStart,
       generalWarningTypeListOptions,
       generalPriorityList,
+      generalProjectSources,
+      loadingSource,
       renderLabel,
       updateWorkerGroup,
       removeStartParams,
@@ -228,6 +281,12 @@ export default defineComponent({
       ...toRefs(variables),
       ...toRefs(startState),
       ...toRefs(props),
+      showSourceModal,
+      handleSourceModal,
+      confirmSourceModal,
+      updateSourceModal,
+      sourceModalSelectedIds,
+      taskPlatformSourceParam,
       trim
     }
   },
@@ -247,9 +306,7 @@ export default defineComponent({
             label={t('project.workflow.workflow_name')}
             path='workflow_name'
           >
-            <div class={styles.formItem} title={this.row.name}>
-              {this.row.name}
-            </div>
+            {this.row.name}
           </NFormItem>
           <NFormItem
             label={t('project.workflow.failure_strategy')}
@@ -494,22 +551,25 @@ export default defineComponent({
               </NSpace>
             )}
           <NFormItem
-              label="Stellarops源"
-              path='isPlatform'
-            >
-            <NCheckbox
-              checkedValue="1"
-              uncheckedValue="0"
-              v-model:checked={this.startForm.isPlatform}
-            >
-              使用Platform源
-            </NCheckbox>
+              label="Platform源"
+              path='isPlatform'>
+            <NSpace vertical>
+              <NCheckbox
+                checkedValue={true}
+                uncheckedValue={false}
+                v-model:checked={this.startForm.isPlatform}>
+                使用Platform源
+              </NCheckbox>
+              {this.startForm.isPlatform && (
+                <NSpace inline align="center">
+                  <NTag type="info">platform.datasource</NTag> :
+                  <NInput
+                    disabled
+                    placeholder="选择源时 自动填充."
+                    value={this.taskPlatformSourceParam}/>
+              </NSpace>)}
+              </NSpace>
           </NFormItem>
-
-          {this.startForm.isPlatform && this.startForm.isPlatform==="1" &&(
-              <NSpace vertical class={styles['width-100']}>
-              TODO: LOAD  Source With Cluster
-            </NSpace>)}
           <NFormItem
             label={t('project.workflow.startup_parameter')}
             path='startup_parameter'
@@ -530,7 +590,7 @@ export default defineComponent({
                       separator=':'
                       placeholder={['prop', 'value']}
                       defaultValue={[item.prop, item.value]}
-                      onUpdateValue={(param) =>
+                      onUpdateValue={(param: Array<string>) =>
                         this.updateParamsList(index, param)
                       }
                     />
@@ -553,6 +613,21 @@ export default defineComponent({
                       <NIcon>
                         <PlusCircleOutlined />
                       </NIcon>
+                    </NButton>
+                    <NButton
+                      text
+                      type='primary'
+                      disabled={!this.startForm.isPlatform}
+                      onClick={() => this.handleSourceModal(item)}
+                      class='btn-create-custom-parameter'
+                    >
+                      {h(NTooltip, {}, {
+                        trigger: () =>
+                          <NIcon>
+                            <LinkOutlined />
+                          </NIcon>,
+                        default: () => '选择Platform源  将源id使用,连接作为参数值'
+                      })}
                     </NButton>
                   </NSpace>
                 ))}
@@ -577,6 +652,29 @@ export default defineComponent({
             />
           </NFormItem>
         </NForm>
+        <Modal
+          show={this.showSourceModal}
+          title="选择项目源"
+          onCancel={() => { this.showSourceModal = false }}
+          onConfirm={this.confirmSourceModal}>
+          <NCascader multiple clearable
+            onLoad={this.loadingSource}
+            checkStrategy="child"
+            value={this.sourceModalSelectedIds}
+            filterable
+            maxTagCount={5}
+            themeOverrides={{ columnWidth: "400px", optionFontSize: "13px" }}
+            renderLabel={(option: CascaderOption, checked: boolean) => 
+              h(NTooltip, {}, 
+                {
+                  trigger: () => h(NText, { type: checked ? 'primary' : 'default', style: "min-width:400px" }, { default: () => option.label }),
+                  default: () => option.disabled ? (option.label + ' 节点未关联源，不可选择！') : (option.value + ":" + option.label)
+                })
+            }
+            options={this.generalProjectSources(this.projectCode)}
+            onUpdateValue={this.updateSourceModal}
+            placeholder="Load Source from project" />
+        </Modal>
       </Modal>
     )
   }

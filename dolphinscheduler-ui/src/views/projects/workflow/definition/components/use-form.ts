@@ -72,7 +72,8 @@ export const useForm = () => {
       version: null,
       allLevelDependent: 'false',
       executionOrder: 'DESC_ORDER',
-      isPlatform: "0"
+      isPlatform: Boolean(false),
+      platformSource: ""
     },
     saving: false,
     rules: {
