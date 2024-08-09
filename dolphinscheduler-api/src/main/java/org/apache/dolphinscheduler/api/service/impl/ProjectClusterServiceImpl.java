@@ -114,11 +114,8 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
     }
 
     @Override
-    public Result<List<ProjectCluster>> queryClusterListPaging(User loginUser, long projectCode) {
+    public Result<List<ProjectCluster>> queryClusterListPaging(long projectCode) {
         Result<List<ProjectCluster>> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
-
         List<ProjectCluster> projectList = projectClusterMapper
                 .selectList(new QueryWrapper<ProjectCluster>().eq("project_code", projectCode));
         result.setData(projectList);
@@ -127,10 +124,8 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
     }
 
     @Override
-    public Result<Boolean> deleteCluster(User loginUser, long projectCode, Integer clusterCode) {
+    public Result<Boolean> deleteCluster(long projectCode, Integer clusterCode) {
         Result<Boolean> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         if (projectClusterMapper.deleteById(clusterCode) > 0) {
             putMsg(result, Status.SUCCESS);

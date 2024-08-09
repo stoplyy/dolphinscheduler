@@ -235,11 +235,9 @@ public class ProjectNodeParameterServiceImpl extends BaseServiceImpl implements 
     }
 
     @Override
-    public Result<List<ProjectNodeParameter>> queryParameterList(User loginUser, long projectCode, Integer nodeCode) {
+    public Result<List<ProjectNodeParameter>> queryParameterList(long projectCode, Integer nodeCode) {
 
         Result<List<ProjectNodeParameter>> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         List<ProjectNodeParameter> paramList = parameterMapper
                 .selectList(new QueryWrapper<ProjectNodeParameter>()

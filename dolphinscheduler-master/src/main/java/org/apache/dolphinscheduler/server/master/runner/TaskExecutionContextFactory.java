@@ -159,8 +159,8 @@ public class TaskExecutionContextFactory {
         Set<String> localDatasource = new HashSet<>();
         String stringValue = platformDataSourceProperty.getValue();
         if (stringValue != null && !stringValue.isEmpty()) {
-            if (stringValue.contains(PlatformConstant.DATASOURCE_PARAM_NAME_SEPARATOR)) {
-                String[] values = stringValue.split(PlatformConstant.DATASOURCE_PARAM_NAME_SEPARATOR);
+            if (stringValue.contains(PlatformConstant.PARAM_VALUE_SEPARATOR)) {
+                String[] values = stringValue.split(PlatformConstant.PARAM_VALUE_SEPARATOR);
                 for (String value : values) {
                     localDatasource.add(value);
                 }

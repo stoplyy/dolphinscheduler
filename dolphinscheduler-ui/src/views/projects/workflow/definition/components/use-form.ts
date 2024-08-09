@@ -73,7 +73,11 @@ export const useForm = () => {
       allLevelDependent: 'false',
       executionOrder: 'DESC_ORDER',
       isPlatform: Boolean(false),
-      platformSource: ""
+      isPlatformCluster: Boolean(false),
+      isPlatformNode: Boolean(false),
+      platformSource: "",
+      platformClusters: "",
+      platformNodes: "",
     },
     saving: false,
     rules: {

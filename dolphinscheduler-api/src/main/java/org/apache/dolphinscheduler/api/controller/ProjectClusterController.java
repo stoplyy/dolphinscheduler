@@ -14,6 +14,7 @@ import java.util.List;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.ProjectClusterParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectClusterService;
+import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
@@ -45,6 +46,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("projects/{projectCode}/project-cluster")
 public class ProjectClusterController extends BaseController {
+
+    @Autowired
+    private ProjectService projectService;
 
     @Autowired
     private ProjectClusterService service;
@@ -105,7 +109,10 @@ public class ProjectClusterController extends BaseController {
     public Result<List<ProjectCluster>> queryList(
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @PathVariable long projectCode) {
-        return service.queryClusterListPaging(loginUser, projectCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return service.queryClusterListPaging(projectCode);
     }
 
     @Operation(summary = "deleteCluster", description = "DELETE_PROJECT_BY_ID_NOTES")
@@ -120,7 +127,9 @@ public class ProjectClusterController extends BaseController {
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @PathVariable long projectCode,
             @PathVariable("code") Integer clusterCode) {
-        return service.deleteCluster(loginUser, projectCode, clusterCode);
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return service.deleteCluster(projectCode, clusterCode);
     }
 
     @Operation(summary = "createClusterParameter", description = "CREATE_PROJECT_CLUSTER_PARAMETER_NOTES")
@@ -138,6 +147,7 @@ public class ProjectClusterController extends BaseController {
             @PathVariable("clusterCode") Integer clusterCode,
             @RequestParam("paramName") String paramName,
             @RequestParam(value = "paramValue") String paramValue) {
+
         return paramService.createParameter(loginUser, projectCode, clusterCode, paramName, paramValue);
     }
 
@@ -159,7 +169,10 @@ public class ProjectClusterController extends BaseController {
             @RequestParam("paramName") String paramName,
             @RequestParam(value = "paramValue") String paramValue,
             @RequestParam(value = "description", required = false) String des) {
-        return paramService.updateParameter(loginUser, projectCode, clusterCode, code, paramName, paramValue,
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return paramService.updateParameter(projectCode, clusterCode, code, paramName, paramValue,
                 des);
     }
 
@@ -175,7 +188,10 @@ public class ProjectClusterController extends BaseController {
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable("clusterCode") Integer clusterCode,
             @PathVariable("code") Integer code) {
-        return paramService.deleteParametersByCode(loginUser, projectCode, clusterCode, code);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return paramService.deleteParametersByCode(projectCode, clusterCode, code);
     }
 
     @Operation(summary = "batchDeleteClusterParametersByCodes", description = "DELETE_PROJECT_PARAMETER_NOTES")
@@ -190,7 +206,10 @@ public class ProjectClusterController extends BaseController {
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable("clusterCode") Integer clusterCode,
             @RequestParam("codes") String codes) {
-        return paramService.batchDeleteParametersByCodes(loginUser, projectCode, clusterCode, codes);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return paramService.batchDeleteParametersByCodes(projectCode, clusterCode, codes);
     }
 
     @Operation(summary = "queryClusterParameterList", description = "QUERY_PROJECT_PARAMETER_LIST_PAGING")
@@ -204,7 +223,10 @@ public class ProjectClusterController extends BaseController {
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable("clusterCode") Integer clusterCode) {
-        return paramService.queryParameterList(loginUser, projectCode, clusterCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return paramService.queryParameterList(projectCode, clusterCode);
     }
 
     @Operation(summary = "queryClusterParameterByCode", description = "QUERY_PROJECT_PARAMETER_NOTES")
@@ -218,6 +240,9 @@ public class ProjectClusterController extends BaseController {
             @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable("code") Integer parameterCode) {
-        return paramService.queryParameterByCode(loginUser, projectCode, parameterCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return paramService.queryParameterByCode(projectCode, parameterCode);
     }
 }
