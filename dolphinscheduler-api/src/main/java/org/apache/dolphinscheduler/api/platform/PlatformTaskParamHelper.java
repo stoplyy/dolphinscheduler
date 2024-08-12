@@ -70,6 +70,8 @@ public class PlatformTaskParamHelper {
                 ? Arrays.asList(startParams.get(CLUSTER_PARAM_NAME).split(PARAM_VALUE_SEPARATOR))
                         .stream().map(this::parseInterger).sorted().collect(Collectors.toList())
                 : new ArrayList<>();
+        clusterIdsInt.addAll(taskNodes.stream().map(ProjectNode::getClusterCode).collect(Collectors.toList()));
+
         final Map<Integer, ProjectCluster> taskClusters = tryCollectorCluster(clusterIdsInt, projectAllClusters);
 
         Map<Integer, List<ProjectClusterParameter>> taskClusterParamsMap = new HashMap<>();

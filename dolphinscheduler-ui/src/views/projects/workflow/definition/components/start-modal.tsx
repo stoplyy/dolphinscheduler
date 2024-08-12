@@ -667,7 +667,7 @@ export default defineComponent({
                     value={this.taskPlatformNodes}
                     filterable
                     maxTagCount={5}
-                    placeholder="选择集群，会被替换为节点参数"
+                    placeholder="选择项目节点，会被替换为节点参数"
                     themeOverrides={{ columnWidth: "300px", optionFontSize: "14px" }}
                     renderLabel={(option: CascaderOption, checked: boolean) =>
                       h(NTooltip, {},
