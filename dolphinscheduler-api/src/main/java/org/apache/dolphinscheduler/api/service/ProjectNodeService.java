@@ -67,4 +67,8 @@ public interface ProjectNodeService {
 
     Result<Boolean> createSourceWithNode(User loginUser, long projectCode, int clusterCode, int code);
 
+    List<ProjectNode> queryNodeListByDataSourceCodes(Integer... dataSourceCodes);
+
+    List<ProjectNode> queryNodesByProjectCode(long projectCode);
+
 }

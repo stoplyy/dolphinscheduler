@@ -610,4 +610,18 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         String jsonStr = JSONObject.toJSONString(paramMap);
         return DataSourceUtils.buildDatasourceParam(jsonStr);
     }
+
+    @Override
+    public List<ProjectNode> queryNodeListByDataSourceCodes(Integer... dataSourceCodes) {
+        QueryWrapper<ProjectNode> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().in(ProjectNode::getDataSourceCode, (Object[]) dataSourceCodes);
+        return projectNodeMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public List<ProjectNode> queryNodesByProjectCode(long projectCode) {
+        QueryWrapper<ProjectNode> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ProjectNode::getProjectCode, projectCode);
+        return projectNodeMapper.selectList(queryWrapper);
+    }
 }

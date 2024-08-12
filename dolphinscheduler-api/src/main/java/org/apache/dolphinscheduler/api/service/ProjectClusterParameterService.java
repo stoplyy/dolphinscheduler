@@ -25,21 +25,22 @@ import org.apache.dolphinscheduler.dao.entity.User;
 
 public interface ProjectClusterParameterService {
 
-    Result<ProjectClusterParameter> createParameter(User loginUser, long projectCode, Integer clusterCode,
+    Result<ProjectClusterParameter> createParameter(User loginUser,
+            long projectCode, Integer clusterCode,
             String parameterName,
             String parameterValue);
 
-    Result<ProjectClusterParameter> updateParameter(User loginUser, long projectCode,
+    Result<ProjectClusterParameter> updateParameter(long projectCode,
             Integer clusterCode,
             Integer code, String parameterName,
             String parameterValue, String des);
 
-    Result<Boolean> deleteParametersByCode(User loginUser, long projectCode, Integer clusterCode, Integer code);
+    Result<Boolean> deleteParametersByCode(long projectCode, Integer clusterCode, Integer code);
 
-    Result<Boolean> batchDeleteParametersByCodes(User loginUser, long projectCode, Integer clusterCode, String codes);
+    Result<Boolean> batchDeleteParametersByCodes(long projectCode, Integer clusterCode, String codes);
 
-    Result<List<ProjectClusterParameter>> queryParameterList(User loginUser, long projectCode,
+    Result<List<ProjectClusterParameter>> queryParameterList(long projectCode,
             Integer projectClusterId);
 
-    Result<ProjectClusterParameter> queryParameterByCode(User loginUser, long projectCode, Integer code);
+    Result<ProjectClusterParameter> queryParameterByCode(long projectCode, Integer code);
 }

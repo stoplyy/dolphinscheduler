@@ -62,6 +62,7 @@ import { IDefinitionData } from '../types'
 import { IParam } from './types'
 import { useForm } from './use-form'
 import { useModal } from './use-modal'
+import { PlatformConst } from '@/service/modules/project-platform/platform'
 
 const props = {
   row: {
@@ -92,6 +93,8 @@ export default defineComponent({
 
     const showSourceModal = ref(false)
     const sourceModalSelectedIds = ref<Array<string | number>>([])
+    const taskPlatformClusters = ref<Array<string | number>>([])
+    const taskPlatformNodes = ref<Array<string | number>>([])
     const setPlatsourceParams = ref<Map<IParam, (number | string)[]>>(new Map())
     let modelSourceParam: IParam;
     const taskPlatformSourceParam = ref("")
@@ -127,7 +130,16 @@ export default defineComponent({
         })
       })
       taskPlatformSourceParam.value = selectedIds.join(",")
-      startState.startForm.platformSource = taskPlatformSourceParam.value
+      
+      if (startState.startForm.isPlatform) {
+        startState.startForm.platformSource = taskPlatformSourceParam.value
+      }
+      if (startState.startForm.isPlatformCluster) { 
+        startState.startForm.platformClusters = taskPlatformClusters.value.join(",")
+      }
+      if (startState.startForm.isPlatformNode) { 
+        startState.startForm.platformNodes = taskPlatformNodes.value.join(",")
+      }
       showSourceModal.value = false
     }
 
@@ -145,6 +157,21 @@ export default defineComponent({
         sourceModalSelectedIds.value = []
       }
       showSourceModal.value = true
+    }
+
+    const renderProjectSourcesOptions = (projectCode: number) => { 
+      const { projectSources, clusterOptions, nodeOptions } = generalProjectSources(projectCode)
+      return projectSources
+    }
+
+    const renderProjectClusterOptions = (projectCode: number) => {
+      const { projectSources, clusterOptions, nodeOptions } = generalProjectSources(projectCode)
+      return clusterOptions
+    }
+
+    const renderProjectNodeOptions = (projectCode: number) => {
+      const { projectSources, clusterOptions, nodeOptions } = generalProjectSources(projectCode)
+      return nodeOptions
     }
 
     const generalWarningTypeListOptions = () => [
@@ -271,7 +298,9 @@ export default defineComponent({
       handleStart,
       generalWarningTypeListOptions,
       generalPriorityList,
-      generalProjectSources,
+      renderProjectSourcesOptions,
+      renderProjectClusterOptions,
+      renderProjectNodeOptions,
       loadingSource,
       renderLabel,
       updateWorkerGroup,
@@ -287,6 +316,8 @@ export default defineComponent({
       updateSourceModal,
       sourceModalSelectedIds,
       taskPlatformSourceParam,
+      taskPlatformClusters,
+      taskPlatformNodes,
       trim
     }
   },
@@ -551,24 +582,105 @@ export default defineComponent({
               </NSpace>
             )}
           <NFormItem
-              label="Platform源"
+              label="项目源"
               path='isPlatform'>
             <NSpace vertical>
               <NCheckbox
                 checkedValue={true}
                 uncheckedValue={false}
                 v-model:checked={this.startForm.isPlatform}>
-                使用Platform源
+                使用项目源
               </NCheckbox>
               {this.startForm.isPlatform && (
                 <NSpace inline align="center">
-                  <NTag type="info">platform.datasource</NTag> :
+                  <NTag type="info">{PlatformConst.P_DATASOURCE_PARAM_NAME}</NTag> :
                   <NInput
                     disabled
                     placeholder="选择源时 自动填充."
                     value={this.taskPlatformSourceParam}/>
               </NSpace>)}
               </NSpace>
+          </NFormItem>
+          <NFormItem
+              label="项目集群"
+              path='isPlatformCluster'>
+            <NSpace vertical>
+              <NCheckbox
+                checkedValue={true}
+                uncheckedValue={false}
+                v-model:checked={this.startForm.isPlatformCluster}
+                >
+                选择项目集群
+              </NCheckbox>
+              {this.startForm.isPlatformCluster && (
+                <NSpace inline align="center">
+                  {h(NTooltip, {}, {
+                    trigger: () =>
+                      <NTag type="info">{PlatformConst.P_CLUSTER_PARAM_NAME}</NTag>,
+                    default: () => '值会被替换为集群参数. 注意：如果只有一个集群值类型为Object,如果多个集群值类型Array! '
+                  })}
+                   :
+                  <NCascader multiple clearable
+                    onLoad={() => this.loadingSource}
+                    checkStrategy="parent"
+                    value={this.taskPlatformClusters}
+                    filterable
+                    maxTagCount={5}
+                    placeholder="选择集群，会被替换为集群参数"
+                    themeOverrides={{ columnWidth: "300px", optionFontSize: "14px" }}
+                    renderLabel={(option: CascaderOption, checked: boolean) =>
+                      h(NTooltip, {},
+                        {
+                          trigger: () => h(NText, { type: checked ? 'primary' : 'default', style: "min-width:400px" }, { default: () => option.label }),
+                          default: () => option.value + ":" + option.label
+                        })
+                    }
+                    options={this.renderProjectClusterOptions(this.projectCode)}
+                    onUpdateValue={(value: Array<string | number>) => this.taskPlatformClusters = value}
+                    />
+              </NSpace>)}
+            </NSpace>
+          </NFormItem>
+
+          <NFormItem
+              label="项目节点"
+              path='isPlatformNode'>
+            <NSpace vertical>
+              <NCheckbox
+                checkedValue={true}
+                uncheckedValue={false}
+                v-model:checked={this.startForm.isPlatformNode}
+                >
+                选择项目节点
+              </NCheckbox>
+              {this.startForm.isPlatformNode && (
+                <NSpace inline align="center">
+                  {h(NTooltip, {}, {
+                    trigger: () =>
+                      <NTag type="info">{PlatformConst.P_NODE_PARAM_NAME}</NTag>,
+                    default: () => '值会被替换为节点参数. 注意：如果只有一个节点 值类型为Object,如果多个节点 值类型Array! '
+                  })}
+                  :
+                  <NCascader multiple clearable
+                    onLoad={() => this.loadingSource}
+                    checkStrategy="child"
+                    value={this.taskPlatformNodes}
+                    filterable
+                    maxTagCount={5}
+                    placeholder="选择集群，会被替换为节点参数"
+                    themeOverrides={{ columnWidth: "300px", optionFontSize: "14px" }}
+                    renderLabel={(option: CascaderOption, checked: boolean) =>
+                      h(NTooltip, {},
+                        {
+                          trigger: () => h(NText, { type: checked ? 'primary' : 'default', style: "min-width:400px" }, { default: () => option.label }),
+                          default: () => option.value + ":" + option.label
+                        })
+                    }
+                    options={this.renderProjectNodeOptions(this.projectCode)}
+                    onUpdateValue={(value: Array<string | number>) => this.taskPlatformNodes = value}
+                  />
+                </NSpace>)}
+            </NSpace>
           </NFormItem>
           <NFormItem
             label={t('project.workflow.startup_parameter')}
@@ -658,7 +770,7 @@ export default defineComponent({
           onCancel={() => { this.showSourceModal = false }}
           onConfirm={this.confirmSourceModal}>
           <NCascader multiple clearable
-            onLoad={this.loadingSource}
+            onLoad={()=>this.loadingSource}
             checkStrategy="child"
             value={this.sourceModalSelectedIds}
             filterable
@@ -671,7 +783,7 @@ export default defineComponent({
                   default: () => option.disabled ? (option.label + ' 节点未关联源，不可选择！') : (option.value + ":" + option.label)
                 })
             }
-            options={this.generalProjectSources(this.projectCode)}
+            options={this.renderProjectSourcesOptions(this.projectCode)}
             onUpdateValue={this.updateSourceModal}
             placeholder="Load Source from project" />
         </Modal>

@@ -44,7 +44,7 @@ public interface ProjectClusterService {
      *
      * @return project list which the login user have permission to see
      */
-    Result<List<ProjectCluster>> queryClusterListPaging(User loginUser, long projectCode);
+    Result<List<ProjectCluster>> queryClusterListPaging(long projectCode);
 
     /**
      * delete project by code
@@ -53,7 +53,7 @@ public interface ProjectClusterService {
      * @param projectCode project code
      * @return delete result code
      */
-    Result<Boolean> deleteCluster(User loginUser, long projectCode, Integer clusterCode);
+    Result<Boolean> deleteCluster(long projectCode, Integer clusterCode);
 
     /**
      * updateProcessInstance project

@@ -1,7 +1,5 @@
 package org.apache.dolphinscheduler.api.service.impl;
 
-import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.PROJECT;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +13,6 @@ import org.apache.dolphinscheduler.api.service.ProjectClusterParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
 import org.apache.dolphinscheduler.dao.entity.ProjectClusterParameter;
@@ -105,13 +102,11 @@ public class ProjectClusterParameterServiceImpl extends BaseServiceImpl implemen
     }
 
     @Override
-    public Result<ProjectClusterParameter> updateParameter(User loginUser, long projectCode,
+    public Result<ProjectClusterParameter> updateParameter(long projectCode,
             Integer clusterCode,
             Integer code,
             String parameterName, String parameterValue, String des) {
         Result<ProjectClusterParameter> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         ProjectClusterParameter parameter = parameterMapper.selectById(code);
         // check project parameter exists
@@ -158,10 +153,8 @@ public class ProjectClusterParameterServiceImpl extends BaseServiceImpl implemen
     }
 
     @Override
-    public Result<Boolean> deleteParametersByCode(User loginUser, long projectCode, Integer clusterCode, Integer code) {
+    public Result<Boolean> deleteParametersByCode(long projectCode, Integer clusterCode, Integer code) {
         Result<Boolean> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         ProjectClusterParameter parameter = parameterMapper.selectById(code);
         // check project parameter exists
@@ -191,11 +184,8 @@ public class ProjectClusterParameterServiceImpl extends BaseServiceImpl implemen
     }
 
     @Override
-    public Result<Boolean> batchDeleteParametersByCodes(User loginUser, long projectCode,
-            Integer clusterCode, String codes) {
+    public Result<Boolean> batchDeleteParametersByCodes(long projectCode, Integer clusterCode, String codes) {
         Result<Boolean> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         if (StringUtils.isEmpty(codes)) {
             log.error("Project Cluster parameter codes is empty, projectCode is {}.",
@@ -224,7 +214,7 @@ public class ProjectClusterParameterServiceImpl extends BaseServiceImpl implemen
 
         for (ProjectClusterParameter projectParameter : parameterList) {
             try {
-                this.deleteParametersByCode(loginUser, projectCode, clusterCode, projectParameter.getId());
+                this.deleteParametersByCode(projectCode, clusterCode, projectParameter.getId());
             } catch (Exception e) {
                 throw new ServiceException(Status.DELETE_PROJECT_CLUSTER_PARAMETER_ERROR,
                         e.getMessage());
@@ -236,12 +226,10 @@ public class ProjectClusterParameterServiceImpl extends BaseServiceImpl implemen
     }
 
     @Override
-    public Result<List<ProjectClusterParameter>> queryParameterList(User loginUser, long projectCode,
+    public Result<List<ProjectClusterParameter>> queryParameterList(long projectCode,
             Integer projectClusterId) {
 
         Result<List<ProjectClusterParameter>> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         List<ProjectClusterParameter> paramList = parameterMapper
                 .selectList(new QueryWrapper<ProjectClusterParameter>()
@@ -254,10 +242,8 @@ public class ProjectClusterParameterServiceImpl extends BaseServiceImpl implemen
     }
 
     @Override
-    public Result<ProjectClusterParameter> queryParameterByCode(User loginUser, long projectCode, Integer code) {
+    public Result<ProjectClusterParameter> queryParameterByCode(long projectCode, Integer code) {
         Result<ProjectClusterParameter> result = new Result<>();
-
-        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
 
         ProjectClusterParameter projectParameter = parameterMapper.selectById(code);
         if (projectParameter == null || projectCode != projectParameter.getProjectCode()) {

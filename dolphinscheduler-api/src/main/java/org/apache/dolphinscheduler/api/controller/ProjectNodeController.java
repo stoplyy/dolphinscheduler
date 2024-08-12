@@ -15,6 +15,7 @@ import java.util.Map;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
+import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
@@ -51,6 +52,9 @@ public class ProjectNodeController extends BaseController {
 
     @Autowired
     private ProjectNodeParameterService paramService;
+
+    @Autowired
+    private ProjectService projectService;
 
     @Operation(summary = "createNode", description = "CREATE_PROJECT_CLUSTER")
     @Parameters({
@@ -212,7 +216,10 @@ public class ProjectNodeController extends BaseController {
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable int clusterCode,
             @PathVariable("nodeCode") Integer nodeCode) {
-        return paramService.queryParameterList(loginUser, projectCode, nodeCode);
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return paramService.queryParameterList(projectCode, nodeCode);
     }
 
     @Operation(summary = "queryNodeParameterByCode", description = "QUERY_PROJECT_PARAMETER_NOTES")

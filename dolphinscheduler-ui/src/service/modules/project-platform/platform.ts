@@ -85,7 +85,9 @@ enum PlatformRestEnum {
 }
 
 enum PlatformConst {
-  PlatformSourceParamName = "platform.datasource"
+  P_DATASOURCE_PARAM_NAME = "platform.datasource",
+  P_NODE_PARAM_NAME = "platform.node",
+  P_CLUSTER_PARAM_NAME = "platform.cluster"
 }
 
 export {
