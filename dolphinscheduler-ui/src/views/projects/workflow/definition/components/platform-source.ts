@@ -35,7 +35,12 @@ export const platformDef = () => {
 
     nodesAll.forEach((clusterNodes) => {
       const cluster = manuallyCluster.find((cluster) => cluster.id === clusterNodes[0].clusterCode);
-      clusterOptions.push({ label: cluster?.clusterName, value: cluster?.id, key: cluster?.id });
+
+      clusterOptions.push({
+        label: cluster?.clusterName,
+        value: cluster?.id,
+        key: - (cluster?.id || 0) // 与二级节点的key区分
+      });
 
       const index = projectSources.findIndex((source) => source.value === cluster?.id);
       const sourceChildren: CascaderOption[] = clusterNodes.map((node) => {
@@ -43,7 +48,7 @@ export const platformDef = () => {
           {
             label: node.nodeName,
             value: node.dataSourceCode,
-            key: - node.id,
+            key: node.id,
             disabled: node.dataSourceCode == undefined || node.dataSourceCode == null || node.dataSourceCode <= 0
           })
         return option;
