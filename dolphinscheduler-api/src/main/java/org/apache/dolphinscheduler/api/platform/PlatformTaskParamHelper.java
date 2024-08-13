@@ -47,12 +47,9 @@ public class PlatformTaskParamHelper {
     @Autowired
     private ProjectNodeParameterService pProjectNodeService;
 
-    public void tryFillPlatformParams(Map<String, String> startParams, final long projectCode) {
-        if (startParams == null) {
-            startParams = new HashMap<>();
-        }
-
-        if (!(startParams.containsKey(NODE_PARAM_NAME) || startParams.containsKey(CLUSTER_PARAM_NAME))) {
+    public void tryFillPlatformParams(final Map<String, String> startParams, final long projectCode) {
+        if (startParams == null ||
+                !(startParams.containsKey(NODE_PARAM_NAME) || startParams.containsKey(CLUSTER_PARAM_NAME))) {
             return;
         }
 
@@ -70,6 +67,7 @@ public class PlatformTaskParamHelper {
                 ? Arrays.asList(startParams.get(CLUSTER_PARAM_NAME).split(PARAM_VALUE_SEPARATOR))
                         .stream().map(this::parseInterger).sorted().collect(Collectors.toList())
                 : new ArrayList<>();
+        final Integer clusterIdsCount = clusterIdsInt.size();
         clusterIdsInt.addAll(taskNodes.stream().map(ProjectNode::getClusterCode).collect(Collectors.toList()));
 
         final Map<Integer, ProjectCluster> taskClusters = tryCollectorCluster(clusterIdsInt, projectAllClusters);
@@ -92,25 +90,25 @@ public class PlatformTaskParamHelper {
                 .forEach(appendClusterParamsList::add);
 
         if (nodeIdsInt.size() > 0) {
-            // 一个节点时 value为 object
+            // 一个节点时 value为 object & 所有
             if (nodeIdsInt.size() == 1) {
                 Map<String, String> nodeParam = appendNodeParamsList.size() > 0
                         ? appendNodeParamsList.get(0)
                         : new HashMap<>();
-                startParams.put(NODE_PARAM_PROPS_NAME, JSONUtils.toJsonString(nodeParam));
+                nodeParam.forEach((k, v) -> startParams.put(NODE_PARAM_NAME + "." + k, v));
             } else {
                 // 多个节点时 value为 array
                 startParams.put(NODE_PARAM_PROPS_NAME, JSONUtils.toJsonString(appendNodeParamsList));
             }
         }
 
-        if (clusterIdsInt.size() > 0) {
+        if (clusterIdsCount > 0) {
             // 一个集群时 value为 object
-            if (clusterIdsInt.size() == 1) {
+            if (clusterIdsCount == 1) {
                 Map<String, String> clusterParam = appendClusterParamsList.size() > 0
                         ? appendClusterParamsList.get(0)
                         : new HashMap<>();
-                startParams.put(CLUSTER_PARAM_PROPS_NAME, JSONUtils.toJsonString(clusterParam));
+                clusterParam.forEach((k, v) -> startParams.put(CLUSTER_PARAM_NAME + "." + k, v));
             } else {
                 // 多个集群时 value为 array
                 startParams.put(CLUSTER_PARAM_PROPS_NAME, JSONUtils.toJsonString(appendClusterParamsList));
