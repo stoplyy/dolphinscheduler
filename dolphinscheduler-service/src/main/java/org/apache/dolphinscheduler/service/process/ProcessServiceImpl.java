@@ -607,6 +607,7 @@ public class ProcessServiceImpl implements ProcessService {
                 if (param.getKey() == null || startParamMap.get(param.getKey()) == null) {
                     log.error("global param key is null or start param is null. param:[{}] startParamMap:[{}]", param,
                             startParamMap);
+                    continue;
                 }
                 String val = startParamMap.get(param.getKey()).getValue();
                 if (val != null) {
