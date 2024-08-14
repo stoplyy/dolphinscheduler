@@ -2,7 +2,6 @@ package org.apache.dolphinscheduler.api.platform;
 
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.CLUSTER_PARAM_NAME;
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.CLUSTER_PARAM_PROPS_NAME;
-import static org.apache.dolphinscheduler.common.constants.PlatformConstant.DATASOURCE_PARAM_NAME;
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.NODE_PARAM_NAME;
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.NODE_PARAM_PROPS_NAME;
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.PARAM_VALUE_SEPARATOR;
@@ -17,15 +16,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.dolphinscheduler.api.platform.common.RestParamEntry;
 import org.apache.dolphinscheduler.api.service.ProjectClusterParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectClusterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
+import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
 import org.apache.dolphinscheduler.dao.entity.ProjectClusterParameter;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
 import org.apache.dolphinscheduler.dao.entity.ProjectNodeParameter;
+import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +39,9 @@ public class PlatformTaskParamHelper {
 
     @Autowired
     private ProjectNodeService projectNodeService;
+
+    @Autowired
+    PlatformRestService platformRestService;
 
     @Autowired
     private ProjectClusterService projectClusterService;
@@ -54,7 +59,7 @@ public class PlatformTaskParamHelper {
         }
 
         final List<ProjectNode> projectAllNodes = projectNodeService.queryNodesByProjectCode(projectCode);
-        final List<ProjectCluster> projectAllClusters = projectClusterService.queryClusterListPaging(projectCode)
+        final List<ProjectCluster> projectClusters = projectClusterService.queryClusterListPaging(projectCode)
                 .getData();
 
         final List<Integer> nodeIdsInt = startParams.containsKey(NODE_PARAM_NAME)
@@ -67,27 +72,33 @@ public class PlatformTaskParamHelper {
                 ? Arrays.asList(startParams.get(CLUSTER_PARAM_NAME).split(PARAM_VALUE_SEPARATOR))
                         .stream().map(this::parseInterger).sorted().collect(Collectors.toList())
                 : new ArrayList<>();
-        final Integer clusterIdsCount = clusterIdsInt.size();
-        clusterIdsInt.addAll(taskNodes.stream().map(ProjectNode::getClusterCode).collect(Collectors.toList()));
 
-        final Map<Integer, ProjectCluster> taskClusters = tryCollectorCluster(clusterIdsInt, projectAllClusters);
+        final Map<Integer, ProjectCluster> clusterInfos = tryCollectorClusterInfo(clusterIdsInt, projectClusters);
+        final Map<Integer, ProjectCluster> nodeClusterInfos = tryCollectorClusterInfo(
+                taskNodes.stream().map(ProjectNode::getClusterCode).distinct().collect(Collectors.toList()),
+                projectClusters);
 
         Map<Integer, List<ProjectClusterParameter>> taskClusterParamsMap = new HashMap<>();
         Map<Integer, List<ProjectNodeParameter>> taskNodeParamsMap = new HashMap<>();
-        fillParamsMap(projectCode, taskNodes, new ArrayList<>(taskClusters.values()),
+        fillParamsMap(projectCode, taskNodes, new ArrayList<>(clusterInfos.values()),
                 taskClusterParamsMap,
                 taskNodeParamsMap);
-        // append datasource params
+
         List<Map<String, String>> appendNodeParamsList = new ArrayList<>();
         List<Map<String, String>> appendClusterParamsList = new ArrayList<>();
-
-        taskNodes.stream()
-                .map(node -> collectorNodeParam(taskClusters.get(node.getClusterCode()), taskNodeParamsMap, node))
-                .forEach(appendNodeParamsList::add);
-
-        taskClusters.values().stream()
-                .map(cluster -> collectorClusterParam(taskClusterParamsMap, cluster.getId(), cluster))
+        clusterInfos.values().stream()
+                .map(cluster -> collectorClusterParam(taskClusterParamsMap.get(cluster.getId()), cluster))
                 .forEach(appendClusterParamsList::add);
+        taskNodes.stream()
+                .map(node -> collectorNodeParam(nodeClusterInfos.get(node.getClusterCode()), taskNodeParamsMap, node))
+                .forEach(appendNodeParamsList::add);
+        //移除所有value为空的参数
+        appendNodeParamsList.forEach(
+            map -> map.entrySet().removeIf(entry -> entry.getValue() == null )
+        );
+        appendClusterParamsList.forEach(
+            map -> map.entrySet().removeIf(entry -> entry.getValue() == null )
+        );
 
         if (nodeIdsInt.size() > 0) {
             // 一个节点时 value为 object & 所有
@@ -102,9 +113,9 @@ public class PlatformTaskParamHelper {
             }
         }
 
-        if (clusterIdsCount > 0) {
+        if (clusterIdsInt.size() > 0) {
             // 一个集群时 value为 object
-            if (clusterIdsCount == 1) {
+            if (clusterIdsInt.size() == 1) {
                 Map<String, String> clusterParam = appendClusterParamsList.size() > 0
                         ? appendClusterParamsList.get(0)
                         : new HashMap<>();
@@ -117,20 +128,36 @@ public class PlatformTaskParamHelper {
     }
 
     private Map<String, String> collectorClusterParam(
-            Map<Integer, List<ProjectClusterParameter>> taskClusterParamsMap,
-            Integer clusterId, ProjectCluster cluster) {
+            List<ProjectClusterParameter> taskClusterParams,
+            ProjectCluster cluster) {
         Map<String, String> params = new HashMap<>();
+        final String clusterId = cluster.getClusterId();
         // 注意顺序 集群自定义参数 最高优先级最后put
         // 1. 集群默认参数
         params.put("cluster_name", cluster.getClusterName());
-        params.put("cluster_id", cluster.getClusterId());
+        params.put("cluster_id", clusterId);
         params.put("appid", cluster.getAppId());
-        // 2. 集群自定义参数
-        params.putAll(taskClusterParamsMap.containsKey(clusterId)
-                ? taskClusterParamsMap.get(clusterId).stream()
-                        .collect(Collectors.toMap(ProjectClusterParameter::getParamName,
-                                ProjectClusterParameter::getParamValue))
-                : new HashMap<>());
+        // 2. Rest 接口参数
+        Result<Map<String, Object>> result = platformRestService.getRest(RestParamEntry.newEntry()
+                .build(cluster.getClusterId(), null, null)
+                .buildRestParamEntiy(taskClusterParams.stream().map(clusterPamra -> {
+                    ProjectParameter projectParameter = new ProjectParameter();
+                    projectParameter.setParamName(clusterPamra.getParamName());
+                    projectParameter.setParamValue(clusterPamra.getParamValue());
+                    return projectParameter;
+                }).collect(Collectors.toList())), PathEnum.CLUSTER_PARAMS);
+        if (result.getData() != null) {
+            params.putAll(result.getData().entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString())));
+        } else {
+            log.warn("get cluster params error, clusterId: {}", clusterId);
+        }
+
+        // 3. 集群自定义参数
+        params.putAll(taskClusterParams.stream()
+                .collect(Collectors.toMap(ProjectClusterParameter::getParamName,
+                        ProjectClusterParameter::getParamValue)));
+
         // 3. id 必须为 cluster.id
         params.put("id", String.valueOf(cluster.getId()));
         return params;
@@ -151,13 +178,29 @@ public class PlatformTaskParamHelper {
         params.put("node_name", node.getNodeName());
         params.put("node_id", String.valueOf(node.getNodeId()));
         params.put("node_key", node.getNodeKey());
-        // 3. 节点自定义参数
+        // 3. Rest 接口参数
+        Result<Map<String, Object>> result = platformRestService.getRest(RestParamEntry.newEntry()
+                .build(cluster.getClusterId(), String.valueOf(node.getNodeId()), null)
+                .buildRestParamEntiy(taskNodeParamsMap.get(node.getId()).stream().map(nodePamra -> {
+                    ProjectParameter projectParameter = new ProjectParameter();
+                    projectParameter.setParamName(nodePamra.getParamName());
+                    projectParameter.setParamValue(nodePamra.getParamValue());
+                    return projectParameter;
+                }).collect(Collectors.toList())), PathEnum.NODE_PARAMS);
+        if (result.getData() != null) {
+            params.putAll(result.getData().entrySet().stream().collect(
+                    Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString())));
+        } else {
+            log.warn("get node params error, clusterId: {}, nodeId: {}", cluster.getClusterId(), node.getId());
+        }
+
+        // 4. 节点自定义参数
         params.putAll(taskNodeParamsMap.containsKey(node.getId())
                 ? taskNodeParamsMap.get(node.getId()).stream()
                         .collect(Collectors.toMap(ProjectNodeParameter::getParamName,
                                 ProjectNodeParameter::getParamValue))
                 : new HashMap<>());
-        // 4. id 必须为 node.id
+        // 5. id 必须为 node.id
         params.put("id", String.valueOf(node.getId()));
         return params;
     }
@@ -181,6 +224,7 @@ public class PlatformTaskParamHelper {
                                 pProjectClusterService.queryParameterList(projectCode, clusterCode).getData());
                     }
                 });
+
         taskSourceNodesAll.stream().map(ProjectNode::getId).distinct()
                 .forEach(nodeId -> {
                     if (!taskNodeParamsMap.containsKey(nodeId)) {
@@ -206,7 +250,7 @@ public class PlatformTaskParamHelper {
         }
     }
 
-    private Map<Integer, ProjectCluster> tryCollectorCluster(List<Integer> clusterIdsInt,
+    private Map<Integer, ProjectCluster> tryCollectorClusterInfo(List<Integer> clusterIdsInt,
             List<ProjectCluster> projectClusters) {
         final List<Integer> projectClusterIds = projectClusters.stream().map(ProjectCluster::getId).sorted()
                 .collect(Collectors.toList());

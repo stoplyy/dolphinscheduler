@@ -38,8 +38,7 @@ export const platformDef = () => {
 
       clusterOptions.push({
         label: cluster?.clusterName,
-        value: cluster?.id,
-        key: - (cluster?.id || 0) // 与二级节点的key区分
+        value: cluster?.id
       });
 
       const index = projectSources.findIndex((source) => source.value === cluster?.id);
@@ -54,7 +53,11 @@ export const platformDef = () => {
         return option;
       });
       if (index === -1) {
-        projectSources.push({ label: cluster?.clusterName, value: cluster?.id, children: sourceChildren });
+        projectSources.push({
+          label: cluster?.clusterName,
+          value: -(cluster?.id || 0),// 与二级节点的key区分
+          children: sourceChildren
+        });
       } else {
         projectSources[index].children = sourceChildren;
       }
@@ -70,12 +73,19 @@ export const platformDef = () => {
       });
       const nodeIndex = nodeOptions.findIndex((source) => source.value === cluster?.id);
       if (nodeIndex === -1) {
-        nodeOptions.push({ label: cluster?.clusterName, value: cluster?.id, children: nodeChildren });
+        nodeOptions.push({
+          label: cluster?.clusterName,
+          value: -(cluster?.id || 0),// 与二级节点的key区分
+          children: nodeChildren
+        });
       } else {
         nodeOptions[nodeIndex].children = nodeChildren;
       }
-
     });
+
+    console.log("projectSources:", projectSources);
+    console.log("clusterOptions:", clusterOptions);
+    console.log("nodeOptions:", nodeOptions);
   }
 
   async function loadProjectSources(projectCode: number): Promise<any> {

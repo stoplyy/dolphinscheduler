@@ -89,11 +89,11 @@ export default defineComponent({
 
     const { startState } = useForm()
 
-    const { generalProjectSources,loadingSource } = platformDef()
+    const { generalProjectSources, loadingSource } = platformDef()
 
     const showSourceModal = ref(false)
     const sourceModalSelectedIds = ref<Array<string | number>>([])
-    const taskPlatformClusters = ref<Array<string | number>>([])
+    const taskPlatformClusters = ref<Array<number>>([])
     const taskPlatformNodes = ref<Array<string | number>>([])
     const setPlatsourceParams = ref<Map<IParam, (number | string)[]>>(new Map())
     let modelSourceParam: IParam;
@@ -114,7 +114,20 @@ export default defineComponent({
     }
 
     const handleStart = () => {
+      fillPlatformParam()
       handleStartDefinition(props.row.code, props.row.version)
+    }
+
+    const fillPlatformParam = () => {
+      if (startState.startForm.isPlatformCluster) {
+        startState.startForm.platformClusters = taskPlatformClusters.value.join(",")
+      }
+      if (startState.startForm.isPlatformNode) {
+        startState.startForm.platformNodes = taskPlatformNodes.value.join(",")
+      }
+      if (startState.startForm.isPlatform) {
+        startState.startForm.platformSource = taskPlatformSourceParam.value
+      }
     }
 
     const confirmSourceModal = () => {
@@ -130,16 +143,6 @@ export default defineComponent({
         })
       })
       taskPlatformSourceParam.value = selectedIds.join(",")
-      
-      if (startState.startForm.isPlatform) {
-        startState.startForm.platformSource = taskPlatformSourceParam.value
-      }
-      if (startState.startForm.isPlatformCluster) { 
-        startState.startForm.platformClusters = taskPlatformClusters.value.join(",")
-      }
-      if (startState.startForm.isPlatformNode) { 
-        startState.startForm.platformNodes = taskPlatformNodes.value.join(",")
-      }
       showSourceModal.value = false
     }
 
@@ -636,7 +639,7 @@ export default defineComponent({
                         })
                     }
                     options={this.renderProjectClusterOptions(this.projectCode)}
-                    onUpdateValue={(value: Array<string | number>) => this.taskPlatformClusters = value}
+                    onUpdateValue={(value: Array<number>) => this.taskPlatformClusters = value}
                     />
               </NSpace>)}
             </NSpace>

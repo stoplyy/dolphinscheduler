@@ -126,7 +126,6 @@ export function useModal(
           startParams[item.prop] = item.value
         }
       }
-      debugger
       if (true == state.startForm.isPlatform && startParams[PlatformConst.P_DATASOURCE_PARAM_NAME] == undefined) {
         startParams[PlatformConst.P_DATASOURCE_PARAM_NAME] = state.startForm.platformSource
       }
