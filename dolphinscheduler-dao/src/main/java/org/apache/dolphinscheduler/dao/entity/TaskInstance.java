@@ -210,7 +210,7 @@ public class TaskInstance implements Serializable {
     private int maxRetryTimes;
 
     /**
-     * task retry interval, unit: minute
+     * task retry interval, unit: second
      */
     private int retryInterval;
 
@@ -305,11 +305,11 @@ public class TaskInstance implements Serializable {
 
     public DependentParameters getDependency() {
         if (this.dependency == null) {
-            Map<String, Object> taskParamsMap =
-                    JSONUtils.parseObject(this.getTaskParams(), new TypeReference<Map<String, Object>>() {
+            Map<String, Object> taskParamsMap = JSONUtils.parseObject(this.getTaskParams(),
+                    new TypeReference<Map<String, Object>>() {
                     });
-            this.dependency =
-                    JSONUtils.parseObject((String) taskParamsMap.get(Constants.DEPENDENCE), DependentParameters.class);
+            this.dependency = JSONUtils.parseObject((String) taskParamsMap.get(Constants.DEPENDENCE),
+                    DependentParameters.class);
         }
         return this.dependency;
     }
@@ -319,21 +319,22 @@ public class TaskInstance implements Serializable {
     }
 
     public SwitchParameters getSwitchDependency() {
-        // todo: We need to directly use Jackson to deserialize the taskParam, rather than parse the map and get from
+        // todo: We need to directly use Jackson to deserialize the taskParam, rather
+        // than parse the map and get from
         // field.
         if (this.switchDependency == null) {
-            Map<String, Object> taskParamsMap =
-                    JSONUtils.parseObject(this.getTaskParams(), new TypeReference<Map<String, Object>>() {
+            Map<String, Object> taskParamsMap = JSONUtils.parseObject(this.getTaskParams(),
+                    new TypeReference<Map<String, Object>>() {
                     });
-            this.switchDependency =
-                    JSONUtils.parseObject((String) taskParamsMap.get(Constants.SWITCH_RESULT), SwitchParameters.class);
+            this.switchDependency = JSONUtils.parseObject((String) taskParamsMap.get(Constants.SWITCH_RESULT),
+                    SwitchParameters.class);
         }
         return this.switchDependency;
     }
 
     public void setSwitchDependency(SwitchParameters switchDependency) {
-        Map<String, Object> taskParamsMap =
-                JSONUtils.parseObject(this.getTaskParams(), new TypeReference<Map<String, Object>>() {
+        Map<String, Object> taskParamsMap = JSONUtils.parseObject(this.getTaskParams(),
+                new TypeReference<Map<String, Object>>() {
                 });
         taskParamsMap.put(Constants.SWITCH_RESULT, JSONUtils.toJsonString(switchDependency));
         this.switchDependency = switchDependency;
@@ -407,7 +408,7 @@ public class TaskInstance implements Serializable {
         Date now = new Date();
         long failedTimeInterval = DateUtils.differSec(now, getEndTime());
         // task retry does not over time, return false
-        return TimeUnit.MINUTES.toSeconds(getRetryInterval()) < failedTimeInterval;
+        return getRetryInterval() < failedTimeInterval;
     }
 
 }
