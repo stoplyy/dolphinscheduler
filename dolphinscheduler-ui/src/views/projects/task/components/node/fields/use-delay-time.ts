@@ -29,7 +29,7 @@ export function useDelayTime(model: { [field: string]: any }): IJsonItem {
       min: 0
     },
     slots: {
-      suffix: () => t('project.node.minute')
+      suffix: () => t('project.node.second')
     },
     value: model.delayTime || 0
   }
