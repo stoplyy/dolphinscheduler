@@ -148,8 +148,8 @@ public class HttpTask extends AbstractTask {
         }
         String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(),
                 ParameterUtils.convert(paramsMap));
-        final boolean isPost = httpParameters.getHttpMethod().equals(HttpMethod.POST);
-        addRequestParams(builder, httpPropertyList, isPost ? httpBody : "");
+
+        addRequestParams(builder, httpPropertyList, httpBody);
         String requestUrl = ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(),
                 ParameterUtils.convert(paramsMap));
         HttpUriRequest request = builder.setUri(requestUrl).build();
@@ -263,19 +263,19 @@ public class HttpTask extends AbstractTask {
         }
 
         if (CollectionUtils.isNotEmpty(httpPropertyList)) {
-            ObjectNode jsonParam = JSONUtils.createObjectNode();
+            ObjectNode bodyParams = JSONUtils.createObjectNode();
             for (HttpProperty property : httpPropertyList) {
                 if (property.getHttpParametersType() != null) {
                     if (property.getHttpParametersType().equals(HttpParametersType.PARAMETER)) {
                         builder.addParameter(property.getProp(), property.getValue());
                     } else if (property.getHttpParametersType().equals(HttpParametersType.BODY)) {
-                        jsonParam.put(property.getProp(), property.getValue());
+                        bodyParams.put(property.getProp(), property.getValue());
                     }
                 }
             }
-            if (builder.getEntity() == null) {
+            if (builder.getEntity() == null && bodyParams.size() > 0) {
                 builder.setEntity(new StringEntity(
-                        jsonParam.toString(),
+                        bodyParams.toString(),
                         ContentType.create(ContentType.APPLICATION_JSON.getMimeType(),
                                 StandardCharsets.UTF_8)));
             }
