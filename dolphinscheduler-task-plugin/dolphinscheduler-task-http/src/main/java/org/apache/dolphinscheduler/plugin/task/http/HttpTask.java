@@ -148,9 +148,8 @@ public class HttpTask extends AbstractTask {
         }
         String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(),
                 ParameterUtils.convert(paramsMap));
-        final boolean isPost = httpParameters.getHttpMethod().equals(HttpMethod.POST);
 
-        addRequestParams(builder, httpPropertyList, isPost ? httpBody : "");
+        addRequestParams(builder, httpPropertyList, httpBody);
         String requestUrl = ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(),
                 ParameterUtils.convert(paramsMap));
         HttpUriRequest request = builder.setUri(requestUrl).build();
