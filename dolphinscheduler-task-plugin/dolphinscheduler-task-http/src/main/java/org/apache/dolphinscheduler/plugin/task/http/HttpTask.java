@@ -140,19 +140,23 @@ public class HttpTask extends AbstractTask {
         if (CollectionUtils.isNotEmpty(httpParameters.getHttpParams())) {
             for (HttpProperty httpProperty : httpParameters.getHttpParams()) {
                 String jsonObject = JSONUtils.toJsonString(httpProperty);
-                String params =
-                        ParameterUtils.convertParameterPlaceholders(jsonObject, ParameterUtils.convert(paramsMap));
+                String params = ParameterUtils.convertParameterPlaceholders(jsonObject,
+                        ParameterUtils.convert(paramsMap));
                 log.info("http request params：{}", params);
                 httpPropertyList.add(JSONUtils.parseObject(params, HttpProperty.class));
             }
         }
         String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(),
                 ParameterUtils.convert(paramsMap));
-        addRequestParams(builder, httpPropertyList, httpBody);
-        String requestUrl =
-                ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(), ParameterUtils.convert(paramsMap));
+        final boolean isPost = httpParameters.getHttpMethod().equals(HttpMethod.POST);
+        addRequestParams(builder, httpPropertyList, isPost ? httpBody : "");
+        String requestUrl = ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(),
+                ParameterUtils.convert(paramsMap));
         HttpUriRequest request = builder.setUri(requestUrl).build();
         setHeaders(request, httpPropertyList);
+
+        log.info("http request url: {}, method: {}, headers: {}, body: {}", requestUrl, httpParameters.getHttpMethod(),
+                JSONUtils.toJsonString(request.getAllHeaders()), httpBody);
         return client.execute(request);
     }
 
@@ -162,7 +166,7 @@ public class HttpTask extends AbstractTask {
      * @param httpResponse http response
      * @return response body
      * @throws ParseException parse exception
-     * @throws IOException io exception
+     * @throws IOException    io exception
      */
     protected String getResponseBody(CloseableHttpResponse httpResponse) throws ParseException, IOException {
         if (httpResponse == null) {
@@ -188,7 +192,7 @@ public class HttpTask extends AbstractTask {
     /**
      * valid response
      *
-     * @param body body
+     * @param body       body
      * @param statusCode status code
      * @return exit status code
      */
@@ -247,7 +251,7 @@ public class HttpTask extends AbstractTask {
     /**
      * add request params
      *
-     * @param builder buidler
+     * @param builder          buidler
      * @param httpPropertyList http property list
      */
     protected void addRequestParams(RequestBuilder builder, List<HttpProperty> httpPropertyList, String httpBody) {
@@ -281,7 +285,7 @@ public class HttpTask extends AbstractTask {
     /**
      * set headers
      *
-     * @param request request
+     * @param request          request
      * @param httpPropertyList http property list
      */
     protected void setHeaders(HttpUriRequest request, List<HttpProperty> httpPropertyList) {
