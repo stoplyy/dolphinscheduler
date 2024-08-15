@@ -19,6 +19,13 @@ package org.apache.dolphinscheduler.api.service.impl;
 
 import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.PROJECT;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ServiceException;
 import org.apache.dolphinscheduler.api.service.ProjectParameterService;
@@ -32,17 +39,6 @@ import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProjectParameterMapper;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +47,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -68,7 +66,7 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
     @Override
     @Transactional
     public Result createProjectParameter(User loginUser, long projectCode, String projectParameterName,
-                                         String projectParameterValue) {
+            String projectParameterValue) {
         Result result = new Result();
 
         // check if user have write perm for project
@@ -122,7 +120,7 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
 
     @Override
     public Result updateProjectParameter(User loginUser, long projectCode, long code, String projectParameterName,
-                                         String projectParameterValue) {
+            String projectParameterValue) {
         Result result = new Result();
 
         // check if user have write perm for project
@@ -212,11 +210,11 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
         Set<Long> requestCodeSet = Lists.newArrayList(codes.split(Constants.COMMA)).stream().map(Long::parseLong)
                 .collect(Collectors.toSet());
         List<ProjectParameter> projectParameterList = projectParameterMapper.queryByCodes(requestCodeSet);
-        Set<Long> actualCodeSet =
-                projectParameterList.stream().map(ProjectParameter::getCode).collect(Collectors.toSet());
+        Set<Long> actualCodeSet = projectParameterList.stream().map(ProjectParameter::getCode)
+                .collect(Collectors.toSet());
         // requestCodeSet - actualCodeSet
-        Set<Long> diffCode =
-                requestCodeSet.stream().filter(code -> !actualCodeSet.contains(code)).collect(Collectors.toSet());
+        Set<Long> diffCode = requestCodeSet.stream().filter(code -> !actualCodeSet.contains(code))
+                .collect(Collectors.toSet());
 
         String diffCodeString = diffCode.stream().map(String::valueOf).collect(Collectors.joining(Constants.COMMA));
         if (CollectionUtils.isNotEmpty(diffCode)) {
@@ -238,7 +236,7 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
 
     @Override
     public Result queryProjectParameterListPaging(User loginUser, long projectCode, Integer pageSize, Integer pageNo,
-                                                  String searchVal) {
+            String searchVal) {
         Result result = new Result();
 
         Project project = projectMapper.queryByCode(projectCode);
@@ -247,11 +245,20 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
             return result;
         }
 
+        return queryProjectParameterListPagingWithOutUser(projectCode, pageSize, pageNo, searchVal);
+    }
+
+    @Override
+    public Result<PageInfo<ProjectParameter>> queryProjectParameterListPagingWithOutUser(long projectCode,
+            Integer pageSize, Integer pageNo,
+            String searchVal) {
+        Result<PageInfo<ProjectParameter>> result = new Result<>();
+
         PageInfo<ProjectParameter> pageInfo = new PageInfo<>(pageNo, pageSize);
         Page<ProjectParameter> page = new Page<>(pageNo, pageSize);
 
-        IPage<ProjectParameter> iPage =
-                projectParameterMapper.queryProjectParameterListPaging(page, projectCode, null, searchVal);
+        IPage<ProjectParameter> iPage = projectParameterMapper.queryProjectParameterListPaging(page, projectCode, null,
+                searchVal);
 
         List<ProjectParameter> projectParameterList = iPage.getRecords();
 
