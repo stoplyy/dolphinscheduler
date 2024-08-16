@@ -185,19 +185,29 @@ export function useTable() {
         render: (row) =>
           row.releaseState === 'ONLINE'
             ? h(
-                NTag,
-                { type: 'success', size: 'small' },
-                {
-                  default: () => t('project.workflow.up_line')
-                }
-              )
+              NTag,
+              { type: 'success', size: 'small' },
+              {
+                default: () => t('project.workflow.up_line')
+              }
+            )
             : h(
-                NTag,
-                { type: 'warning', size: 'small' },
-                {
-                  default: () => t('project.workflow.down_line')
-                }
-              )
+              NTag,
+              { type: 'warning', size: 'small' },
+              {
+                default: () => t('project.workflow.down_line')
+              }
+            )
+      },
+      {
+        title: t('project.workflow.update_time'),
+        key: 'updateTime',
+        ...COLUMN_WIDTH_CONFIG['time']
+      },
+      {
+        title: t('project.workflow.description'),
+        key: 'description',
+        ...COLUMN_WIDTH_CONFIG['note']
       },
       {
         title: t('project.workflow.schedule_publish_status'),
@@ -229,16 +239,6 @@ export function useTable() {
         title: t('project.workflow.create_time'),
         key: 'createTime',
         ...COLUMN_WIDTH_CONFIG['time']
-      },
-      {
-        title: t('project.workflow.update_time'),
-        key: 'updateTime',
-        ...COLUMN_WIDTH_CONFIG['time']
-      },
-      {
-        title: t('project.workflow.description'),
-        key: 'description',
-        ...COLUMN_WIDTH_CONFIG['note']
       },
       {
         title: t('project.workflow.create_user'),
@@ -352,7 +352,7 @@ export function useTable() {
     })
   }
 
-  const batchCopyWorkflow = () => {}
+  const batchCopyWorkflow = () => { }
 
   const releaseWorkflow = (row: any) => {
     const data = {
