@@ -17,6 +17,14 @@
 
 package org.apache.dolphinscheduler.plugin.task.http;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.common.utils.DateUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.AbstractTask;
@@ -28,9 +36,6 @@ import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
@@ -44,15 +49,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 public class HttpTask extends AbstractTask {
@@ -134,29 +133,36 @@ public class HttpTask extends AbstractTask {
         RequestBuilder builder = createRequestBuilder();
 
         // replace placeholder,and combine local and global parameters
-        Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+        final Map<String, String> prepareParamMap = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
 
         List<HttpProperty> httpPropertyList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(httpParameters.getHttpParams())) {
             for (HttpProperty httpProperty : httpParameters.getHttpParams()) {
                 String jsonObject = JSONUtils.toJsonString(httpProperty);
-                String params = ParameterUtils.convertParameterPlaceholders(jsonObject,
-                        ParameterUtils.convert(paramsMap));
+                String params = ParameterUtils.convertParameterPlaceholders(jsonObject, prepareParamMap);
                 log.info("http request params：{}", params);
                 httpPropertyList.add(JSONUtils.parseObject(params, HttpProperty.class));
             }
         }
-        String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(),
-                ParameterUtils.convert(paramsMap));
 
+        String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(), prepareParamMap);
         addRequestParams(builder, httpPropertyList, httpBody);
-        String requestUrl = ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(),
-                ParameterUtils.convert(paramsMap));
+
+        String requestUrl = ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(), prepareParamMap);
         HttpUriRequest request = builder.setUri(requestUrl).build();
         setHeaders(request, httpPropertyList);
 
-        log.info("http request url: {}, method: {}, headers: {}, body: {}", requestUrl, httpParameters.getHttpMethod(),
-                JSONUtils.toJsonString(request.getAllHeaders()), httpBody);
+        if (httpParameters.getCondition() != null) {
+            httpParameters.setCondition(
+                    ParameterUtils.convertParameterPlaceholders(httpParameters.getCondition(), prepareParamMap));
+        }
+
+        log.info("http request url: {}, method: {}, headers: {}, body: {} ,condition: {}", requestUrl,
+                httpParameters.getHttpMethod(),
+                JSONUtils.toJsonString(request.getAllHeaders()),
+                httpBody,
+                httpParameters.getCondition());
+
         return client.execute(request);
     }
 
