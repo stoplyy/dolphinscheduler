@@ -64,6 +64,8 @@ public class PlatformTaskParamHelper {
             return;
         }
 
+        // TODO: 如果选择了 DATASOURCE_PARAM_NAME 将其选择的机器与集群添加到参数中
+
         final List<ProjectNode> projectAllNodes = projectNodeService.queryNodesByProjectCode(projectCode);
         final List<ProjectCluster> projectClusters = projectClusterService.queryClusterListPaging(projectCode)
                 .getData();
@@ -200,6 +202,7 @@ public class PlatformTaskParamHelper {
         params.put("cluster_id", cluster.getClusterId());
         params.put("cluster_appid", cluster.getAppId());
         params.put("cluster_code", String.valueOf(cluster.getId()));
+        params.put("node_source", node.getDataSourceCode() == null ? "-1" : String.valueOf(node.getDataSourceCode()));
         params.put("node_name", node.getNodeName());
         params.put("node_id", String.valueOf(node.getNodeId()));
         params.put("node_key", node.getNodeKey());
