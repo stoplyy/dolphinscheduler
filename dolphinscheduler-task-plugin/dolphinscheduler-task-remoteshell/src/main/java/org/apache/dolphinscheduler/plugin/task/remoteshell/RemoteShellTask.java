@@ -172,7 +172,11 @@ public class RemoteShellTask extends AbstractTask {
             environment = environment.replace("\r\n", "\n");
             script = environment + "\n" + script;
         }
-        script = String.format(RemoteExecutor.COMMAND.HEADER) + script;
+        String headString = String.format(RemoteExecutor.COMMAND.HEADER);
+        headString += "BASEDIR=$(cd `dirname $0`; pwd)";
+        headString += "\ncd $BASEDIR \n\n";
+
+        script = headString + script;
         script += String.format(RemoteExecutor.COMMAND.ADD_STATUS_COMMAND, RemoteExecutor.STATUS_TAG_MESSAGE);
 
         FileUtils.createFileWith755(path);
@@ -201,5 +205,7 @@ public class RemoteShellTask extends AbstractTask {
                 DbType.valueOf(remoteShellParameters.getType()),
                 dbSource.getConnectionParams());
         remoteExecutor = new RemoteExecutor(sshConnectionParam);
+        // 绑定文件 拷贝到远程 /tmp/dolphinscheduler-remote-shell-root/ 目录下
+        remoteExecutor.bindFiles(remoteShellParameters.getLocalParams(), taskExecutionContext);
     }
 }
