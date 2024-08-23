@@ -144,9 +144,15 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
             putMsg(result, Status.NO_CURRENT_OPERATING_PERMISSION);
             return result;
         }
-
         String userResRootPath = ResourceType.UDF.equals(type) ? storageOperate.getUdfDir(tenantCode)
                 : storageOperate.getResDir(tenantCode);
+
+        if (!userResRootPath.endsWith(FOLDER_SEPARATOR)) {
+            userResRootPath += FOLDER_SEPARATOR;
+        }
+        if (!currentDir.endsWith(FOLDER_SEPARATOR)) {
+            currentDir += FOLDER_SEPARATOR;
+        }
         String fullName = !currentDir.contains(userResRootPath) ? userResRootPath + name : currentDir + name;
 
         try {
@@ -212,6 +218,13 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
         // check resource name exists
         String userResRootPath = ResourceType.UDF.equals(type) ? storageOperate.getUdfDir(tenantCode)
                 : storageOperate.getResDir(tenantCode);
+        if (!userResRootPath.endsWith(FOLDER_SEPARATOR)) {
+            userResRootPath += FOLDER_SEPARATOR;
+        }
+        if (!currentDir.endsWith(FOLDER_SEPARATOR)) {
+            currentDir += FOLDER_SEPARATOR;
+        }
+
         String currDirNFileName = !currentDir.contains(userResRootPath) ? userResRootPath + name : currentDir + name;
 
         try {
@@ -1121,10 +1134,18 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
 
         String fullName = "";
         String userResRootPath = storageOperate.getResDir(tenantCode);
+
+        if (!userResRootPath.endsWith(FOLDER_SEPARATOR)) {
+            userResRootPath += FOLDER_SEPARATOR;
+        }
+        if (!currentDir.endsWith(FOLDER_SEPARATOR)) {
+            currentDir += FOLDER_SEPARATOR;
+        }
+
         if (!currentDir.contains(userResRootPath)) {
             fullName = userResRootPath + name;
         } else {
-            fullName = (currentDir.endsWith(FOLDER_SEPARATOR) ? currentDir : currentDir + FOLDER_SEPARATOR) + name;
+            fullName = currentDir + name;
         }
 
         result = verifyResourceName(fullName, type, loginUser);
