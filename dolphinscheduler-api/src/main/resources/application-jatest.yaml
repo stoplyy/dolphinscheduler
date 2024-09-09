@@ -217,7 +217,7 @@ security:
           authorizationUri: "https://ja-sso.jatest.cn/connect/authorize?scope=openid email"
           redirectUri: "https://ja-stellarops-api.jatest.cn/dolphinscheduler/redirect/login/oauth2"
           clientId: "int-service-arch-stellarops-api"
-          clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
+          clientSecret: "q9i2LwpKCOe55H4OmAXPa2AP50ANCRkgxVUDNdt69FQ="
           tokenUri: "https://ja-sso.jatest.cn/connect/token"
           userInfoUri: "https://ja-sso.jatest.cn/connect/userinfo"
           callbackUrl: "https://ja-stellarops-web.jatest.cn/login"
