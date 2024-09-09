@@ -220,7 +220,7 @@ security:
           clientSecret: "q9i2LwpKCOe55H4OmAXPa2AP50ANCRkgxVUDNdt69FQ="
           tokenUri: "https://ja-sso.jatest.cn/connect/token"
           userInfoUri: "https://ja-sso.jatest.cn/connect/userinfo"
-          callbackUrl: "https://ja-stellarops-web.jatest.cn/login"
+          callbackUrl: "https://ja-stellarops.jatest.cn/login"
           iconUri: "https://res.tuhu.org/images/hongbao-tiger.png"
           provider: tuhu
 casdoor:
