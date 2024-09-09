@@ -332,6 +332,8 @@ public enum Status {
             "项目[{0}] 集群[{1}] 所有节点已存在"),
     PROJECT_NODE_SOURCE_EXIST(104023, "project {0} cluster {1} node {2} exist",
             "项目[{0}] 集群[{1}] 节点[{2}] 数据源已存在"),
+    PROJECT_NODE_SOURCE_CREATE_ERROR(104024, " create erro nodekeys: {0}r",
+            "部分节点创建失败，无法粘贴公钥，请确认！！nodeKeys: {0}"),
 
     UDF_FUNCTION_NOT_EXIST(20001, "UDF function not found", "UDF函数不存在"),
     UDF_FUNCTION_EXISTS(20002, "UDF function already exists", "UDF函数已存在"),

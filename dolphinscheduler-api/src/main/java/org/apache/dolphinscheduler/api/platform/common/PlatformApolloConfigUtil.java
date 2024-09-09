@@ -56,4 +56,23 @@ public class PlatformApolloConfigUtil {
     public static String getSolariApiUrl() {
         return ApolloConfigUtil.getProperty("solaris.notify.url", "https://solaris.tuhu.work/solaris/api");
     }
+
+    /**
+     * 获取sre地址
+     * 
+     * @return
+     */
+    public static String getSreApiUrl() {
+        return ApolloConfigUtil.getProperty("sre.url", "https://sre.tuhuyun.cn");
+    }
+
+    /**
+     * 获取sre token
+     * 
+     * @return
+     */
+    public static String getSreAuthToken() {
+        return ApolloConfigUtil.getProperty("sre.url.auth.head", "X-SRE-SEC: xxxxx");
+    }
+
 }

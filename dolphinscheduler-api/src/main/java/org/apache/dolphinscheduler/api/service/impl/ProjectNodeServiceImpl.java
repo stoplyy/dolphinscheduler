@@ -19,6 +19,7 @@ package org.apache.dolphinscheduler.api.service.impl;
 
 import static org.apache.dolphinscheduler.api.service.impl.ProjectServiceImpl.checkDesc;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.apache.dolphinscheduler.api.platform.PlatformRestService;
 import org.apache.dolphinscheduler.api.platform.dto.halley.AssetsInfo;
 import org.apache.dolphinscheduler.api.platform.enums.DataFrom;
 import org.apache.dolphinscheduler.api.platform.service.HalleyAccessService;
+import org.apache.dolphinscheduler.api.platform.service.SreAccessService;
 import org.apache.dolphinscheduler.api.service.DataSourceService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
@@ -47,6 +49,7 @@ import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils.CodeGenerateEx
 import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.ProjectCluster;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
+import org.apache.dolphinscheduler.dao.entity.ProjectNodeParameter;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.ProjectClusterMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
@@ -99,6 +102,9 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
 
     @Autowired
     ProjectNodeParameterService projectNodeParameterService;
+
+    @Autowired
+    SreAccessService sreAccessService;
 
     @Override
     public Result<ProjectNode> createNode(User loginUser, long projectCode, Integer clusterCode, String nodeName,
@@ -526,14 +532,26 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         List<ProjectNode> projectNodes = projectNodeMapper
                 .selectList(new QueryWrapper<ProjectNode>().lambda().eq(ProjectNode::getClusterCode, clusterCode));
         projectNodes.removeIf(p -> p.getDataSourceCode() != null && p.getDataSourceCode() != 0);
-
+        List<String> errorIp = new ArrayList<>();
         if (!projectNodes.isEmpty()) {
             for (ProjectNode node : projectNodes) {
-                BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
-                Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
-                node.setDataSourceCode(dsId);
-                projectNodeMapper.updateById(node);
+
+                String ip = tryGetNodeIp(node);
+                boolean isSuccess = "success".equalsIgnoreCase(sreAccessService.pastePubRsa(ip));
+                if (!isSuccess) {
+                    errorIp.add(node.getNodeKey());
+                } else {
+                    BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
+                    Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
+                    node.setDataSourceCode(dsId);
+                    projectNodeMapper.updateById(node);
+                }
+
             }
+        }
+        if (!errorIp.isEmpty()) {
+            putMsg(result, Status.PROJECT_NODE_SOURCE_CREATE_ERROR, errorIp.toString());
+            return result;
         }
 
         return Result.success(true);
@@ -572,12 +590,32 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
             return result;
         }
 
+        String ip = tryGetNodeIp(node);
+
+        boolean isSuccess = "success".equalsIgnoreCase(sreAccessService.pastePubRsa(ip));
+        if (!isSuccess) {
+            throw new ServiceException("sre Paste public rsa failed.");
+        }
+
         BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
         Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
         node.setDataSourceCode(dsId);
         projectNodeMapper.updateById(node);
 
         return Result.success(true);
+    }
+
+    private String tryGetNodeIp(ProjectNode node) {
+        List<ProjectNodeParameter> params = projectNodeParameterService.queryParameterList(node.getProjectCode(),
+                node.getId()).getData();
+        if (!params.isEmpty()) {
+            for (ProjectNodeParameter param : params) {
+                if (param.getParamName().equals("platform_sre_ip")) {
+                    return param.getParamValue();
+                }
+            }
+        }
+        return node.getNodeKey();
     }
 
     public static BaseDataSourceParamDTO convertSystemDataSource(Project project, ProjectCluster cluster,

@@ -73,7 +73,7 @@
                     </template>创建源
                   </NButton>
                 </template>
-                <span>当前列表中的Key作为源IP，快速创建 SSH源。</span>
+                <span>使用IP调用SRE接口，添加平台公钥，快速创建SSH源。（ip选取策略: 节点参数 platform_sre_ip >> nodeKey）</span>
               </NTooltip>
             </template>
             是否确认快速创建源？
