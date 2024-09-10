@@ -538,19 +538,19 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
 
                 String ip = tryGetNodeIp(node);
                 boolean isSuccess = "success".equalsIgnoreCase(sreAccessService.pastePubRsa(ip));
-                if (!isSuccess) {
-                    errorIp.add(node.getNodeKey());
-                } else {
-                    BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
-                    Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
-                    node.setDataSourceCode(dsId);
-                    projectNodeMapper.updateById(node);
-                }
+                BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
+                Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
+                node.setDataSourceCode(dsId);
+                projectNodeMapper.updateById(node);
 
+                if (!isSuccess) {
+                    errorIp.add(dataSourceParam.getName());
+                }
             }
         }
+
         if (!errorIp.isEmpty()) {
-            putMsg(result, Status.PROJECT_NODE_SOURCE_CREATE_ERROR, errorIp.toString());
+            putMsg(result, Status.PROJECT_NODE_SOURCE_CREATE_ERROR, String.join(";", errorIp));
             return result;
         }
 
@@ -592,16 +592,18 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
 
         String ip = tryGetNodeIp(node);
 
-        boolean isSuccess = "success".equalsIgnoreCase(sreAccessService.pastePubRsa(ip));
-        if (!isSuccess) {
-            throw new ServiceException("sre Paste public rsa failed.");
-        }
+        boolean pasteSuccess = "success".equalsIgnoreCase(sreAccessService.pastePubRsa(ip));
+        String errorMsg = "Paste public rsa failed. Please paste platform public rsa to node.";
 
         BaseDataSourceParamDTO dataSourceParam = convertSystemDataSource(project, cluster, node);
         Integer dsId = dataSourceService.createDataSource(loginUser, dataSourceParam).getId();
         node.setDataSourceCode(dsId);
         projectNodeMapper.updateById(node);
 
+        if (!pasteSuccess) {
+            putMsg(result, Status.PROJECT_NODE_SOURCE_CREATE_ERROR, dataSourceParam.getName());
+            return result;
+        }
         return Result.success(true);
     }
 
