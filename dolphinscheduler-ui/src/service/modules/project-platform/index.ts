@@ -186,6 +186,20 @@ export async function queryClusterParameterByCode(projectCode: number, parameter
   return data as unknown as ProjectClusterParameter;
 }
 
+
+// 根据ip查询halley参数
+export async function getHalleyParamsByNode(projectCode: number, clusterCode: number, ip?: String): Promise<ProjectNodeParameter[]> {
+  const response = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/halley/params`,
+    method: 'get',
+    params: {
+      ip
+    }
+  })
+  return response as unknown as ProjectNodeParameter[];
+}
+
+
 export async function syncNodesByHalley(projectCode: number, clusterCode: number): Promise<boolean> {
   const data = await axios({
     url: `/projects/${projectCode}/project-node/${clusterCode}/all/sync/halley`,
@@ -306,6 +320,15 @@ export async function batchDeleteProjectNodeParameters(projectCode: number, clus
 export async function queryProjectNodeParametersList(projectCode: number, clusterCode: number, nodeCode: number): Promise<ProjectNodeParameter[]> {
   const response = await axios({
     url: `/projects/${projectCode}/project-node/${clusterCode}/${nodeCode}/parameters`,
+    method: 'get'
+  });
+  return response as unknown as ProjectNodeParameter[];
+}
+
+// 查询项目节点参数列表
+export async function queryProjectNodeALlParameters(projectCode: number, clusterCode: number, nodeCode: number): Promise<ProjectNodeParameter[]> {
+  const response = await axios({
+    url: `/projects/${projectCode}/project-node/${clusterCode}/${nodeCode}/all/params`,
     method: 'get'
   });
   return response as unknown as ProjectNodeParameter[];

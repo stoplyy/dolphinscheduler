@@ -65,4 +65,6 @@ public interface ProjectClusterService {
             String clusterId, String desc,
             String appId);
 
+    Result<ProjectCluster> queryClusterByCode(long projectCode, Integer clusterId);
+
 }

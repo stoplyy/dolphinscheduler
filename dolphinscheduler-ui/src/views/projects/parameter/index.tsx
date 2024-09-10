@@ -122,7 +122,7 @@ export default defineComponent({
           trigger: () => <NTag>platform_cluster.list.rest</NTag>,
           default: () =>'通过配置的API接口获取集群列表,最高优先级'
         })}
-        ... <NText>For More</NText>
+        ... <NText>For More TODO: link wiki</NText>
       </NAlert>
     );
 

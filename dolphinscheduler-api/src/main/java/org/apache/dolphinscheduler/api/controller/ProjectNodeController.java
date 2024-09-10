@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
+import org.apache.dolphinscheduler.api.platform.PlatformTaskParamHelper;
 import org.apache.dolphinscheduler.api.service.ProjectNodeParameterService;
 import org.apache.dolphinscheduler.api.service.ProjectNodeService;
 import org.apache.dolphinscheduler.api.service.ProjectService;
@@ -55,6 +56,9 @@ public class ProjectNodeController extends BaseController {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    PlatformTaskParamHelper platformTaskParamHelper;
 
     @Operation(summary = "createNode", description = "CREATE_PROJECT_CLUSTER")
     @Parameters({
@@ -204,6 +208,22 @@ public class ProjectNodeController extends BaseController {
         return paramService.batchDeleteParametersByCodes(loginUser, projectCode, nodeCdoe, codes);
     }
 
+    @GetMapping(value = "/{nodeCode}/all/params")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<List<ProjectNodeParameter>> getAllParams(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @PathVariable int clusterCode,
+            @PathVariable("nodeCode") Integer nodeCode) {
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        List<ProjectNodeParameter> result = platformTaskParamHelper.collectorNodeParam(projectCode, nodeCode);
+
+        return Result.success(result);
+    }
+
     @Operation(summary = "queryNodeParameterList", description = "QUERY_PROJECT_PARAMETER_LIST_PAGING")
     @Parameters({
             @Parameter(name = "code", description = "PROJECT_CLUSTER_CODE", schema = @Schema(implementation = long.class, example = "123456"))
@@ -255,6 +275,19 @@ public class ProjectNodeController extends BaseController {
             @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
             @PathVariable int clusterCode) {
         return service.syncNodesByHalley(loginUser, projectCode, clusterCode);
+    }
+
+    @GetMapping(value = "/halley/params")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_PROJECT_PARAMETER_ERROR)
+    public Result<List<ProjectNodeParameter>> getHalleyParams(
+            @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+            @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+            @Parameter(name = "ip", description = "IP", required = true) @RequestParam String ip) {
+
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, projectCode);
+
+        return service.getHalleyParams(ip);
     }
 
     @PostMapping(value = "/all/test/connect")

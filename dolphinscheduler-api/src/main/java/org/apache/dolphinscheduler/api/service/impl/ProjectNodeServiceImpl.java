@@ -20,6 +20,7 @@ package org.apache.dolphinscheduler.api.service.impl;
 import static org.apache.dolphinscheduler.api.service.impl.ProjectServiceImpl.checkDesc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ServiceException;
 import org.apache.dolphinscheduler.api.platform.PlatformRestService;
 import org.apache.dolphinscheduler.api.platform.dto.halley.AssetsInfo;
+import org.apache.dolphinscheduler.api.platform.dto.halley.HalleyServerInfo;
 import org.apache.dolphinscheduler.api.platform.enums.DataFrom;
 import org.apache.dolphinscheduler.api.platform.service.HalleyAccessService;
 import org.apache.dolphinscheduler.api.platform.service.SreAccessService;
@@ -318,7 +320,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
             if (projectNode == null) {
                 needInserList.add(
                         buildNewProjectNode(loginUser, projectCode, clusterCode, node.getNodeName(), node.getNodeKey(),
-                                node.getNodeId(), DataFrom.AUTO.getValue(), "一键同步", cluster));
+                                node.getNodeId(), DataFrom.AUTO.getValue(), "一键同步-AUTO", cluster));
             }
         }
 
@@ -345,6 +347,35 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         }
 
         return Result.success(true);
+    }
+
+    @Override
+    public Result<List<ProjectNodeParameter>> getHalleyParams(String ip) {
+        List<HalleyServerInfo> detailInfo = halleyAccessService.getAssetsInfoByIps(Arrays.asList(ip));
+        if (detailInfo == null || detailInfo.isEmpty()) {
+            return Result.success(new ArrayList<>());
+        }
+
+        HalleyServerInfo info = detailInfo.get(0);
+        List<ProjectNodeParameter> params = new ArrayList<>();
+        params.add(ProjectNodeParameter.builder()
+                .paramName("halley_hostName")
+                .paramValue(info.getHostName())
+                .build());
+        params.add(ProjectNodeParameter.builder()
+                .paramName("halley_cpu")
+                .paramValue(info.getCpu().toString())
+                .build());
+        params.add(ProjectNodeParameter.builder()
+                .paramName("halley_memory")
+                .paramValue(info.getMemory().toString())
+                .build());
+        params.add(ProjectNodeParameter.builder()
+                .paramName("halley_zone")
+                .paramValue(info.getZone())
+                .build());
+
+        return Result.success(params);
     }
 
     @Override
@@ -405,7 +436,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
                 projectNode.setNodeKey(assertNode.getIp());
                 projectNode.setNodeName(assertNode.getHostName());
                 projectNode.setDataFrom(DataFrom.HALLEY.getValue());
-                projectNode.setDescription("一键同步");
+                projectNode.setDescription("一键同步-Halley");
                 projectNode.setUserId(loginUser.getId());
                 projectNode.setUserName(loginUser.getUserName());
                 projectNode.setCreateTime(new Date());
@@ -608,6 +639,7 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
     }
 
     private String tryGetNodeIp(ProjectNode node) {
+        //
         List<ProjectNodeParameter> params = projectNodeParameterService.queryParameterList(node.getProjectCode(),
                 node.getId()).getData();
         if (!params.isEmpty()) {
@@ -663,5 +695,15 @@ public class ProjectNodeServiceImpl extends BaseServiceImpl implements ProjectNo
         QueryWrapper<ProjectNode> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ProjectNode::getProjectCode, projectCode);
         return projectNodeMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public Result<ProjectNode> queryNodeByCode(long projectCode, Integer code) {
+
+        QueryWrapper<ProjectNode> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ProjectNode::getProjectCode, projectCode).eq(ProjectNode::getId, code);
+        ProjectNode projectNode = projectNodeMapper.selectOne(queryWrapper);
+
+        return Result.success(projectNode);
     }
 }

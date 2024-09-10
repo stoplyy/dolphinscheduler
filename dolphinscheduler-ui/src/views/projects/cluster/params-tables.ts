@@ -41,15 +41,24 @@ export function useParamsTable(object: DataTableRowOper) {
         key: "description",
         ...COLUMN_WIDTH_CONFIG['note'],
         render: (row: CommonParameter) => {
-          return row.from === DataFromEnum.AUTO ?
-            h(NTag, { type: 'warning' }, { default: '导入参数' }) :
-            h(NEllipsis, { lineClamp: 1 }, { default: row.description })
-        }
+          return h(NEllipsis, { lineClamp: 1 }, { default: row.description })
+        },
       },
       {
         title: '更新时间',
         key: 'updateTime',
-        ...COLUMN_WIDTH_CONFIG['time']
+        ...COLUMN_WIDTH_CONFIG['time'],
+        render: (row: CommonParameter) => {
+          return row.from === DataFromEnum.MANUAL ?
+            h(NEllipsis, { lineClamp: 1 }, { default: row.description }) :
+            h(NTag, { type: 'warning' }, {
+              default: (
+                row.from === DataFromEnum.AUTO ? 'API参数' : (
+                  row.from === DataFromEnum.HALLEY ? "Halley参数" :
+                    (row.from === DataFromEnum.SYSTEM ? "System参数" : '导入参数')
+                ))
+            })
+        }
       },
       {
         title: '操作',
@@ -69,7 +78,7 @@ export function useParamsTable(object: DataTableRowOper) {
                         circle: true,
                         type: 'info',
                         size: 'small',
-                        disabled: row.from === DataFromEnum.AUTO,
+                        disabled: row.from !== DataFromEnum.MANUAL,
                         onClick: () => {
                           handleEdit(row)
                         }
@@ -78,7 +87,7 @@ export function useParamsTable(object: DataTableRowOper) {
                         icon: () => h(EditOutlined)
                       }
                     ),
-                  default: () => row.from === DataFromEnum.AUTO ? '导入不可修改' : '修改'
+                  default: () => row.from !== DataFromEnum.MANUAL ? '导入不可修改' : '修改'
                 }
               ),
               h(
@@ -100,14 +109,14 @@ export function useParamsTable(object: DataTableRowOper) {
                             {
                               circle: true,
                               type: 'error',
-                              disabled: row.from === DataFromEnum.AUTO,
+                              disabled: row.from !== DataFromEnum.MANUAL,
                               size: 'small'
                             },
                             {
                               icon: () => h(DeleteOutlined)
                             }
                           ),
-                        default: () => row.from === DataFromEnum.AUTO ? '导入不可删除' : '删除'
+                        default: () => row.from !== DataFromEnum.MANUAL ? '导入不可删除' : '删除'
                       }
                     ),
                   default: () => '删除'
@@ -118,6 +127,6 @@ export function useParamsTable(object: DataTableRowOper) {
         }
       }
     ]
-  
+
   return columns
 }

@@ -34,6 +34,7 @@ import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import autovalue.shaded.org.jetbrains.annotations.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -64,7 +65,9 @@ public class PlatformTaskParamHelper {
             return;
         }
 
-        // TODO: 如果选择了 DATASOURCE_PARAM_NAME 将其选择的机器与集群添加到参数中
+        // TODO: 检查 startParams >> projectParams 中是否有禁止使用的参数
+        // TODO: platform_api_params_disable 为true时不填充平台参数
+        // TODO: platform_halley_params_disable 为true时不填充halley参数
 
         final List<ProjectNode> projectAllNodes = projectNodeService.queryNodesByProjectCode(projectCode);
         final List<ProjectCluster> projectClusters = projectClusterService.queryClusterListPaging(projectCode)
@@ -104,9 +107,15 @@ public class PlatformTaskParamHelper {
                 .forEach(appendClusterParamsList::add);
 
         taskNodes.stream()
-                .map(node -> collectorNodeParam(nodeClusterInfos.get(node.getClusterCode()),
-                        taskPlatformParams, taskNodeParamsMap, node))
+                .map(node -> collectorNodeParam(
+                        nodeClusterInfos.get(node.getClusterCode()),
+                        taskPlatformParams,
+                        taskNodeParamsMap.containsKey(node.getId())
+                                ? taskNodeParamsMap.get(node.getId())
+                                : new ArrayList<>(),
+                        node))
                 .forEach(appendNodeParamsList::add);
+
         // 移除所有value为空的参数
         appendNodeParamsList.forEach(
                 map -> map.entrySet().removeIf(entry -> entry.getValue() == null));
@@ -144,69 +153,188 @@ public class PlatformTaskParamHelper {
             List<ProjectParameter> taskPlatformParams,
             List<ProjectClusterParameter> taskClusterParams,
             ProjectCluster cluster) {
-        Map<String, String> params = new HashMap<>();
-        final String clusterId = cluster.getClusterId();
-        // 注意顺序 集群自定义参数 最高优先级最后put
-        // 1. Rest 接口参数
-        Result<Map<String, Object>> result = platformRestService.getRest(RestParamEntry.newEntry()
-                .build(clusterId, null, null)
-                .buildRestParamEntiy(taskPlatformParams), PathEnum.CLUSTER_PARAMS);
-        if (result.getData() != null) {
-            params.putAll(result.getData().entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString())));
-        } else {
-            log.warn("get cluster params error, clusterId: {}", clusterId);
-        }
-
-        // 2. 集群自定义参数
-        params.putAll(taskClusterParams.stream()
+        return collectorClusterParam(cluster, taskPlatformParams, taskClusterParams).stream()
                 .collect(Collectors.toMap(ProjectClusterParameter::getParamName,
-                        ProjectClusterParameter::getParamValue)));
-
-        // 3. 配置在stellarops的集群相关参数 优先级最高
-        params.put("cluster_name", cluster.getClusterName());
-        params.put("cluster_id", clusterId);
-        params.put("cluster_appid", cluster.getAppId());
-        params.put("id", String.valueOf(cluster.getId()));
-        return params;
+                        ProjectClusterParameter::getParamValue));
     }
 
-    private Map<String, String> collectorNodeParam(
-            ProjectCluster cluster,
-            List<ProjectParameter> taskPlatformParams,
-            Map<Integer, List<ProjectNodeParameter>> taskNodeParamsMap,
-            ProjectNode node) {
-        Map<String, String> params = new HashMap<>();
-        // 注意顺序 节点自定义参数 最高优先级最后put
+    /**
+     * 获取集群的完整参数列表
+     * 
+     * @param cluster
+     * @return
+     */
+    public List<ProjectClusterParameter> collectorClusterParam(@NotNull ProjectCluster cluster) {
+        return collectorClusterParam(cluster, null, null);
+    }
 
-        // 1. Rest 接口参数
-        Result<Map<String, Object>> result = platformRestService.getRest(RestParamEntry.newEntry()
-                .build(cluster.getClusterId(), String.valueOf(node.getNodeId()), null)
-                .buildRestParamEntiy(taskPlatformParams), PathEnum.NODE_PARAMS);
-        if (result.getData() != null) {
-            params.putAll(result.getData().entrySet().stream().collect(
-                    Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString())));
-        } else {
-            log.warn("get node params error, clusterId: {}, nodeId: {}", cluster.getClusterId(), node.getId());
+    private List<ProjectClusterParameter> collectorClusterParam(@NotNull ProjectCluster cluster,
+            List<ProjectParameter> taskPlatformParams,
+            List<ProjectClusterParameter> taskClusterParams) {
+        long projectCode = cluster.getProjectCode();
+        Integer clusterCode = cluster.getId();
+        List<ProjectClusterParameter> result = new ArrayList<>();
+
+        if (taskClusterParams == null) {
+            taskClusterParams = pProjectClusterService.queryParameterList(projectCode, clusterCode).getData();
         }
 
-        // 2. 节点自定义参数
-        params.putAll(taskNodeParamsMap.containsKey(node.getId())
-                ? taskNodeParamsMap.get(node.getId()).stream()
-                        .collect(Collectors.toMap(ProjectNodeParameter::getParamName,
-                                ProjectNodeParameter::getParamValue))
-                : new HashMap<>());
+        // 平台参数用于构建rest请求
+        if (taskPlatformParams == null) {
+            taskPlatformParams = projectParameterService.queryProjectParameterListPagingWithOutUser(projectCode, 200, 1,
+                    PlatformConstant.PLATFORM_PARAM_PRIFEX).getData().getTotalList();
+        }
 
+        Map<String, ProjectClusterParameter> paramterMap = new HashMap<>();
+        // 注意顺序 集群自定义参数 最高优先级最后put
+        // 1. Rest 接口参数
+        Result<Map<String, Object>> restResult = platformRestService.getRest(RestParamEntry.newEntry()
+                .build(cluster.getClusterId(), null, null)
+                .buildRestParamEntiy(taskPlatformParams), PathEnum.CLUSTER_PARAMS);
+        if (restResult.getData() != null) {
+            paramterMap.putAll(restResult.getData().entrySet().stream().collect(
+                    Collectors.toMap(Map.Entry::getKey, e -> {
+                        ProjectClusterParameter p = new ProjectClusterParameter();
+                        p.setParamName(e.getKey());
+                        p.setParamValue(e.getValue().toString());
+                        p.setDescription("FROM_API");
+                        return p;
+                    })));
+        }
+        // 2. 自定义参数
+        for (ProjectClusterParameter p : taskClusterParams) {
+            paramterMap.put(p.getParamName(), p);
+        }
         // 3. 配置在stellarops的设置参数 优先级最高
+        Map<String, String> params = systemClusterParam(cluster);
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            ProjectClusterParameter p = new ProjectClusterParameter();
+            p.setParamName(entry.getKey());
+            p.setParamValue(entry.getValue());
+            p.setDescription("SYSTEM");
+            paramterMap.put(entry.getKey(), p);
+        }
+        result.addAll(paramterMap.values());
+        return result;
+    }
+
+    public static Map<String, String> systemClusterParam(ProjectCluster cluster) {
+        Map<String, String> params = new HashMap<>();
         params.put("cluster_name", cluster.getClusterName());
         params.put("cluster_id", cluster.getClusterId());
         params.put("cluster_appid", cluster.getAppId());
         params.put("cluster_code", String.valueOf(cluster.getId()));
+        return params;
+    }
+
+    /**
+     * 获取节点的完整参数列表
+     * 
+     * @param node
+     * @return
+     */
+    public List<ProjectNodeParameter> collectorNodeParam(Long projectCode, Integer nodeCode) {
+        ProjectNode node = projectNodeService.queryNodeByCode(projectCode, nodeCode).getData();
+        return collectorNodeParam(node, null, null, null);
+    }
+
+    /**
+     * 获取节点的完整参数列表
+     * 
+     * @param node
+     * @return
+     */
+    public List<ProjectNodeParameter> collectorNodeParam(@NotNull ProjectNode node) {
+        return collectorNodeParam(node, null, null, null);
+    }
+
+    private List<ProjectNodeParameter> collectorNodeParam(
+            @NotNull ProjectNode node,
+            ProjectCluster cluster,
+            List<ProjectParameter> taskPlatformParams,
+            List<ProjectNodeParameter> taskNodeDBParams) {
+
+        long projectCode = node.getProjectCode();
+        Integer nodeId = node.getId();
+        List<ProjectNodeParameter> result = new ArrayList<>();
+
+        if (taskNodeDBParams == null) {
+            taskNodeDBParams = pProjectNodeService.queryParameterList(projectCode, nodeId).getData();
+        }
+        if (cluster == null) {
+            cluster = projectClusterService.queryClusterByCode(projectCode, node.getClusterCode()).getData();
+        }
+        if (taskPlatformParams == null) {
+            taskPlatformParams = projectParameterService.queryProjectParameterListPagingWithOutUser(projectCode, 200, 1,
+                    PlatformConstant.PLATFORM_PARAM_PRIFEX).getData().getTotalList();
+        }
+
+        Map<String, ProjectNodeParameter> paramterMap = new HashMap<>();
+        // 注意顺序 节点自定义参数 最高优先级最后put
+        // 1. Rest 接口参数
+        Result<Map<String, Object>> restResult = platformRestService.getRest(RestParamEntry.newEntry()
+                .build(cluster.getClusterId(), String.valueOf(node.getNodeId()), null)
+                .buildRestParamEntiy(taskPlatformParams), PathEnum.NODE_PARAMS);
+        if (restResult.getData() != null) {
+            paramterMap.putAll(restResult.getData().entrySet().stream().collect(
+                    Collectors.toMap(Map.Entry::getKey, e -> {
+                        ProjectNodeParameter p = new ProjectNodeParameter();
+                        p.setParamName(e.getKey());
+                        p.setParamValue(e.getValue().toString());
+                        p.setDescription("FROM_API");
+                        return p;
+                    })));
+        }
+        // 2. 自定义参数
+        for (ProjectNodeParameter p : taskNodeDBParams) {
+            paramterMap.put(p.getParamName(), p);
+        }
+        // 3. halley 参数
+        String ip = node.getNodeKey();
+        if (paramterMap.containsKey("platform_sre_ip")) {
+            ip = paramterMap.get("platform_sre_ip").getParamValue();
+        }
+        Result<List<ProjectNodeParameter>> halleyParams = projectNodeService.getHalleyParams(ip);
+        if (halleyParams.getData() != null) {
+            for (ProjectNodeParameter p : halleyParams.getData()) {
+                p.setDescription("FROM_HALLEY");
+                paramterMap.put(p.getParamName(), p);
+            }
+        }
+        // 4. 配置在stellarops的设置参数 优先级最高
+        Map<String, String> params = systemNodeParam(cluster, node);
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            ProjectNodeParameter p = new ProjectNodeParameter();
+            p.setParamName(entry.getKey());
+            p.setParamValue(entry.getValue());
+            p.setDescription("SYSTEM");
+            paramterMap.put(entry.getKey(), p);
+        }
+        result.addAll(paramterMap.values());
+        return result;
+    }
+
+    public static Map<String, String> systemNodeParam(@NotNull ProjectCluster cluster, @NotNull ProjectNode node) {
+        Map<String, String> params = new HashMap<>();
+        params.putAll(systemClusterParam(cluster));
         params.put("node_source", node.getDataSourceCode() == null ? "-1" : String.valueOf(node.getDataSourceCode()));
         params.put("node_name", node.getNodeName());
         params.put("node_id", String.valueOf(node.getNodeId()));
         params.put("node_key", node.getNodeKey());
-        params.put("id", String.valueOf(node.getId()));
+        params.put("node_code", String.valueOf(node.getId()));
+        return params;
+    }
+
+    private Map<String, String> collectorNodeParam(
+            @NotNull ProjectCluster cluster,
+            @NotNull List<ProjectParameter> taskPlatformParams,
+            @NotNull List<ProjectNodeParameter> taskNodeDBParams,
+            @NotNull ProjectNode node) {
+        Map<String, String> params = new HashMap<>();
+        List<ProjectNodeParameter> nodeParams = collectorNodeParam(node, cluster, taskPlatformParams, taskNodeDBParams);
+        for (ProjectNodeParameter p : nodeParams) {
+            params.put(p.getParamName(), p.getParamValue());
+        }
         return params;
     }
 
@@ -268,6 +396,7 @@ public class PlatformTaskParamHelper {
             List<ProjectCluster> projectClusters) {
         final List<Integer> projectClusterIds = projectClusters.stream().map(ProjectCluster::getId).sorted()
                 .collect(Collectors.toList());
+
         if (clusterIdsInt.size() == 0) {
             return Collections.emptyMap();
         } else if (clusterIdsInt.size() > 0 && !projectClusterIds.containsAll(clusterIdsInt)) {

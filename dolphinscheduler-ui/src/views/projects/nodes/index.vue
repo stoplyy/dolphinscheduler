@@ -154,7 +154,7 @@
 </template>
 
 <script lang="ts">
-  import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, testConnectivityByHalley, createSourceWithAllNode, getPlatformRestByProject, queryProjectNodeList, queryProjectNodeParametersList, syncAllNodeData, syncNodesByHalley, syncSourceNodeData, updateProjectNode, updateProjectNodeParameter } from '@/service/modules/project-platform';
+  import { createProjectNode, createProjectNodeParameter, deleteProjectNode, deleteProjectNodeParameter, testConnectivityByHalley, createSourceWithAllNode, getPlatformRestByProject, queryProjectNodeList, queryProjectNodeALlParameters, syncAllNodeData, syncNodesByHalley, syncSourceNodeData, updateProjectNode, updateProjectNodeParameter, getHalleyParamsByNode } from '@/service/modules/project-platform';
   import { PlatformRestEnum, ProjectNodeParameter } from '@/service/modules/project-platform/platform';
   import { NButton, NCard, NEmpty, NDataTable, NDialog, NDialogProvider, NPopconfirm, NDynamicTags, NIcon, NForm, NFormItem, NFormItemGi, NFormItemRow, NGrid, NGridItem, NInput, NModal, NPagination, NSelect, NSpace, NTable, NTooltip, SelectOption, NDropdown, NMenu } from 'naive-ui';
   import { computed, defineComponent, getCurrentInstance, h, reactive, ref, VNode, watch } from 'vue';
@@ -419,17 +419,35 @@
       async function refreshParamList() {
         loadingParamRef.value = true;
         if (modalNodeInfo.id && modalNodeInfo.id > 0) {
-          // 人工创建的参数
-          await queryProjectNodeParametersList(projectCode.value, modalNodeInfo.clusterCode, modalNodeInfo.id).then((res) => {
-            nodeParams.value = res;
-          });
-          await getPlatformRestByProject(projectCode.value, PlatformRestEnum.NODE_PARAMS, modalNodeInfo.clusterId, modalNodeInfo.nodeId, '').then((res) => {
-            res.forEach((val, key) => {
-              nodeParams.value.push({
-                paramName: key,
-                paramValue: val,
-                from: DataFromEnum.AUTO,
-              } as ProjectNodeParameter);
+          nodeParams.value = [];
+          //TODO: 提供选项，是否展示 halley、api、system 参数
+          await queryProjectNodeALlParameters(projectCode.value, modalNodeInfo.clusterCode, modalNodeInfo.id).then((res) => {
+            res.forEach((val) => {
+              // debugger
+              if (val.description === "FROM_HALLEY") {
+                val.from = DataFromEnum.HALLEY;
+              } else if (val.description === "FROM_API") {
+                val.from = DataFromEnum.AUTO;
+              } else if (val.description === "SYSTEM") {
+                val.from = DataFromEnum.SYSTEM;
+              } else {
+                val.from = DataFromEnum.MANUAL;
+              }
+              nodeParams.value.push(val);
+            });
+            //排序 MANUAL>SYSTEM>HALLEY>API
+            nodeParams.value.sort((a, b) => {
+              if (a.from === b.from) {
+                return 0;
+              } else if (a.from === DataFromEnum.MANUAL) {
+                return -1;
+              } else if (a.from === DataFromEnum.SYSTEM) {
+                return b.from === DataFromEnum.MANUAL ? 1 : -1;
+              } else if (a.from === DataFromEnum.HALLEY) {
+                return b.from === DataFromEnum.MANUAL || b.from === DataFromEnum.SYSTEM ? 1 : -1;
+              } else {
+                return 1;
+              }
             });
           });
         } else {
