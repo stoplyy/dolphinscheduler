@@ -717,7 +717,10 @@ const DetailModal = defineComponent({
                         <NTooltip trigger='hover' placement='top'>
 
                           {{
-                            default: () => `公钥请配置在目标机器的 /root/.ssh/authorized_keys 文件中,PKeyIdentity配置为：USE_SYSTEM_PRIVATE_KEY`,
+                            default: () => `1. 公钥请配置在目标机器的 /root/.ssh/authorized_keys 文件中
+                            2. 当前源的PKeyIdentity配置为系统占位符: USE_SYSTEM_PRIVATE_KEY
+                            stellarops检查到当前源的PKeyIdentity配置为系统占位符时，会自动使用平台私钥进行连接
+                            `,
                             trigger: () => (
                               <NButton
                                 class='btn-public-key'
