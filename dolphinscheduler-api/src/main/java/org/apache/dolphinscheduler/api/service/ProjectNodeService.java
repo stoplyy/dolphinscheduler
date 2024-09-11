@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.dao.entity.ProjectNode;
+import org.apache.dolphinscheduler.dao.entity.ProjectNodeParameter;
 import org.apache.dolphinscheduler.dao.entity.User;
 
 public interface ProjectNodeService {
@@ -61,6 +62,8 @@ public interface ProjectNodeService {
 
     Result<Boolean> syncNodesByHalley(User loginUser, long projectCode, int clusterCode);
 
+    Result<List<ProjectNodeParameter>> getHalleyParams(String ip);
+
     Result<Map<String, Boolean>> testConnect(User loginUser, long projectCode, int clusterCode);
 
     Result<Boolean> createSourceWithAllNode(User loginUser, long projectCode, int clusterCode);
@@ -70,5 +73,7 @@ public interface ProjectNodeService {
     List<ProjectNode> queryNodeListByDataSourceCodes(Integer... dataSourceCodes);
 
     List<ProjectNode> queryNodesByProjectCode(long projectCode);
+
+    Result<ProjectNode> queryNodeByCode(long projectCode, Integer code);
 
 }

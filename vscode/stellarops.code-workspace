@@ -1,0 +1,29 @@
+{
+    "folders": [
+        {
+            "path": "../dolphinscheduler-api"
+        },
+        {
+            "path": "../dolphinscheduler-master"
+        },
+        {
+            "path": "../dolphinscheduler-worker"
+        },
+        {
+            "path": "../dolphinscheduler-common"
+        },
+        {
+            "path": "../dolphinscheduler-dao"
+        },
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable"
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": []
+    }
+}

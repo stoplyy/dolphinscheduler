@@ -3,7 +3,8 @@ import { ProjectCluster, ProjectNodeParameter, StellarOpsClusterInfo } from "@/s
 enum DataFromEnum {
   AUTO = 'Auto',
   HALLEY = 'Halley',
-  MANUAL = 'manual'
+  MANUAL = 'manual',
+  SYSTEM = 'system'
 }
 
 interface OpsClusterInfo extends ProjectCluster, StellarOpsClusterInfo {

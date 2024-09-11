@@ -185,4 +185,20 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
         }
         return result;
     }
+
+    @Override
+    public Result<ProjectCluster> queryClusterByCode(long projectCode, Integer clusterCode) {
+        Result<ProjectCluster> result = new Result<>();
+        ProjectCluster projectCluster = projectClusterMapper
+                .selectOne(new QueryWrapper<ProjectCluster>().lambda()
+                        .eq(ProjectCluster::getProjectCode, projectCode)
+                        .eq(ProjectCluster::getId, clusterCode));
+        if (projectCluster != null) {
+            result.setData(projectCluster);
+            putMsg(result, Status.SUCCESS);
+        } else {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, projectCode, clusterCode);
+        }
+        return result;
+    }
 }
