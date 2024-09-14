@@ -32,6 +32,7 @@
         <module>dolphinscheduler-task-all-prune</module>
         <module>dolphinscheduler-task-api</module>
         <module>dolphinscheduler-task-shell</module>
+        <module>dolphinscheduler-task-resource</module>
         <!-- <module>dolphinscheduler-task-datax</module> -->
         <!-- <module>dolphinscheduler-task-flink</module> -->
         <module>dolphinscheduler-task-http</module>
@@ -50,7 +51,7 @@
         <module>dolphinscheduler-task-jupyter</module>
         <module>dolphinscheduler-task-mlflow</module>
         <module>dolphinscheduler-task-openmldb</module>
-        <module>dolphinscheduler-task-dvc</module>
+        <!-- <module>dolphinscheduler-task-dvc</module> -->
         <!-- <module>dolphinscheduler-task-dinky</module> -->
         <module>dolphinscheduler-task-java</module>
         <!-- <module>dolphinscheduler-task-sagemaker</module>

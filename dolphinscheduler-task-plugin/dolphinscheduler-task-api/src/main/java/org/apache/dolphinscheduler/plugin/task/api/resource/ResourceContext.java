@@ -22,6 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
+import org.apache.dolphinscheduler.plugin.task.api.TaskChannel;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,8 +39,25 @@ public class ResourceContext {
      */
     private final Map<String, ResourceItem> resourceItemMap;
 
+    private String tenant;
+    private StorageOperate storageOperate;
+
     public ResourceContext() {
         this.resourceItemMap = new HashMap<>();
+    }
+
+    public ResourceContext(String tenant, StorageOperate storageOperate) {
+        this.resourceItemMap = new HashMap<>();
+        this.tenant = tenant;
+        this.storageOperate = storageOperate;
+    }
+
+    public String getTenant() {
+        return tenant;
+    }
+
+    public StorageOperate getStorageOperate() {
+        return storageOperate;
     }
 
     public void addResourceItem(ResourceItem resourceItem) {
