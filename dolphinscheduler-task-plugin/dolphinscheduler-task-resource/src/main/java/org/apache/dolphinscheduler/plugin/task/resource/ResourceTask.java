@@ -14,13 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.dolphinscheduler.plugin.task.resource;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -33,10 +30,9 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
-import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
-import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext.ResourceItem;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
+import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -90,26 +86,57 @@ public class ResourceTask extends AbstractTask {
     }
 
     private void parseParameters() {
-        for (ResourceTaskParameters.ResourceTaskParameter parameter : resourceParameters.taskParameters()) {
-            // 如果参数需要替换
-            if (parameter.isParseContext()) {
-                String template = parameter.getFileContext();
-                if (StringUtils.isEmpty(template) && parameter.getResource() != null) {
-                    template = readLocalFile(parameter.getResource().getResourceName());
-                }
-                if (StringUtils.isNotEmpty(template)) {
-                    parameter.setFileContext(parseContent(template));
-                }
+        for (ResourceTaskParameter parameter : resourceParameters.getResourceItems()) {
+            // 1. file name parse with prepare params
+            if (StringUtils.isEmpty(parameter.getFileName()) && parameter.getResource() != null) {
+                parameter.setFileName(parameter.getResource());
             }
             if (StringUtils.isNotEmpty(parameter.getFileName())) {
                 parameter.setFileName(parseContent(parameter.getFileName()));
+            }
+            // 2. set file context
+            if (StringUtils.isEmpty(parameter.getFileContext()) && parameter.getResource() != null) {
+                parameter.setFileContext(readLocalFile(parameter.getResource()));
+            }
+
+            // 3. if parse context, parse content with create a new file
+            String template = parameter.getFileContext();
+            if (StringUtils.isNotEmpty(template)) {
+                String parsedContent = template;
+                switch (parameter.getParseMethod()) {
+                    case NONE:
+                        break;
+                    case FREEMARK:
+                        parsedContent = paseContentWithFreeMark(template, prepareParams);
+                        break;
+                    case SIMPLE:
+                        parsedContent = parseContent(template);
+                        break;
+                    default:
+                        break;
+                }
+                parameter.setFileContext(parsedContent);
+            }
+
+            // 4. add local resource with create file
+            if (StringUtils.isEmpty(parameter.getFileContext())) {
+                log.warn("file context is empty, skip this parameter: {}", parameter);
+            } else {
+                String localNewFilePath = getLocalDownloadString(parameter.getFileName());
+                String storeFileName = parameter.getFileName();
+                // store file name with out suffix.local file name with suffix
+                addLocalResourceWithCreateFile(parameter.getFileContext(), storeFileName, localNewFilePath);
+                log.info("add local resource with create file: {}. store file name:{}", localNewFilePath,
+                        storeFileName);
             }
         }
     }
 
     public String readLocalFile(String fileName) {
         try {
-            String localDownloadString = getLocalDownloadString(fileName);
+            String fileRealName = storageOperate.getResDir(taskExecutionContext.getTenantCode());
+            fileRealName = fileName.replaceFirst(fileRealName, "");
+            String localDownloadString = getLocalDownloadString(fileRealName);
             return FileUtils.readFile2Str(new FileInputStream(localDownloadString));
         } catch (IOException e) {
             log.error("read local file failed", e);
@@ -124,58 +151,17 @@ public class ResourceTask extends AbstractTask {
     @Override
     public void handle(TaskCallBack taskCallBack) throws TaskException {
         try {
-            // 生成的文件会以 文件名 为 key 存储在 resourceItemMap 中
-            // 如果有 OUT FILE 参数，则参数名为key. Follow 文件参数传递到下一个任务
+            for (ResourceTaskParameter parameter : resourceParameters.getResourceItems()) {
 
-            /**
-             * 资源文件两个来源：
-             * 1. 当前任务通过content创建
-             * content创建的需要保存到本地并添加到resourceItemMap
-             * 2. 通过resource参数下载（下载的已存在本地）
-             * 
-             * content创建的需要保存到本地并添加到resourceItemMap
-             * ** 如果是替换了内容
-             * 
-             */
-            for (ResourceTaskParameters.ResourceTaskParameter parameter : resourceParameters.taskParameters()) {
+                String storeFileName = parameter.getFileName();
+                String localFilePath = getLocalDownloadString(storeFileName);
 
-                String dstFileName = parameter.getFileName();
-                String localFilePath = getLocalDownloadString(dstFileName);
-
-                // 1. 通过content创建的文件
-                if (parameter.getResource() == null) {
-                    // 与某个资源文件同名 删除这个本地文件 并log
-                    ResourceItem item = taskExecutionContext.getResourceContext().getResourceItem(localFilePath);
-                    if (item != null) {
-                        // 删除本地文件
-                        log.warn(
-                                "will create a new file named {} but already exists with a resource file. {} resource file will be replaced in local",
-                                localFilePath, item.getResourceAbsolutePathInStorage());
-                        FileUtils.deleteFile(localFilePath);
-                    }
-                    // 写文件，并尝试添加到resourceItemMap
-                    addLocalResourceWithCreateFile(parameter.getFileContext(), dstFileName, localFilePath);
-                } else {
-                    // 2. 通过resource参数下载的文件
-                    // 2.2 本地文件不存在 本地文件名称改变
-                    if (taskExecutionContext.getResourceContext().getResourceItem(localFilePath) == null) {
-                        addLocalResourceWithCreateFile(parameter.getFileContext(), dstFileName, localFilePath);
-                    } else {
-                        // 2.1 本地文件存在，文件内容不一致
-                        if (parameter.isParseContext()) {
-                            log.warn("resource file {} already exists, will be replaced because content is parsed",
-                                    localFilePath);
-                            FileUtils.deleteFile(localFilePath);
-                            addLocalResourceWithCreateFile(parameter.getFileContext(), dstFileName, localFilePath);
-                        }
-                    }
-                }
                 // 处理文件操作
                 switch (parameter.getOperMethod()) {
                     case UPLOAD:
                     case UPLOAD_FORCE:
                     case DELETE:
-                        storageOperate.upload(tenant, localFilePath, dstFileName,
+                        storageOperate.upload(tenant, localFilePath, storeFileName,
                                 parameter.getOperMethod() == OperMethod.DELETE,
                                 parameter.getOperMethod() == OperMethod.UPLOAD_FORCE);
                         break;
@@ -183,26 +169,41 @@ public class ResourceTask extends AbstractTask {
                         log.info("resource task method not support: {}", parameter.getOperMethod());
                         break;
                 }
-                // TODO: 处理文件参数
             }
+
+            exitStatusCode = 0;
         } catch (Exception e) {
             log.error("resource task failed", e);
+            exitStatusCode = -1;
             throw new TaskException("resource task failed", e);
         }
     }
 
-    private void addLocalResourceWithCreateFile(String content, String dstFileName,
-            String localFilePath) {
+    private void addLocalResourceWithCreateFile(String content, String storageFileName, String localFilePath) {
+        // 1. save file to local
         FileUtils.writeContent2File(content, localFilePath);
-        String resourceRelativePath = storageOperate.getResourceFileName(tenant, dstFileName);
+        // // 2. get storage relative path with suffix
+        // final String storeFilePath = storageOperate.getResourceFileName(tenant,
+        // storageFileName);
 
-        if (taskExecutionContext.getResourceContext().getResourceItem(localFilePath) == null) {
-            ResourceContext.ResourceItem resourceItem = ResourceContext.ResourceItem.builder()
-                    .resourceAbsolutePathInStorage(dstFileName)
-                    .resourceRelativePath(resourceRelativePath)
-                    .resourceAbsolutePathInLocal(localFilePath)
-                    .build();
-            taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
+        // // 3. add resourceItem to resourceItemMap key: storeFilePath
+        // ResourceContext.ResourceItem resourceItem =
+        // ResourceContext.ResourceItem.builder()
+        // .resourceAbsolutePathInStorage(storageFileName)
+        // .resourceRelativePath(storeFilePath)
+        // .resourceAbsolutePathInLocal(localFilePath)
+        // .build();
+        // taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
+    }
+
+    private String paseContentWithFreeMark(String content, Map<String, String> params) {
+        try {
+            return FreemarkHelper.processTemplate(content, params);
+        } catch (IOException | TemplateException e) {
+            log.error("freemark convert exception！source:" + content + " arrays:" + JSONUtils.toJsonString(params), e);
+            return "freemark convert exception ！source:" + content + " arrays:" + JSONUtils.toJsonString(params);
+        } catch (Exception e) {
+            throw new TaskException("task content error");
         }
     }
 
@@ -213,7 +214,6 @@ public class ResourceTask extends AbstractTask {
 
     @Override
     public void cancel() throws TaskException {
-
     }
 
     @Override

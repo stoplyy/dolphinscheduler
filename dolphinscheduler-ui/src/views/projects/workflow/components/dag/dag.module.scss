@@ -213,6 +213,9 @@ $bgLight: #ffffff;
     &.icon-remoteshell {
       background-image: url('/images/task-icons/remoteshell.png');
     }
+    &.icon-resource {
+      background-image: url('/images/task-icons/resource.png');
+    }
   }
 
   &:hover {
@@ -328,6 +331,9 @@ $bgLight: #ffffff;
       }
       &.icon-remoteshell {
         background-image: url('/images/task-icons/remoteshell_hover.png');
+      }
+      &.icon-resource {
+        background-image: url('/images/task-icons/resource_hover.png');
       }
     }
   }

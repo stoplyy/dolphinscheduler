@@ -17,29 +17,11 @@
 
 package org.apache.dolphinscheduler.plugin.task.resource;
 
-import java.util.List;
-
-import org.apache.dolphinscheduler.plugin.task.api.TaskChannel;
-import org.apache.dolphinscheduler.plugin.task.api.TaskChannelFactory;
-import org.apache.dolphinscheduler.spi.params.base.PluginParams;
-
-import com.google.auto.service.AutoService;
-
-@AutoService(TaskChannelFactory.class)
-public class ResourceTaskChannelFactory implements TaskChannelFactory {
-
-    @Override
-    public String getName() {
-        return "RESOURCE";
-    }
-
-    @Override
-    public List<PluginParams> getParams() {
-        return null;
-    }
-
-    @Override
-    public TaskChannel create() {
-        return new ResourceTaskChannel();
-    }
+/**
+ * NONE: 不转化
+ * SIMPLE: 参数转化
+ * FREEMARK: freemark转化
+ */
+public enum ParseMethod {
+    NONE, SIMPLE, FREEMARK
 }

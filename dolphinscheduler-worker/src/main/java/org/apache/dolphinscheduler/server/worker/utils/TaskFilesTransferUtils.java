@@ -37,6 +37,7 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.enums.DataType;
 import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
+import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.zeroturnaround.zip.ZipUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -78,9 +79,15 @@ public class TaskFilesTransferUtils {
         if (localParamsProperty.isEmpty()) {
             return;
         }
+        Map<String, String> taskParamsMap = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
 
         log.info("Upload output files ...");
         for (Property property : localParamsProperty) {
+            
+            // convert parameter placeholders
+            String convertProVal = ParameterUtils.convertParameterPlaceholders(property.getValue(), taskParamsMap);
+            property.setValue(convertProVal);
+
             // get local file path
             String path = String.format("%s/%s", taskExecutionContext.getExecutePath(), property.getValue());
             String srcPath = packIfDir(path);

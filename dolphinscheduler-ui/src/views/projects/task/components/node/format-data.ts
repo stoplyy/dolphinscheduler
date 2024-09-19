@@ -25,7 +25,7 @@ import type {
   ILocalParam,
   IDependentParameters
 } from './types'
-import {ref} from "vue";
+import { ref } from "vue";
 
 export function formatParams(data: INodeData): {
   processDefinitionCode: string
@@ -95,6 +95,17 @@ export function formatParams(data: INodeData): {
     taskParams.socketTimeout = data.socketTimeout
   }
 
+  if (data.taskType === 'RESOURCE') {
+    taskParams.resourceItems = data.resourceItems
+    taskParams.resourceItems?.forEach((item: any) => {
+      if (item.resourceList.length > 0) {
+        //取第一个
+        debugger
+        item.resource = item.resourceList.map((resource: any) => resource)[0]
+      }
+    })
+  }
+
   if (data.taskType === 'SQOOP') {
     taskParams.jobType = data.isCustomTask ? 'CUSTOM' : 'TEMPLATE'
     taskParams.localParams = data.localParams
@@ -132,7 +143,7 @@ export function formatParams(data: INodeData): {
           fieldsTerminated: data.targetHdfsFieldsTerminated,
           linesTerminated: data.targetHdfsLinesTerminated
         }
-      } else if (rdbmsSourceTypes.value.some(target => target === data.targetType)){
+      } else if (rdbmsSourceTypes.value.some(target => target === data.targetType)) {
         targetParams = {
           targetType: data.targetMysqlType,
           targetDatasource: data.targetMysqlDatasource,
@@ -150,11 +161,11 @@ export function formatParams(data: INodeData): {
           srcTable: data.srcQueryType === '1' ? '' : data.srcTable,
           srcColumnType: data.srcQueryType === '1' ? '0' : data.srcColumnType,
           srcColumns:
-              data.srcQueryType === '1' || data.srcColumnType === '0'
-                  ? ''
-                  : data.srcColumns,
+            data.srcQueryType === '1' || data.srcColumnType === '0'
+              ? ''
+              : data.srcColumns,
           srcQuerySql:
-              data.srcQueryType === '0' ? '' : data.sourceMysqlSrcQuerySql,
+            data.srcQueryType === '0' ? '' : data.sourceMysqlSrcQuerySql,
           srcQueryType: data.srcQueryType,
           srcType: data.sourceMysqlType,
           srcDatasource: data.sourceMysqlDatasource,
@@ -530,8 +541,8 @@ export function formatParams(data: INodeData): {
         rawScript: data.rawScript,
         resourceList: data.resourceList?.length
           ? data.resourceList.map((fullName: string) => ({
-              resourceName: `${fullName}`
-            }))
+            resourceName: `${fullName}`
+          }))
           : [],
         ...taskParams
       },

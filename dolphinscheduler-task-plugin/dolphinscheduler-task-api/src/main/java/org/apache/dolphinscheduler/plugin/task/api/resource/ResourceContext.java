@@ -73,6 +73,10 @@ public class ResourceContext {
         return resourceItem;
     }
 
+    public Map<String, ResourceItem> getResourceItemMap() {
+        return resourceItemMap;
+    }
+
     @Data
     @Builder
     @AllArgsConstructor
