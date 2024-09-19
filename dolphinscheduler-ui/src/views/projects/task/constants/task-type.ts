@@ -53,6 +53,7 @@ export type TaskType =
   | 'LINKIS'
   | 'DATA_FACTORY'
   | 'REMOTESHELL'
+  | 'RESOURCE'
 
 export type TaskExecuteType = 'STREAM' | 'BATCH'
 

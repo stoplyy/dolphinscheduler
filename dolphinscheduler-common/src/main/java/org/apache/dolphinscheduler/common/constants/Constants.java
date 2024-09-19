@@ -745,4 +745,13 @@ public final class Constants {
      * use system private key withDATASOURCE_PUBLIC_KEY_IDENTITY config value
      */
     public static final String DATASOURCE_PUBLIC_KEY_FLAG = "USE_SYSTEM_PRIVATE_KEY";
+    
+    /**
+     * resource.storage.type: jfrog
+     */
+    public static String JFROG_REPO_NAME = "resource.jfrog.repo.name";
+    public static String JFROG_URL = "resource.jfrog.url";
+    public static String JFROG_USERNAME = "resource.jfrog.user";
+    public static String JFROG_DIR_PREFIX = "resource.jfrog.dir.prefix";
+    public static String JFROG_PASSWORD = "resource.jfrog.password";
 }

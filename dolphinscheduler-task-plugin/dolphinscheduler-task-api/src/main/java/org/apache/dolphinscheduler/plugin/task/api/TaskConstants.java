@@ -380,15 +380,6 @@ public class TaskConstants {
     public static final String TASK_TYPE_BLOCKING = "BLOCKING";
 
     /**
-     * resource.storage.type: jfrog
-     */
-    public static String JFROG_REPO_NAME = "resource.jfrog.repo.name";
-    public static String JFROG_URL = "resource.jfrog.url";
-    public static String JFROG_USERNAME = "resource.jfrog.user";
-    public static String JFROG_DIR_PREFIX = "resource.jfrog.dir.prefix";
-    public static String JFROG_PASSWORD = "resource.jfrog.password";
-
-    /**
      * azure config
      */
     public static final String AZURE_CLIENT_ID = "resource.azure.client.id";

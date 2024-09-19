@@ -120,10 +120,10 @@ public class TaskExecutionContextUtils {
         List<ResourceInfo> resourceFilesList = abstractParameters.getResourceFilesList();
         if (CollectionUtils.isEmpty(resourceFilesList)) {
             log.debug("There is no resource file need to download");
-            return new ResourceContext();
+            return new ResourceContext(tenant, storageOperate);
         }
 
-        ResourceContext resourceContext = new ResourceContext();
+        ResourceContext resourceContext = new ResourceContext(tenant, storageOperate);
         String taskWorkingDirectory = taskExecutionContext.getExecutePath();
 
         for (ResourceInfo resourceInfo : resourceFilesList) {

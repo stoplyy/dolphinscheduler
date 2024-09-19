@@ -1,7 +1,7 @@
 
 package org.apache.dolphinscheduler.plugin.storage.jfrog;
 
-import static org.apache.dolphinscheduler.common.constants.Constants.RESOURCE_TYPE_FILE;
+import static org.apache.dolphinscheduler.common.constants.Constants.*;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -86,29 +86,29 @@ public class JFrogStorageOperator implements Closeable, StorageOperate {
 
     private void setRepo() {
         REPO_NAME = StringUtils.isBlank(REPO_NAME)
-                ? PropertyUtils.getString(TaskConstants.JFROG_REPO_NAME, "dolphinscheduler")
+                ? PropertyUtils.getString(Constants.JFROG_REPO_NAME, "dolphinscheduler")
                 : REPO_NAME;
     }
 
     private void setUrl() {
         jfrogUrl = StringUtils.isBlank(jfrogUrl)
-                ? PropertyUtils.getString(TaskConstants.JFROG_URL, "http://localhost:8081/artifactory")
+                ? PropertyUtils.getString(Constants.JFROG_URL, "http://localhost:8081/artifactory")
                 : jfrogUrl;
     }
 
     private void setUser() {
-        user = StringUtils.isBlank(user) ? PropertyUtils.getString(TaskConstants.JFROG_USERNAME, "admin") : user;
+        user = StringUtils.isBlank(user) ? PropertyUtils.getString(Constants.JFROG_USERNAME, "admin") : user;
     }
 
     private void setPwd() {
-        pwd = StringUtils.isBlank(pwd) ? PropertyUtils.getString(TaskConstants.JFROG_PASSWORD, "password") : pwd;
+        pwd = StringUtils.isBlank(pwd) ? PropertyUtils.getString(Constants.JFROG_PASSWORD, "password") : pwd;
     }
 
     private void setDirPrefix() {
         jfrogDirPrefix = System.getProperty("jfrog.dir.prefix");
 
         if (StringUtils.isBlank(jfrogDirPrefix)) {
-            jfrogDirPrefix = PropertyUtils.getString(TaskConstants.JFROG_DIR_PREFIX, "");
+            jfrogDirPrefix = PropertyUtils.getString(Constants.JFROG_DIR_PREFIX, "");
         }
         if (StringUtils.isBlank(jfrogDirPrefix)) {
             jfrogDirPrefix = "/local";
