@@ -133,14 +133,19 @@ public class ResourceTask extends AbstractTask {
     }
 
     public String readLocalFile(String fileName) {
+        String localDownloadString = null;
+        String fileRealName = null;
         try {
-            String fileRealName = storageOperate.getResDir(taskExecutionContext.getTenantCode());
+            fileRealName = storageOperate.getResDir(taskExecutionContext.getTenantCode());
             fileRealName = fileName.replaceFirst(fileRealName, "");
-            String localDownloadString = getLocalDownloadString(fileRealName);
+            localDownloadString = getLocalDownloadString(fileRealName);
             return FileUtils.readFile2Str(new FileInputStream(localDownloadString));
         } catch (IOException e) {
-            log.error("read local file failed", e);
-            throw new TaskException("read local file failed", e);
+            String msg = String.format("read local file failed. fileName: %s localDownloadString:%s fileRealName:%s",
+                    fileName,
+                    localDownloadString, fileRealName);
+            log.error(msg, e);
+            throw new TaskException(msg, e);
         }
     }
 
