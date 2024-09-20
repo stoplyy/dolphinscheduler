@@ -147,6 +147,7 @@ public class ResourceTask extends AbstractTask {
         } catch (IOException e) {
             String msg = String.format(
                     "read local file failed. \nfileName: %s  \nresourceString: %s \nlocalDownloadString:%s \nfileRealName:%s",
+                    resourceString,
                     fileName,
                     localDownloadString, fileRealName);
             log.error(msg, e);
