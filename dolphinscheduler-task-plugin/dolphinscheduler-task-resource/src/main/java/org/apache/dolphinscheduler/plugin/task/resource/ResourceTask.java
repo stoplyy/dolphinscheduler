@@ -193,8 +193,10 @@ public class ResourceTask extends AbstractTask {
         try {
             return FreemarkHelper.processTemplate(content, params);
         } catch (IOException | TemplateException e) {
-            log.error("freemark convert exception！source:" + content + " arrays:" + JSONUtils.toJsonString(params), e);
-            return "freemark convert exception ！source:" + content + " arrays:" + JSONUtils.toJsonString(params);
+            String msg = "freemark convert exception！source: \n" + content + " \ninput params:"
+                    + JSONUtils.toJsonString(params);
+            log.error(msg, e);
+            throw new TaskException("freemark convert exception！");
         } catch (Exception e) {
             throw new TaskException("task content error");
         }
