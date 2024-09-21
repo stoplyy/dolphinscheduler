@@ -30,6 +30,7 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext.ResourceItem;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
 import freemarker.template.TemplateException;
@@ -53,6 +54,7 @@ public class ResourceTask extends AbstractTask {
     private String tenant;
     private StorageOperate storageOperate;
     private Map<String, String> prepareParams;
+    private Map<String, ResourceItem> resourceItemMap;
 
     /**
      * constructor
@@ -70,9 +72,12 @@ public class ResourceTask extends AbstractTask {
     public void init() {
         resourceParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), ResourceTaskParameters.class);
         prepareParams = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
+        resourceItemMap = taskExecutionContext.getResourceContext().getResourceItemMap();
 
-        log.info("Initialized resource task. \n params: \n{}\n prepareParams:\n{}",
-                JSONUtils.toPrettyJsonString(resourceParameters), prepareParams);
+        log.info("Initialized resource task. \n params: \n{}\n prepareParams:\n{} resoureItemKeys:\n{}",
+                JSONUtils.toPrettyJsonString(resourceParameters),
+                prepareParams,
+                resourceItemMap == null ? "" : JSONUtils.toPrettyJsonString(resourceItemMap.keySet()));
 
         if (resourceParameters == null || !resourceParameters.checkParameters()) {
             throw new RuntimeException("http task params is not valid");
@@ -125,7 +130,7 @@ public class ResourceTask extends AbstractTask {
                 String localNewFilePath = getLocalDownloadString(parameter.getFileName());
                 String storeFileName = parameter.getFileName();
                 // store file name with out suffix.local file name with suffix
-                addLocalResourceWithCreateFile(parameter.getFileContext(), storeFileName, localNewFilePath);
+                FileUtils.writeContent2File(parameter.getFileContext(), localNewFilePath);
                 log.info("add local resource with create file: {}. store file name:{}", localNewFilePath,
                         storeFileName);
             }
@@ -133,24 +138,18 @@ public class ResourceTask extends AbstractTask {
     }
 
     public String readLocalFile(String fileName) {
-        String localDownloadString = null;
-        String fileRealName = null;
-        String resourceString = null;
+        ResourceItem item = null;
         try {
-            resourceString = storageOperate.getResDir(taskExecutionContext.getTenantCode());
-            if (resourceString.startsWith("/")) {
-                resourceString = resourceString.substring(1);
+            item = resourceItemMap.getOrDefault(fileName, null);
+            if (item == null) {
+                throw new TaskException("resource file not exist in resours item map. file name: " + fileName);
             }
-            fileRealName = fileName.replaceFirst(resourceString, "");
-            localDownloadString = getLocalDownloadString(fileRealName);
-            return FileUtils.readFile2Str(new FileInputStream(localDownloadString));
+            return FileUtils.readFile2Str(new FileInputStream(item.getResourceAbsolutePathInLocal()));
         } catch (IOException e) {
-            String msg = String.format(
-                    "read local file failed. \nfileName: %s  \nresourceString: %s \nlocalDownloadString:%s \nfileRealName:%s",
-                    resourceString,
-                    fileName,
-                    localDownloadString, fileRealName);
+            String msg = String.format("read local file error: %s",
+                    item == null ? fileName : item.getResourceAbsolutePathInLocal());
             log.error(msg, e);
+
             throw new TaskException(msg, e);
         }
     }
@@ -188,23 +187,6 @@ public class ResourceTask extends AbstractTask {
             exitStatusCode = -1;
             throw new TaskException("resource task failed", e);
         }
-    }
-
-    private void addLocalResourceWithCreateFile(String content, String storageFileName, String localFilePath) {
-        // 1. save file to local
-        FileUtils.writeContent2File(content, localFilePath);
-        // // 2. get storage relative path with suffix
-        // final String storeFilePath = storageOperate.getResourceFileName(tenant,
-        // storageFileName);
-
-        // // 3. add resourceItem to resourceItemMap key: storeFilePath
-        // ResourceContext.ResourceItem resourceItem =
-        // ResourceContext.ResourceItem.builder()
-        // .resourceAbsolutePathInStorage(storageFileName)
-        // .resourceRelativePath(storeFilePath)
-        // .resourceAbsolutePathInLocal(localFilePath)
-        // .build();
-        // taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
     }
 
     private String paseContentWithFreeMark(String content, Map<String, String> params) {
