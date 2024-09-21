@@ -35,7 +35,7 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
     {
       type: 'custom',
       field: 'custom-title-source',
-      span: 20,
+      span: 22,
       widget: h(
         NAlert,
         {
@@ -43,7 +43,7 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
           size: 'small',
           vShow: !closeInfo
         }, {
-        default: () => '文件内容：资源文件或者输入内容. 二选一，优先输入的内容',
+        default: () => '文件内容：资源文件或者输入内容. 二选一，优先输入的内容。',
         //3s后自动关闭
         trigger: () => setTimeout(() => {
           //关闭当前提示
@@ -60,16 +60,16 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
         type: 'input',
         class: 'input-url-name',
         field: 'fileName',
-        name: '文件名',
-        span: 20,
+        name: '输出文件名',
+        span: 22,
         props: {
-          placeholder: '请输入文件名'
+          placeholder: '请输入输出的文件名，支持参数替换'
         },
       },
       {
         type: 'select',
         field: 'operMethod',
-        span: 10,
+        span: 11,
         name: '操作方式',
         options: POSITIONS,
         props: {
@@ -79,7 +79,7 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
       {
         type: 'select',
         field: 'parseMethod',
-        span: 10,
+        span: 11,
         name: '解析方式',
         options: ParseMethods,
         props: {
@@ -87,11 +87,21 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
         },
       },
       // '文件内容：资源文件 或者 输入内容，二选一，优先输入的文件内容'
-      useResources(20, false, 1),
+      useResources(11, false, 1),
+      {
+        type: 'input',
+        class: 'input-url-name',
+        field: 'dynamicResource',
+        name: '资源文件路径',
+        span: 11,
+        props: {
+          placeholder: '资源名称 支持参数替换'
+        },
+      },
       {
         type: 'editor',
         field: 'fileContext',
-        span: 20,
+        span: 22,
         name: t('project.node.script'),
         validate: {
           trigger: ['input', 'trigger'],

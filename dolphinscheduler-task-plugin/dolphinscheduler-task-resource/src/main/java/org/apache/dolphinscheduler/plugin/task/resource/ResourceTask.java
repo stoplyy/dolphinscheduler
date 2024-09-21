@@ -16,8 +16,10 @@
  */
 package org.apache.dolphinscheduler.plugin.task.resource;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +32,7 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
 import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext.ResourceItem;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
@@ -74,7 +77,7 @@ public class ResourceTask extends AbstractTask {
         prepareParams = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
         resourceItemMap = taskExecutionContext.getResourceContext().getResourceItemMap();
 
-        log.info("Initialized resource task. \n params: \n{}\n prepareParams:\n{} resoureItemKeys:\n{}",
+        log.info("Initialized resource task. \n===params===\n{}\n===prepareParams===:\n{} \n===resoureItemKeys===\n{}",
                 JSONUtils.toPrettyJsonString(resourceParameters),
                 prepareParams,
                 resourceItemMap == null ? "" : JSONUtils.toPrettyJsonString(resourceItemMap.keySet()));
@@ -92,16 +95,31 @@ public class ResourceTask extends AbstractTask {
 
     private void parseParameters() {
         for (ResourceTaskParameter parameter : resourceParameters.getResourceItems()) {
+
             // 1. file name parse with prepare params
-            if (StringUtils.isEmpty(parameter.getFileName()) && parameter.getResource() != null) {
+            if (StringUtils.isEmpty(parameter.getFileName())
+                    && StringUtils.isNotEmpty(parameter.getResource())) {
                 parameter.setFileName(parameter.getResource());
+            }
+            if (StringUtils.isEmpty(parameter.getFileName())
+                    && StringUtils.isNotEmpty(parameter.getDynamicResource())) {
+                parameter.setFileName(parameter.getDynamicResource());
             }
             if (StringUtils.isNotEmpty(parameter.getFileName())) {
                 parameter.setFileName(parseContent(parameter.getFileName()));
             }
+
             // 2. set file context
-            if (StringUtils.isEmpty(parameter.getFileContext()) && parameter.getResource() != null) {
-                parameter.setFileContext(readLocalFile(parameter.getResource()));
+            if (StringUtils.isEmpty(parameter.getFileContext())) {
+                if (parameter.getResource() == null && parameter.getDynamicResource() != null) {
+                    String dynamicResourceName = parseContent(parameter.getDynamicResource());
+                    parameter.setResource(dynamicResourceName);
+                    downloadResourceWithAddResource(dynamicResourceName);
+                }
+
+                if (parameter.getResource() != null) {
+                    parameter.setFileContext(readLocalFile(parameter.getResource()));
+                }
             }
 
             // 3. if parse context, parse content with create a new file
@@ -152,6 +170,32 @@ public class ResourceTask extends AbstractTask {
 
             throw new TaskException(msg, e);
         }
+    }
+
+    private void downloadResourceWithAddResource(String resourceAbsolutePathInStorage) {
+        String resourceRelativePath = storageOperate.getResourceFileName(tenant, resourceAbsolutePathInStorage);
+        String resourceAbsolutePathInLocal = Paths.get(taskExecutionContext.getExecutePath(), resourceRelativePath)
+                .toString();
+        File file = new File(resourceAbsolutePathInLocal);
+        if (!file.exists()) {
+            try {
+                storageOperate.download(resourceAbsolutePathInStorage, resourceAbsolutePathInLocal, true);
+                log.debug("Download resource file {} under: {} successfully", resourceAbsolutePathInStorage,
+                        resourceAbsolutePathInLocal);
+                FileUtils.setFileTo755(file);
+            } catch (Exception ex) {
+                throw new TaskException(
+                        String.format("Download resource file: %s error", resourceAbsolutePathInStorage), ex);
+            }
+        } else {
+            log.warn("resource file already exist, skip download. file: {}", resourceAbsolutePathInLocal);
+        }
+        ResourceContext.ResourceItem resourceItem = ResourceContext.ResourceItem.builder()
+                .resourceAbsolutePathInStorage(resourceAbsolutePathInStorage)
+                .resourceRelativePath(resourceRelativePath)
+                .resourceAbsolutePathInLocal(resourceAbsolutePathInLocal)
+                .build();
+        taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
     }
 
     public String getLocalDownloadString(String fileName) {
