@@ -454,26 +454,26 @@ interface ITaskParams {
   yarnQueue?: string
   awsRegion?: string
   kubeConfig?: string,
-  resourceItems?:[]
+  resourceItems?: []
 }
 
 interface INodeData
   extends Omit<
-      ITaskParams,
-      | 'resourceList'
-      | 'mainJar'
-      | 'targetParams'
-      | 'sourceParams'
-      | 'dependence'
-      | 'sparkParameters'
-      | 'conditionResult'
-      | 'udfs'
-      | 'customConfig'
-    >,
-    ISqoopTargetData,
-    ISqoopSourceData,
-    IDependentParameters,
-    Omit<IRuleParameters, 'mapping_columns'> {
+    ITaskParams,
+    | 'resourceList'
+    | 'mainJar'
+    | 'targetParams'
+    | 'sourceParams'
+    | 'dependence'
+    | 'sparkParameters'
+    | 'conditionResult'
+    | 'udfs'
+    | 'customConfig'
+  >,
+  ISqoopTargetData,
+  ISqoopSourceData,
+  IDependentParameters,
+  Omit<IRuleParameters, 'mapping_columns'> {
   id?: string
   taskType?: ITaskType
   processName?: number

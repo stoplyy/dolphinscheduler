@@ -21,11 +21,14 @@ import { queryResourceList } from '@/service/modules/resources'
 import { useTaskNodeStore } from '@/store/project/task-node'
 import utils from '@/utils'
 import type { IJsonItem, IResource } from '../types'
+import { FormItemProps } from 'naive-ui'
 
 export function useResources(
   span: number | Ref<number> = 24,
   required: boolean | Ref<boolean> = false,
-  limit: number | Ref<number> = -1
+  limit: number | Ref<number> = -1,
+  path?: string,
+  itemProps?: FormItemProps
 ): IJsonItem {
   const { t } = useI18n()
 
@@ -117,6 +120,7 @@ export function useResources(
   }
 
   onMounted(() => {
+    console.log('onMounted')
     getResources()
   })
 
@@ -125,6 +129,8 @@ export function useResources(
     field: 'resourceList',
     name: t('project.node.resources'),
     span: span,
+    path: path,
+    itemProps: itemProps,
     options: resourcesOptions,
     props: {
       multiple: true,

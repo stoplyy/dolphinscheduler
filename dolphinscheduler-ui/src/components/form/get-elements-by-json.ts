@@ -29,6 +29,7 @@ export default function getElementByJson(
   const initialValues: { [field: string]: any } = {}
   const elements: IFormItem[] = []
   for (const item of json) {
+    
     const mergedItem = isFunction(item) ? item() : item
     const { name, value, field, children, validate, ...rest } = mergedItem
     if (value || value === 0) {
@@ -41,6 +42,7 @@ export default function getElementByJson(
       ...omit(rest, ['type', 'props', 'options']),
       label: name,
       path: !children ? field : '',
+      itemProps: mergedItem.itemProps,
       widget: () => getField(item, fields, rules),
       span: toRef(mergedItem, 'span') as Ref<number>
     }

@@ -26,10 +26,23 @@ public class ResourceTaskParameter {
 
     /**
      * 关联的资源文件
+     * //TODO: 为啥不能清理掉这个字段
      *
      */
     @Nullable
     private String resource;
+
+    /*
+     * 动态资源文件 reourceTask 处理此文件
+     */
+    @Nullable
+    private String dynamicResource;
+
+    /*
+     * 资源文件 所属的角色
+     */
+    @Nullable
+    private String tenant;
 
     /**
      * 文件名称 支持参数替换
@@ -51,7 +64,7 @@ public class ResourceTaskParameter {
         if (operMethod == null) {
             return false;
         }
-        if (resource == null && StringUtils.isEmpty(fileContext)) {
+        if (StringUtils.isEmpty(resource) && StringUtils.isEmpty(fileContext) && StringUtils.isEmpty(dynamicResource)) {
             return false;
         }
 
