@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 import { Ref } from 'vue'
-import type { GridProps, FormProps, FormItemRule, FormRules } from 'naive-ui'
+import type { GridProps, FormProps, FormItemRule, FormRules, FormItemProps } from 'naive-ui'
 
 type IType =
   | 'input'
@@ -41,6 +41,7 @@ interface IFormItem {
   path: string
   label?: string
   widget: any
+  itemProps?: FormItemProps
   span?: number | Ref<number>
   type?: 'custom'
   class?: string
@@ -58,14 +59,15 @@ interface IFormItemRule extends Omit<FormItemRule, 'required'> {
 
 type IFormRules =
   | {
-      [path: string]: IFormItemRule | IFormItemRule[]
-    }
+    [path: string]: IFormItemRule | IFormItemRule[]
+  }
   | FormRules
 
 interface IJsonItemParams {
   field: string
   name?: string
   props?: any
+  itemProps?: FormItemProps
   title?: string
   type?: IType
   validate?: IFormItemRule
@@ -77,7 +79,7 @@ interface IJsonItemParams {
   widget?: any
   class?: string
   path?: string
-  rule?: IFormItemRule
+  rule?: IFormItemRule,
 }
 
 type IJsonItemFn = (i?: number) => IJsonItemParams
@@ -95,5 +97,6 @@ export {
   GridProps,
   IJsonItemParams,
   IFormItemRule,
-  IFormRules
+  IFormRules,
+  IJsonItemFn
 }

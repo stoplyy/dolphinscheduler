@@ -100,7 +100,7 @@ export function formatParams(data: INodeData): {
     //取第一个
     debugger
     taskParams.resourceItems?.forEach((item: any) => {
-      if (item.resourceList.length > 0) {
+      if (item.resourceList && item.resourceList.length > 0) {
         item.resource = item.resourceList.map((resource: any) => resource)[0]
       } else {
         item.resource = ''

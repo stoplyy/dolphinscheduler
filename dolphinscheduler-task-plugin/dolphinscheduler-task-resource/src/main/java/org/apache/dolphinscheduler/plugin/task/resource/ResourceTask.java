@@ -54,7 +54,6 @@ public class ResourceTask extends AbstractTask {
      */
     private TaskExecutionContext taskExecutionContext;
 
-    private String tenant;
     private StorageOperate storageOperate;
     private Map<String, String> prepareParams;
     private Map<String, ResourceItem> resourceItemMap;
@@ -67,7 +66,6 @@ public class ResourceTask extends AbstractTask {
     public ResourceTask(TaskExecutionContext taskExecutionContext) {
         super(taskExecutionContext);
         this.taskExecutionContext = taskExecutionContext;
-        this.tenant = taskExecutionContext.getResourceContext().getTenant();
         this.storageOperate = taskExecutionContext.getResourceContext().getStorageOperate();
     }
 
@@ -95,7 +93,9 @@ public class ResourceTask extends AbstractTask {
 
     private void parseParameters() {
         for (ResourceTaskParameter parameter : resourceParameters.getResourceItems()) {
-
+            if (StringUtils.isEmpty(parameter.getTenant())) {
+                parameter.setTenant(taskExecutionContext.getTenantCode());
+            }
             // 1. file name parse with prepare params
             if (StringUtils.isEmpty(parameter.getFileName())
                     && StringUtils.isNotEmpty(parameter.getResource())) {
@@ -111,13 +111,14 @@ public class ResourceTask extends AbstractTask {
 
             // 2. set file context
             if (StringUtils.isEmpty(parameter.getFileContext())) {
-                if (parameter.getResource() == null && parameter.getDynamicResource() != null) {
+                if (StringUtils.isEmpty(parameter.getResource())
+                        && StringUtils.isNotEmpty(parameter.getDynamicResource())) {
                     String dynamicResourceName = parseContent(parameter.getDynamicResource());
                     parameter.setResource(dynamicResourceName);
-                    downloadResourceWithAddResource(dynamicResourceName);
+                    downloadResourceWithAddResource(parameter.getTenant(), dynamicResourceName);
                 }
 
-                if (parameter.getResource() != null) {
+                if (StringUtils.isNotEmpty(parameter.getResource())) {
                     parameter.setFileContext(readLocalFile(parameter.getResource()));
                 }
             }
@@ -172,7 +173,7 @@ public class ResourceTask extends AbstractTask {
         }
     }
 
-    private void downloadResourceWithAddResource(String resourceAbsolutePathInStorage) {
+    private void downloadResourceWithAddResource(String tenant, String resourceAbsolutePathInStorage) {
         String resourceRelativePath = storageOperate.getResourceFileName(tenant, resourceAbsolutePathInStorage);
         String resourceAbsolutePathInLocal = Paths.get(taskExecutionContext.getExecutePath(), resourceRelativePath)
                 .toString();
@@ -215,6 +216,10 @@ public class ResourceTask extends AbstractTask {
                     case UPLOAD:
                     case UPLOAD_FORCE:
                     case DELETE:
+                        String tenant = parameter.getTenant();
+                        if (StringUtils.isEmpty(tenant)) {
+                            tenant = "default";
+                        }
                         storageOperate.upload(tenant, localFilePath, storeFileName,
                                 parameter.getOperMethod() == OperMethod.DELETE,
                                 parameter.getOperMethod() == OperMethod.UPLOAD_FORCE);

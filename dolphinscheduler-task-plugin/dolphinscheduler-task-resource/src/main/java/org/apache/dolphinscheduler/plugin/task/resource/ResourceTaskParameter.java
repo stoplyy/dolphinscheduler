@@ -38,6 +38,12 @@ public class ResourceTaskParameter {
     @Nullable
     private String dynamicResource;
 
+    /*
+     * 资源文件 所属的角色
+     */
+    @Nullable
+    private String tenant;
+
     /**
      * 文件名称 支持参数替换
      * 上传文件时，文件名称 包含相对路径 a/b/file.txt

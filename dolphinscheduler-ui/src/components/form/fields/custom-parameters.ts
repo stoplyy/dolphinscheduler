@@ -121,6 +121,7 @@ export function renderCustomParameters(
       return h(
         NFormItemGi,
         {
+          ...mergedChild.itemProps,
           showLabel: !!mergedChild.name,
           path: mergedChild.path || `${field}[${i}].${mergedChild.field}`,
           label: mergedChild.name,

@@ -50,14 +50,14 @@ const Form = defineComponent({
     const { elements = [], ...restFormProps } = meta
     return (
       <NSpin show={loading}>
-        <NForm {...restFormProps} rules={meta.rules as FormRules} ref='formRef'>
+        <NForm  {...restFormProps} rules={meta.rules as FormRules} ref='formRef'>
           <NGrid {...layout}>
             {elements.map((element) => {
-              const { span = 24, path, widget, ...formItemProps } = element
-
+              const { span = 24, path, widget, itemProps, ...formItemProps } = element
               return (
                 <NFormItemGi
                   {...formItemProps}
+                  {...itemProps}
                   span={unref(span) === void 0 ? 24 : unref(span)}
                   path={path}
                   key={path || String(Date.now() + Math.random())}
