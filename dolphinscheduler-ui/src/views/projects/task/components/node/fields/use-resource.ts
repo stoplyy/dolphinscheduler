@@ -159,6 +159,31 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
               message: t('project.node.script_tips')
             }
           }),
+        (i = 0) => (
+          {
+            type: 'switch',
+            field: 'isInputFileParam',
+            span: 11,
+            name: '使用InputFile参数',
+            itemProps: {
+              labelPlacement: "left",
+            },
+            path: `resourceItems.${i}.isInputFileParam`
+          }),
+        (i = 0) => (
+          {
+            type: 'input',
+            field: 'inputFileParam',
+            span: computed(() => {
+              let item = model.resourceItems[i].isInputFileParam
+              item = item || model.resourceItems[i].isInputFileParam
+              return true == item ? 11 : 0
+            }),
+            name: 'InputFile参数名：',
+            itemProps: {
+              labelPlacement: "left",
+            },
+          }),
       ]
     },
     ...useCustomParams({ model, field: 'localParams', isSimple: false })

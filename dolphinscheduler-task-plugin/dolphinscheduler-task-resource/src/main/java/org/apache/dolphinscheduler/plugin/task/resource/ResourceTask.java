@@ -30,6 +30,8 @@ import org.apache.dolphinscheduler.plugin.task.api.AbstractTask;
 import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
+import org.apache.dolphinscheduler.plugin.task.api.enums.DataType;
+import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
@@ -110,6 +112,21 @@ public class ResourceTask extends AbstractTask {
             }
 
             // 2. set file context
+            // 2.1 set with file context
+            if (StringUtils.isEmpty(parameter.getFileContext())
+                    && StringUtils.isNotEmpty(parameter.getInputFileParam())) {
+                String fileParamName = parameter.getInputFileParam();
+                Property property = resourceParameters.getLocalParametersMap().getOrDefault(fileParamName, null);
+                if (property == null) {
+                    throw new TaskException("input file param not exist in local params. param name: " + fileParamName);
+                }
+                if (property.getDirect() != Direct.IN || property.getType() != DataType.FILE) {
+                    throw new TaskException("local param is not a [input] [file] param. param name: " + fileParamName);
+                }
+                parameter.setFileContext(readLocalFileWithName(parameter.getInputFileParam()));
+            }
+
+            // 2.2 set with resource
             if (StringUtils.isEmpty(parameter.getFileContext())) {
                 if (StringUtils.isEmpty(parameter.getResource())
                         && StringUtils.isNotEmpty(parameter.getDynamicResource())) {
@@ -119,11 +136,11 @@ public class ResourceTask extends AbstractTask {
                 }
 
                 if (StringUtils.isNotEmpty(parameter.getResource())) {
-                    parameter.setFileContext(readLocalFile(parameter.getResource()));
+                    parameter.setFileContext(readLocalFileFromResourceMap(parameter.getResource()));
                 }
             }
 
-            // 3. if parse context, parse content with create a new file
+            // 3. if parse context, parse content
             String template = parameter.getFileContext();
             if (StringUtils.isNotEmpty(template)) {
                 String parsedContent = template;
@@ -156,7 +173,19 @@ public class ResourceTask extends AbstractTask {
         }
     }
 
-    public String readLocalFile(String fileName) {
+    public String readLocalFileWithName(String fileName) {
+        String absolutePathInLocal = null;
+        try {
+            absolutePathInLocal = getLocalDownloadString(fileName);
+            return FileUtils.readFile2Str(new FileInputStream(absolutePathInLocal));
+        } catch (IOException e) {
+            String msg = String.format("read local file(%s) error: %s", fileName, absolutePathInLocal);
+            log.error(msg, e);
+            throw new TaskException(msg, e);
+        }
+    }
+
+    public String readLocalFileFromResourceMap(String fileName) {
         ResourceItem item = null;
         try {
             item = resourceItemMap.getOrDefault(fileName, null);
@@ -191,6 +220,7 @@ public class ResourceTask extends AbstractTask {
         } else {
             log.warn("resource file already exist, skip download. file: {}", resourceAbsolutePathInLocal);
         }
+
         ResourceContext.ResourceItem resourceItem = ResourceContext.ResourceItem.builder()
                 .resourceAbsolutePathInStorage(resourceAbsolutePathInStorage)
                 .resourceRelativePath(resourceRelativePath)
