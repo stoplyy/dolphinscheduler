@@ -26,7 +26,6 @@ public class ResourceTaskParameter {
 
     /**
      * 关联的资源文件
-     * //TODO: 为啥不能清理掉这个字段
      *
      */
     @Nullable
@@ -37,6 +36,12 @@ public class ResourceTaskParameter {
      */
     @Nullable
     private String dynamicResource;
+
+    /*
+     * 文件参数名
+     */
+    @Nullable
+    private String inputFileParam;
 
     /*
      * 资源文件 所属的角色
@@ -59,6 +64,12 @@ public class ResourceTaskParameter {
      * UPLOAD: 上传
      */
     private OperMethod operMethod;
+
+    private String sourceLocalAbsoluteFile;
+
+    public boolean needParse() {
+        return parseMethod != null && parseMethod != ParseMethod.NONE;
+    }
 
     public boolean checkParameters() {
         if (operMethod == null) {
