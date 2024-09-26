@@ -183,8 +183,11 @@ public class RemoteExecutor implements AutoCloseable {
         String cleanCommand = String.format(COMMAND.CLEAN_COMMAND,
                 getRemoteShellHome(taskId), taskId,
                 getRemoteShellHome(taskId), taskId);
-        for (Property p : fileProperties) {
+        for (Property p : inputFiles()) {
             cleanCommand += String.format(" %s%s", getRemoteShellHome(taskId), p.getProp());
+        }
+        for (Property p : outputFiles()) {
+            cleanCommand += String.format(" %s%s", getRemoteShellHome(taskId), p.getValue());
         }
         try {
             runRemote(cleanCommand);
