@@ -65,6 +65,12 @@ public class ResourceTaskParameter {
      */
     private OperMethod operMethod;
 
+    private String sourceLocalAbsoluteFile;
+
+    public boolean needParse() {
+        return parseMethod != null && parseMethod != ParseMethod.NONE;
+    }
+
     public boolean checkParameters() {
         if (operMethod == null) {
             return false;

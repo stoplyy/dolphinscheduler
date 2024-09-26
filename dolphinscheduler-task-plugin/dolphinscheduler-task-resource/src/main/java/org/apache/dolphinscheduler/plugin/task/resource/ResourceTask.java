@@ -95,114 +95,142 @@ public class ResourceTask extends AbstractTask {
 
     private void parseParameters() {
         for (ResourceTaskParameter parameter : resourceParameters.getResourceItems()) {
+            final boolean NEED_PARSE_CONTENT = parameter.needParse();
+
             if (StringUtils.isEmpty(parameter.getTenant())) {
                 parameter.setTenant(taskExecutionContext.getTenantCode());
             }
+
             // 1. file name parse with prepare params
-            if (StringUtils.isEmpty(parameter.getFileName())
-                    && StringUtils.isNotEmpty(parameter.getResource())) {
-                parameter.setFileName(parameter.getResource());
-            }
-            if (StringUtils.isEmpty(parameter.getFileName())
-                    && StringUtils.isNotEmpty(parameter.getDynamicResource())) {
-                parameter.setFileName(parameter.getDynamicResource());
-            }
-            if (StringUtils.isNotEmpty(parameter.getFileName())) {
-                parameter.setFileName(parseContent(parameter.getFileName()));
-            }
+            // 1.1 default file name
+            String dstFileName = parseDstFileName(parameter);
+            log.info("parse file name: {} -> {}", parameter.getFileName(), dstFileName);
+            parameter.setFileName(dstFileName);
 
-            // 2. set file context
-            // 2.1 set with file context
-            if (StringUtils.isEmpty(parameter.getFileContext())
-                    && StringUtils.isNotEmpty(parameter.getInputFileParam())) {
-                String fileParamName = parameter.getInputFileParam();
-                Property property = resourceParameters.getLocalParametersMap().getOrDefault(fileParamName, null);
-                if (property == null) {
-                    throw new TaskException("input file param not exist in local params. param name: " + fileParamName);
-                }
-                if (property.getDirect() != Direct.IN || property.getType() != DataType.FILE) {
-                    throw new TaskException("local param is not a [input] [file] param. param name: " + fileParamName);
-                }
-                parameter.setFileContext(readLocalFileWithName(parameter.getInputFileParam()));
-            }
-
-            // 2.2 set with resource
-            if (StringUtils.isEmpty(parameter.getFileContext())) {
-                if (StringUtils.isEmpty(parameter.getResource())
-                        && StringUtils.isNotEmpty(parameter.getDynamicResource())) {
-                    String dynamicResourceName = parseContent(parameter.getDynamicResource());
-                    parameter.setResource(dynamicResourceName);
-                    downloadResourceWithAddResource(parameter.getTenant(), dynamicResourceName);
-                }
-
-                if (StringUtils.isNotEmpty(parameter.getResource())) {
-                    parameter.setFileContext(readLocalFileFromResourceMap(parameter.getResource()));
-                }
-            }
-
-            // 3. if parse context, parse content
-            String template = parameter.getFileContext();
-            if (StringUtils.isNotEmpty(template)) {
-                String parsedContent = template;
-                switch (parameter.getParseMethod()) {
-                    case NONE:
-                        break;
-                    case FREEMARK:
-                        parsedContent = paseContentWithFreeMark(template, prepareParams);
-                        break;
-                    case SIMPLE:
-                        parsedContent = parseContent(template);
-                        break;
-                    default:
-                        break;
-                }
-                parameter.setFileContext(parsedContent);
-            }
-
-            // 4. add local resource with create file
-            if (StringUtils.isEmpty(parameter.getFileContext())) {
-                log.warn("file context is empty, skip this parameter: {}", parameter);
+            if (StringUtils.isNotEmpty(parameter.getFileContext())) {
+                // 2.1 if file context, set source file with file context
+                String sourceLocalAbsoluteFile = reWriteToLocalWithFileName(parameter);
+                log.info("file context is not empty, save file to: {}", sourceLocalAbsoluteFile);
+                parameter.setSourceLocalAbsoluteFile(sourceLocalAbsoluteFile);
             } else {
-                String localNewFilePath = getLocalDownloadString(parameter.getFileName());
-                String storeFileName = parameter.getFileName();
-                // store file name with out suffix.local file name with suffix
-                FileUtils.writeContent2File(parameter.getFileContext(), localNewFilePath);
-                log.info("add local resource with create file: {}. store file name:{}", localNewFilePath,
-                        storeFileName);
+                // 2.1 if parse context, load source file
+                String sourceLocalAbsoluteFile = loadSourceAbsluteFile(parameter);
+                if (StringUtils.isEmpty(sourceLocalAbsoluteFile)) {
+                    log.warn("file context and source file is empty, skip this parameter: {}", parameter);
+                    continue;
+                }
+
+                log.info("file context is empty, load source file from: {}", sourceLocalAbsoluteFile);
+                parameter.setSourceLocalAbsoluteFile(sourceLocalAbsoluteFile);
+                if (NEED_PARSE_CONTENT) {
+                    // need parse content, load file content with source file
+                    parameter.setFileContext(readLocalFileWithAbsolutePath(sourceLocalAbsoluteFile));
+                }
             }
         }
     }
 
-    public String readLocalFileWithName(String fileName) {
-        String absolutePathInLocal = null;
-        try {
-            absolutePathInLocal = getLocalDownloadString(fileName);
-            return FileUtils.readFile2Str(new FileInputStream(absolutePathInLocal));
-        } catch (IOException e) {
-            String msg = String.format("read local file(%s) error: %s", fileName, absolutePathInLocal);
-            log.error(msg, e);
-            throw new TaskException(msg, e);
-        }
-    }
-
-    public String readLocalFileFromResourceMap(String fileName) {
-        ResourceItem item = null;
-        try {
-            item = resourceItemMap.getOrDefault(fileName, null);
-            if (item == null) {
-                throw new TaskException("resource file not exist in resours item map. file name: " + fileName);
+    private String getParsedContent(ResourceTaskParameter parameter) {
+        String parsedContent = parameter.getFileContext();
+        if (StringUtils.isEmpty(parsedContent)) {
+            log.warn("file context is empty, skip parse step, parameter: {}", parameter);
+        } else {
+            switch (parameter.getParseMethod()) {
+                case NONE:
+                    break;
+                case FREEMARK:
+                    parsedContent = paseContentWithFreeMark(parsedContent, prepareParams);
+                    break;
+                case SIMPLE:
+                    parsedContent = parseContent(parsedContent);
+                    break;
+                default:
+                    break;
             }
-            return FileUtils.readFile2Str(new FileInputStream(item.getResourceAbsolutePathInLocal()));
+        }
+        return parsedContent;
+    }
+
+    private String parseDstFileName(ResourceTaskParameter parameter) {
+        String dstFileNameTmp = parameter.getFileName();
+
+        if (StringUtils.isEmpty(parameter.getFileName())
+                && StringUtils.isNotEmpty(parameter.getDynamicResource())) {
+            dstFileNameTmp = parameter.getDynamicResource();
+        }
+        if (StringUtils.isEmpty(dstFileNameTmp)
+                && StringUtils.isNotEmpty(parameter.getResource())) {
+            dstFileNameTmp = parameter.getResource();
+        }
+
+        if (StringUtils.isNotEmpty(dstFileNameTmp)) {
+            dstFileNameTmp = parseContent(dstFileNameTmp);
+        }
+        return dstFileNameTmp;
+    }
+
+    private String loadSourceAbsluteFile(ResourceTaskParameter parameter) {
+        String sourceLocalAbsoluteFile = null;
+        // 2.1 set with input file param
+        if (StringUtils.isNotEmpty(parameter.getInputFileParam())) {
+            String fileParamName = parameter.getInputFileParam();
+            Property property = resourceParameters.getLocalParametersMap().getOrDefault(fileParamName, null);
+            if (property == null) {
+                throw new TaskException(
+                        "input file param not exist in local params. param name: " + fileParamName);
+            }
+            if (property.getDirect() != Direct.IN || property.getType() != DataType.FILE) {
+                throw new TaskException(
+                        "local param is not a [input] [file] param. param name: " + fileParamName);
+            }
+            sourceLocalAbsoluteFile = getLocalDownloadString(fileParamName);
+        } else if (StringUtils.isNotEmpty(parameter.getDynamicResource())) {
+            // 2.2 set with dynamic resource
+            final String dynamicResourceName = parseContent(parameter.getDynamicResource());
+            // set resource name
+            parameter.setResource(dynamicResourceName);
+            // download resource to local and add resource item
+            sourceLocalAbsoluteFile = downloadResourceWithAddResource(parameter.getTenant(),
+                    dynamicResourceName);
+        } else if (StringUtils.isNotEmpty(parameter.getResource())) {
+            // 2.3 set with resource
+            ResourceItem resourceItem = resourceItemMap.get(parameter.getResource());
+            if (resourceItem == null) {
+                throw new TaskException("resource item not exist in resource context. resource name: "
+                        + parameter.getResource());
+            }
+            sourceLocalAbsoluteFile = resourceItem.getResourceAbsolutePathInLocal();
+        }
+        return sourceLocalAbsoluteFile;
+    }
+
+    private String reWriteToLocalWithFileName(ResourceTaskParameter parameter) {
+        String storeFileName = parameter.getFileName();
+        String localNewFilePath = getLocalDownloadString(parameter.getFileName());
+
+        if (StringUtils.isEmpty(parameter.getFileContext())) {
+            log.warn("file context is empty, skip this parameter: {}", parameter);
+        } else {
+            // create file with file context. if file exist, override it.
+            FileUtils.writeContent2File(parameter.getFileContext(), localNewFilePath);
+            log.info("add local resource with create file: {}. store file name:{}", localNewFilePath,
+                    storeFileName);
+        }
+        return localNewFilePath;
+    }
+
+    private String readLocalFileWithAbsolutePath(String fileAbsolutePathInLocal) {
+        try {
+            return FileUtils.readFile2Str(new FileInputStream(fileAbsolutePathInLocal));
         } catch (IOException e) {
-            String msg = String.format("read local file error: %s",
-                    item == null ? fileName : item.getResourceAbsolutePathInLocal());
+            String msg = String.format("read local file error: %s", fileAbsolutePathInLocal);
             log.error(msg, e);
 
             throw new TaskException(msg, e);
         }
     }
 
-    private void downloadResourceWithAddResource(String tenant, String resourceAbsolutePathInStorage) {
+    private String downloadResourceWithAddResource(String tenant, String resourceAbsolutePathInStorage) {
         String resourceRelativePath = storageOperate.getResourceFileName(tenant, resourceAbsolutePathInStorage);
         String resourceAbsolutePathInLocal = Paths.get(taskExecutionContext.getExecutePath(), resourceRelativePath)
                 .toString();
@@ -227,9 +255,10 @@ public class ResourceTask extends AbstractTask {
                 .resourceAbsolutePathInLocal(resourceAbsolutePathInLocal)
                 .build();
         taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
+        return resourceAbsolutePathInLocal;
     }
 
-    public String getLocalDownloadString(String fileName) {
+    private String getLocalDownloadString(String fileName) {
         return FileUtils.formatDownloadUpstreamLocalFullPath(taskExecutionContext.getExecutePath(), fileName);
     }
 
@@ -239,9 +268,21 @@ public class ResourceTask extends AbstractTask {
             for (ResourceTaskParameter parameter : resourceParameters.getResourceItems()) {
 
                 String storeFileName = parameter.getFileName();
-                String localFilePath = getLocalDownloadString(storeFileName);
+                String localFilePath = parameter.getSourceLocalAbsoluteFile();
 
-                // 处理文件操作
+                // parse content
+                if (parameter.needParse()) {
+                    if (StringUtils.isEmpty(parameter.getFileContext())) {
+                        String msg = "file context is empty, can not parse content. parameter: " + parameter;
+                        exitStatusCode = -1;
+                        throw new TaskException(msg);
+                    }
+
+                    parameter.setFileContext(getParsedContent(parameter));
+                    localFilePath = reWriteToLocalWithFileName(parameter);
+                }
+
+                // upload or delete
                 switch (parameter.getOperMethod()) {
                     case UPLOAD:
                     case UPLOAD_FORCE:

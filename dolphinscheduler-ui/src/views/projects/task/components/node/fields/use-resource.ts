@@ -50,7 +50,7 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
           type: 'info',
           size: 'small',
         }, {
-        default: () => resourceItemsName.value + ' 资源文件或者输入内容. 二选一，优先输入的内容。'
+        default: () => resourceItemsName.value + ' 文件内容 优先级：脚本 >> 文件参数 >> 动态资源 >> 选中资源'
       }
       )
     },
@@ -120,6 +120,31 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
         (i = 0) => (
           {
             type: 'switch',
+            field: 'isInputFileParam',
+            span: 11,
+            name: '使用InputFile参数',
+            itemProps: {
+              labelPlacement: "left",
+            },
+            path: `resourceItems.${i}.isInputFileParam`
+          }),
+        (i = 0) => (
+          {
+            type: 'input',
+            field: 'inputFileParam',
+            span: computed(() => {
+              let item = model.resourceItems[i].isInputFileParam
+              item = item || model.resourceItems[i].isInputFileParam
+              return true == item ? 11 : 0
+            }),
+            name: 'InputFile参数名：',
+            itemProps: {
+              labelPlacement: "left",
+            },
+          }),
+        (i = 0) => (
+          {
+            type: 'switch',
             field: 'isSelected',
             span: 22,
             name: '输入脚本/模板',
@@ -158,31 +183,6 @@ export function useStorage(model: { [field: string]: any }): IJsonItem[] {
               required: false,
               message: t('project.node.script_tips')
             }
-          }),
-        (i = 0) => (
-          {
-            type: 'switch',
-            field: 'isInputFileParam',
-            span: 11,
-            name: '使用InputFile参数',
-            itemProps: {
-              labelPlacement: "left",
-            },
-            path: `resourceItems.${i}.isInputFileParam`
-          }),
-        (i = 0) => (
-          {
-            type: 'input',
-            field: 'inputFileParam',
-            span: computed(() => {
-              let item = model.resourceItems[i].isInputFileParam
-              item = item || model.resourceItems[i].isInputFileParam
-              return true == item ? 11 : 0
-            }),
-            name: 'InputFile参数名：',
-            itemProps: {
-              labelPlacement: "left",
-            },
           }),
       ]
     },
