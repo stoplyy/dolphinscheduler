@@ -246,7 +246,7 @@ public class RemoteExecutor implements AutoCloseable {
         outputFiles().forEach(p -> {
             try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(getSession())) {
                 Path remoteNodePath = fs.getPath(remotePath + p.getValue());
-                Path localFilePath = Paths.get(getLocalDownloadString(p.getProp()));
+                Path localFilePath = Paths.get(getLocalDownloadString(p.getValue()));
                 Files.copy(remoteNodePath, localFilePath);
                 log.info("download file success, local path: {}", localFilePath);
             } catch (IOException e) {
