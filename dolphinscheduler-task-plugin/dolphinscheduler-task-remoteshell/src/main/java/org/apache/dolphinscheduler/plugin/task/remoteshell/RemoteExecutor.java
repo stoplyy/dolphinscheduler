@@ -36,6 +36,7 @@ import org.apache.dolphinscheduler.plugin.datasource.ssh.param.SSHConnectionPara
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.enums.DataType;
+import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parser.TaskOutputParameterParser;
 import org.apache.sshd.client.SshClient;
@@ -60,6 +61,14 @@ public class RemoteExecutor implements AutoCloseable {
     protected TaskExecutionContext taskExecutionContext;
 
     protected List<Property> fileProperties = new ArrayList<>();
+
+    protected List<Property> inputFiles() {
+        return fileProperties.stream().filter(p -> p.getDirect() == Direct.IN).collect(Collectors.toList());
+    }
+
+    protected List<Property> outputFiles() {
+        return fileProperties.stream().filter(p -> p.getDirect() == Direct.OUT).collect(Collectors.toList());
+    }
 
     private SshClient sshClient;
     private ClientSession session;
@@ -107,11 +116,17 @@ public class RemoteExecutor implements AutoCloseable {
             String pid = getTaskPid(taskId);
             log.info("Remote shell task pid: {}", pid);
             if (StringUtils.isEmpty(pid)) {
+                // save command to remote
                 saveCommand(taskId, localFile);
+                // upload file to remote
+                uploadFile(taskId);
                 String runCommand = String.format(COMMAND.RUN_COMMAND,
                         getRemoteShellHome(taskId), taskId,
                         getRemoteShellHome(taskId), taskId);
+                // run remote shell task
                 runRemote(runCommand);
+                // download file from remote
+                downloadFile(taskId);
             }
             track(taskId);
             return getTaskExitCode(taskId);
@@ -194,7 +209,6 @@ public class RemoteExecutor implements AutoCloseable {
                 taskId));
         runRemote(checkDirCommand);
         uploadScript(taskId, localFile);
-        uploadFile(taskId);
 
         log.info("The final script is: \n{}",
                 runRemote(String.format(COMMAND.CAT_FINAL_SCRIPT, getRemoteShellHome(taskId), taskId)));
@@ -212,14 +226,30 @@ public class RemoteExecutor implements AutoCloseable {
 
     public void uploadFile(String taskId) throws IOException {
         String remotePath = getRemoteShellHome(taskId);
-        log.info("upload script from local:{} to remote: {}", remotePath);
-        fileProperties.forEach(p -> {
+        log.info("upload file to remote dic : {}", remotePath);
+        inputFiles().forEach(p -> {
             try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(getSession())) {
                 Path remoteNodePath = fs.getPath(remotePath + p.getProp());
                 Path localFilePath = Paths.get(getLocalDownloadString(p.getProp()));
                 Files.copy(localFilePath, remoteNodePath);
+                log.info("upload file success, remote path: {}", remoteNodePath);
             } catch (IOException e) {
                 log.error("upload file failed", e);
+            }
+        });
+    }
+
+    public void downloadFile(String taskId) throws IOException {
+        String remotePath = getRemoteShellHome(taskId);
+        log.info("download file from remote dic : {}", remotePath);
+        outputFiles().forEach(p -> {
+            try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(getSession())) {
+                Path remoteNodePath = fs.getPath(remotePath + p.getValue());
+                Path localFilePath = Paths.get(getLocalDownloadString(p.getProp()));
+                Files.copy(remoteNodePath, localFilePath);
+                log.info("download file success, local path: {}", localFilePath);
+            } catch (IOException e) {
+                log.error("download file failed", e);
             }
         });
     }
