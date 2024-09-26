@@ -115,21 +115,22 @@ public class RemoteExecutor implements AutoCloseable {
             // only run task if no exist same task
             String pid = getTaskPid(taskId);
             log.info("Remote shell task pid: {}", pid);
+            // upload file to remote
+            uploadFile(taskId);
             if (StringUtils.isEmpty(pid)) {
                 // save command to remote
                 saveCommand(taskId, localFile);
-                // upload file to remote
-                uploadFile(taskId);
                 String runCommand = String.format(COMMAND.RUN_COMMAND,
                         getRemoteShellHome(taskId), taskId,
                         getRemoteShellHome(taskId), taskId);
                 // run remote shell task
                 runRemote(runCommand);
-                // download file from remote
-                downloadFile(taskId);
             }
             track(taskId);
-            return getTaskExitCode(taskId);
+            Integer code = getTaskExitCode(taskId);
+            // download file from remote
+            downloadFile(taskId);
+            return code;
         } catch (Exception e) {
             throw new TaskException("Remote shell task error", e);
         }
