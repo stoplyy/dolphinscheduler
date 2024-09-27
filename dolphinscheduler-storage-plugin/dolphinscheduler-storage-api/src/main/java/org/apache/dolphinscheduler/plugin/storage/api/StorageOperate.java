@@ -56,6 +56,25 @@ public interface StorageOperate {
     String getUdfDir(String tenantCode);
 
     /**
+     * 解析文件名
+     * 
+     * @param fileName
+     * @return
+     */
+    default String expTenantCode(String fileName) {
+        // "/path/to/jfrogDirPrefix/tenants/tenantCode/resources/file.txt"
+        String[] parts = fileName.split("/");
+
+        for (int i = 0; i < parts.length; i++) {
+            // 检查是否包含 "tenants" 目录，并获取下一个部分作为 tenantCode
+            if ("tenants".equals(parts[i]) && i + 1 < parts.length) {
+                return parts[i + 1]; // 返回 tenantCode
+            }
+        }
+        return null;
+    }
+
+    /**
      * create the directory that the path of tenant wanted to create
      * 
      * @param tenantCode
