@@ -252,7 +252,27 @@ public class JFrogStorageOperator implements Closeable, StorageOperate {
 
     @Override
     public String getDir(ResourceType resourceType, String tenantCode) {
-        return resourceType == ResourceType.UDF ? getUdfDir(tenantCode) : getResDir(tenantCode);
+        return getJfrogDir(resourceType, tenantCode);
+    }
+
+    /**
+     * hdfs resource dir
+     *
+     * @param tenantCode   tenant code
+     * @param resourceType resource type
+     * @return hdfs resource dir
+     */
+    public String getJfrogDir(ResourceType resourceType, String tenantCode) {
+        switch (resourceType) {
+            case UDF:
+                return getUdfDir(tenantCode);
+            case FILE:
+                return getResDir(tenantCode);
+            case ALL:
+                return jfrogDirPrefix + "/tenants/";
+            default:
+                return EMPTY_STRING;
+        }
     }
 
     @Override
