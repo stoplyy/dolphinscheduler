@@ -75,7 +75,11 @@ public class ResourceTaskParameter {
         if (operMethod == null) {
             return false;
         }
-        if (StringUtils.isEmpty(resource) && StringUtils.isEmpty(fileContext) && StringUtils.isEmpty(dynamicResource)) {
+
+        if (StringUtils.isEmpty(resource)
+                && StringUtils.isEmpty(fileContext)
+                && StringUtils.isEmpty(dynamicResource)
+                && StringUtils.isEmpty(inputFileParam)) {
             return false;
         }
 

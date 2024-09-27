@@ -516,6 +516,10 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
             putMsg(result, Status.NO_CURRENT_OPERATING_PERMISSION);
             return result;
         }
+        // remove leading and trailing spaces in searchVal
+        if (StringUtils.isNotEmpty(resTenantCode)) {
+            tenantCode = resTenantCode;
+        }
 
         List<StorageEntity> resourcesList = new ArrayList<>();
         try {
@@ -1110,6 +1114,10 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
         }
 
         String tenantCode = getTenantCode(user);
+        String fileTenantCode = storageOperate.expTenantCode(currentDir);
+        if (StringUtils.isNotEmpty(fileTenantCode)) {
+            tenantCode = fileTenantCode;
+        }
 
         if (!isUserTenantValid(isAdmin(loginUser), tenantCode, "")) {
             log.error("current user does not have permission");
