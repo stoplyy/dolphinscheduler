@@ -7,6 +7,7 @@
     "build:tuhutest": "vue-tsc --noEmit && vite build --mode tuhutest",
     "build:prod": "vite build --mode production",
     "build:jatest": "vite build --mode jatest",
+    "build:japrd": "vite build --mode japrd",
     "preview": "vite preview",
     "lint": "eslint src --fix --ext .ts,.tsx,.vue",
     "prettier": "prettier --write \"src/**/*.{vue,ts,tsx}\""
