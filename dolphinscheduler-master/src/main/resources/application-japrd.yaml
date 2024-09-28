@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-jfrog.dir.prefix: /jatest
+jfrog.dir.prefix: /ja-prod
 
 apollo:
   bootstrap:
@@ -39,7 +39,7 @@ registry:
   type: zookeeper
   zookeeper:
     namespace: stellarops
-    connect-string: 10.71.16.10:2181
+    connect-string: ja-zk-arch.ad.tuhu.cn:2182
     retry-policy:
       base-sleep-time: 60ms
       max-sleep: 300ms
