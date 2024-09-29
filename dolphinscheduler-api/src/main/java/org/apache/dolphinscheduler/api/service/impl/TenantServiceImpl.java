@@ -30,6 +30,7 @@ import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.RegexUtils;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
+import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 import org.apache.dolphinscheduler.dao.entity.Queue;
 import org.apache.dolphinscheduler.dao.entity.Schedule;
@@ -47,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -131,19 +133,19 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
     /**
      * create tenant
      *
-     * @param loginUser login user
+     * @param loginUser  login user
      * @param tenantCode tenant code
-     * @param queueId queue id
-     * @param desc description
+     * @param queueId    queue id
+     * @param desc       description
      * @return create result code
      * @throws Exception exception
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Tenant createTenant(User loginUser,
-                               String tenantCode,
-                               int queueId,
-                               String desc) throws Exception {
+            String tenantCode,
+            int queueId,
+            String desc) throws Exception {
         if (!canOperatorPermissions(loginUser, null, AuthorizationType.TENANT, TENANT_CREATE)) {
             throw new ServiceException(Status.USER_NO_OPERATION_PERM);
         }
@@ -169,11 +171,15 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
      */
     @Override
     public PageInfo<Tenant> queryTenantList(User loginUser, String searchVal, Integer pageNo, Integer pageSize) {
-
-        Set<Integer> ids = resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.TENANT,
-                loginUser.getId(), log);
-        if (CollectionUtils.isEmpty(ids)) {
-            return new PageInfo<>(pageNo, pageSize);
+        boolean isAdmin = loginUser.getUserType().equals(UserType.ADMIN_USER);
+        Set<Integer> ids = new LinkedHashSet<>();
+        if (!isAdmin) {
+            // non-admin users can only view their own tenants
+            ids = resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.TENANT,
+                    loginUser.getId(), log);
+            if (CollectionUtils.isEmpty(ids)) {
+                return new PageInfo<>(pageNo, pageSize);
+            }
         }
         Page<Tenant> page = new Page<>(pageNo, pageSize);
         IPage<Tenant> tenantPage = tenantMapper.queryTenantPaging(page, new ArrayList<>(ids), searchVal);
@@ -183,20 +189,20 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
     /**
      * updateProcessInstance tenant
      *
-     * @param loginUser login user
-     * @param id tenant id
+     * @param loginUser  login user
+     * @param id         tenant id
      * @param tenantCode tenant code
-     * @param queueId queue id
-     * @param desc description
+     * @param queueId    queue id
+     * @param desc       description
      * @return update result code
      * @throws Exception exception
      */
     @Override
     public void updateTenant(User loginUser,
-                             int id,
-                             String tenantCode,
-                             int queueId,
-                             String desc) throws Exception {
+            int id,
+            String tenantCode,
+            int queueId,
+            String desc) throws Exception {
 
         if (!canOperatorPermissions(loginUser, null, AuthorizationType.TENANT, TENANT_UPDATE)) {
             throw new ServiceException(Status.USER_NO_OPERATION_PERM);
@@ -210,7 +216,8 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
 
         updateTenant.setCreateTime(existsTenant.getCreateTime());
         // updateProcessInstance tenant
-        // if the tenant code is modified, the original resource needs to be copied to the new tenant.
+        // if the tenant code is modified, the original resource needs to be copied to
+        // the new tenant.
         if (!Objects.equals(existsTenant.getTenantCode(), updateTenant.getTenantCode())) {
             storageOperate.createTenantDirIfNotExists(tenantCode);
         }
@@ -333,9 +340,9 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
      * ONLY for python gateway server, and should not use this in web ui function
      *
      * @param tenantCode tenant code
-     * @param desc The description of tenant object
-     * @param queue The value of queue which current tenant belong
-     * @param queueName The name of queue which current tenant belong
+     * @param desc       The description of tenant object
+     * @param queue      The value of queue which current tenant belong
+     * @param queueName  The name of queue which current tenant belong
      * @return Tenant object
      */
     @Override
