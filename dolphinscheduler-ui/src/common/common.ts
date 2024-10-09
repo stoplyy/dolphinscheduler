@@ -64,7 +64,9 @@ export const fileTypeArr = [
   'yml',
   'yaml',
   'ini',
-  'js'
+  'js',
+  "option",
+  "ftl"
 ]
 
 /**
