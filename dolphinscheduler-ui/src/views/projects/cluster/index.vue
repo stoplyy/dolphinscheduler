@@ -157,6 +157,9 @@
       async function refreshParamList() {
         await queryClusterParametersList(projectCode.value, modalClusterInfo.id).then((res) => {
           clusterParmas.value = res;
+          clusterParmas.value.forEach((val) => {
+            val.from = DataFromEnum.MANUAL;
+          });
         });
         await getPlatformRestByProject(projectCode.value, PlatformRestEnum.CLUSTER_PARAMS, modalClusterInfo.clusterId, '', '').then((res) => {
           res.forEach((val, key) => {
