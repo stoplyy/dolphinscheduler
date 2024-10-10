@@ -22,7 +22,7 @@ import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
-
+import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -74,6 +74,7 @@ public abstract class AbstractParameters implements IParameters {
 
     /**
      * get local parameters map
+     * 
      * @return parameters map
      */
     public Map<String, Property> getLocalParametersMap() {
@@ -88,6 +89,7 @@ public abstract class AbstractParameters implements IParameters {
 
     /**
      * get input local parameters map if the param direct is IN
+     * 
      * @return parameters map
      */
     public Map<String, Property> getInputLocalParametersMap() {
@@ -130,7 +132,7 @@ public abstract class AbstractParameters implements IParameters {
         }
     }
 
-    public void dealOutParam(Map<String, String> taskOutputParams) {
+    public void dealOutParam(Map<String, String> taskOutputParams, Map<String, Property> prepareParamsMap) {
         if (CollectionUtils.isEmpty(localParams)) {
             return;
         }
@@ -142,16 +144,58 @@ public abstract class AbstractParameters implements IParameters {
             outProperty.forEach(this::addPropertyToValPool);
             return;
         }
-
+        List<Property> notExistOutProperty = new ArrayList<>();
         for (Property info : outProperty) {
             String propValue = taskOutputParams.get(info.getProp());
             if (StringUtils.isNotEmpty(propValue)) {
                 info.setValue(propValue);
                 addPropertyToValPool(info);
             } else {
-                log.warn("Cannot find the output parameter {} in the task output parameters", info.getProp());
+                notExistOutProperty.add(info);
+                log.warn("Cannot find the output parameter {} in the task output parameters.", info.getProp());
             }
         }
+
+        if (MapUtils.isNotEmpty(prepareParamsMap) && CollectionUtils.isNotEmpty(notExistOutProperty)) {
+            notExistOutProperty = tryReplaceWithPrepareParamMap(prepareParamsMap, notExistOutProperty);
+            if (CollectionUtils.isNotEmpty(notExistOutProperty)) {
+                notExistOutProperty.forEach(info -> {
+                    log.warn(
+                            "Cannot find the output parameter {} in the task output parameters. will be set with default value",
+                            info.getProp());
+                    addPropertyToValPool(info);
+                });
+            }
+        }
+    }
+
+    private List<Property> tryReplaceWithPrepareParamMap(Map<String, Property> prepareParamsMap,
+            List<Property> propertyList) {
+        // convert prepareParamsMap to string map
+        final Map<String, String> paramsStringMap = ParameterUtils.convert(prepareParamsMap);
+        varPool.forEach(p -> paramsStringMap.put(p.getProp(), p.getValue()));
+        List<Property> result = new ArrayList<>();
+        // 使用迭代器安全地遍历并修改 notExistOutProperty 集合
+        if (CollectionUtils.isNotEmpty(propertyList) && MapUtils.isNotEmpty(prepareParamsMap)) {
+            // try replace with input parameters
+            for (Property info : propertyList) {
+                Property prepareProperty = prepareParamsMap.get(info.getProp());
+                if (prepareProperty != null) {
+                    String remoteLocalP_V = info.getValue();
+                    remoteLocalP_V = ParameterUtils.convertParameterPlaceholders(remoteLocalP_V, paramsStringMap);
+                    info.setValue(remoteLocalP_V);
+                    addPropertyToValPool(info);
+                } else {
+                    result.add(info);
+                    log.warn("Cannot find the output parameter {} in the prepare parameters", info.getProp());
+                }
+            }
+        }
+        return result;
+    }
+
+    public void dealOutParam(Map<String, String> taskOutputParams) {
+        dealOutParam(taskOutputParams, null);
     }
 
     public List<Property> getOutProperty(List<Property> params) {

@@ -85,7 +85,8 @@ public class ShellTask extends AbstractTask {
             TaskResponse commandExecuteResult = shellCommandExecutor.run(shellActuatorBuilder, taskCallBack);
             setExitStatusCode(commandExecuteResult.getExitStatusCode());
             setProcessId(commandExecuteResult.getProcessId());
-            shellParameters.dealOutParam(shellCommandExecutor.getTaskOutputParams());
+            shellParameters.dealOutParam(shellCommandExecutor.getTaskOutputParams(),
+                    taskExecutionContext.getPrepareParamsMap());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("The current Shell task has been interrupted", e);
