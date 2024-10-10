@@ -161,8 +161,9 @@ public abstract class AbstractParameters implements IParameters {
             if (CollectionUtils.isNotEmpty(notExistOutProperty)) {
                 notExistOutProperty.forEach(info -> {
                     log.warn(
-                            "Cannot find the output parameter {} in the task output parameters. will be set with default value",
+                            "Cannot find the output parameter {} in the task output parameters. will be set with empty string value",
                             info.getProp());
+                    info.setValue("");
                     addPropertyToValPool(info);
                 });
             }
