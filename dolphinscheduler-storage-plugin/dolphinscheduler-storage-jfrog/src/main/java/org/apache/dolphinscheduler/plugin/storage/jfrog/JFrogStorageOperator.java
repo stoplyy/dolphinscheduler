@@ -1,7 +1,8 @@
 
 package org.apache.dolphinscheduler.plugin.storage.jfrog;
 
-import static org.apache.dolphinscheduler.common.constants.Constants.*;
+import static org.apache.dolphinscheduler.common.constants.Constants.EMPTY_STRING;
+import static org.apache.dolphinscheduler.common.constants.Constants.RESOURCE_TYPE_FILE;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -12,6 +13,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,7 +26,6 @@ import org.apache.dolphinscheduler.common.enums.ResUploadType;
 import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 import org.apache.dolphinscheduler.plugin.storage.api.StorageEntity;
 import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
-import org.apache.dolphinscheduler.plugin.task.api.TaskConstants;
 import org.apache.dolphinscheduler.spi.enums.ResourceType;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
@@ -39,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class JFrogStorageOperator implements Closeable, StorageOperate {
+
+    final ExecutorService executor = Executors.newFixedThreadPool(20); // 使用固定大小的线程池
 
     public Artifactory artifactory;
 
@@ -405,16 +411,28 @@ public class JFrogStorageOperator implements Closeable, StorageOperate {
             Folder folder = artifactory.repository(REPO_NAME).folder(fullPath).info();
 
             // Handling files in the directory
+            List<Future<?>> futures = new ArrayList<>();
             folder.getChildren().forEach(child -> {
-                try {
-                    StorageEntity entity = getFileStatus(child.getUri(), folder.getPath(), tenantCode, type);
-                    if (entity != null) {
-                        storageEntityList.add(entity);
+                futures.add(executor.submit(() -> {
+                    try {
+                        StorageEntity entity = getFileStatus(child.getUri(), folder.getPath(), tenantCode, type);
+                        if (entity != null) {
+                            storageEntityList.add(entity);
+                        }
+                    } catch (Exception e) {
+                        log.error("Error while listing files status, path: {}", child.getUri(), e);
                     }
-                } catch (Exception e) {
-                    log.error("Error while listing files status, path: {}", child.getUri(), e);
-                }
+                }));
             });
+
+            // Wait for all tasks to complete
+            for (Future<?> future : futures) {
+                try {
+                    future.get(); // Join each task
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error("Error waiting for file status task to complete", e);
+                }
+            }
         } catch (Exception e) {
             throw new Exception("Error listing files in Artifactory: " + e.getMessage(), e);
         }
