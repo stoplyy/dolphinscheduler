@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.utils.FileUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
@@ -189,6 +190,7 @@ public class ResourceTask extends AbstractTask {
             final String dynamicResourceName = parseContent(parameter.getDynamicResource());
             // set resource name
             parameter.setResource(dynamicResourceName);
+
             // download resource to local and add resource item
             sourceLocalAbsoluteFile = downloadResourceWithAddResource(parameter.getTenant(),
                     dynamicResourceName);
@@ -237,8 +239,11 @@ public class ResourceTask extends AbstractTask {
         File file = new File(resourceAbsolutePathInLocal);
         if (!file.exists()) {
             try {
-                storageOperate.download(resourceAbsolutePathInStorage, resourceAbsolutePathInLocal, true);
-                log.debug("Download resource file {} under: {} successfully", resourceAbsolutePathInStorage,
+                String remoteFullPath = resourceAbsolutePathInStorage.startsWith(Constants.FOLDER_SEPARATOR)
+                        ? resourceAbsolutePathInStorage
+                        : storageOperate.getResDir(tenant) + resourceAbsolutePathInStorage;
+                storageOperate.download(remoteFullPath, resourceAbsolutePathInLocal, true);
+                log.debug("Download resource file {} under: {} successfully", remoteFullPath,
                         resourceAbsolutePathInLocal);
                 FileUtils.setFileTo755(file);
             } catch (Exception ex) {
