@@ -19,7 +19,10 @@ package org.apache.dolphinscheduler.plugin.task.resource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -212,9 +215,10 @@ public class ResourceTask extends AbstractTask {
                 // enable output file exist
                 sourceLocalAbsoluteFile = resourceItem.getResourceAbsolutePathInLocal();
                 if (!parameter.getResource().equals(parameter.getFileName())) {
-                    log.info("copy file. resource file: {}, outputFile: {}", sourceLocalAbsoluteFile,
-                            parameter.getFileName());
+                    // TODO JUST COPY FILE
                     String localNewFilePath = getLocalDownloadString(parameter.getFileName());
+                    log.info("copy file. from resource file: {} to: {}", sourceLocalAbsoluteFile,
+                            localNewFilePath);
                     copyFileToNew(sourceLocalAbsoluteFile, localNewFilePath);
                     sourceLocalAbsoluteFile = localNewFilePath;
                 } else {
@@ -227,12 +231,12 @@ public class ResourceTask extends AbstractTask {
 
     private void copyFileToNew(String srcFilePath, String dstFilePath) {
         try {
-            String context = readLocalFileWithAbsolutePath(srcFilePath);
-            FileUtils.writeContent2File(context, dstFilePath);
+            Path srcPath = Paths.get(srcFilePath);
+            Path dstPath = Paths.get(dstFilePath);
+            Files.copy(srcPath, dstPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             String msg = String.format("copy file error: %s -> %s", srcFilePath, dstFilePath);
             log.error(msg, e);
-
             throw new TaskException(msg, e);
         }
     }
