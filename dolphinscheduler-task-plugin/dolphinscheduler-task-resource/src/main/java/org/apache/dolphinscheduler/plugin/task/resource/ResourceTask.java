@@ -105,7 +105,7 @@ public class ResourceTask extends AbstractTask {
             // 1. file name parse with prepare params
             // 1.1 default file name
             String dstFileName = parseDstFileName(parameter);
-            if(dstFileName.startsWith(Constants.FOLDER_SEPARATOR)){ {
+            if (dstFileName.startsWith(Constants.FOLDER_SEPARATOR)) {
                 dstFileName = dstFileName.substring(1);
                 log.info("remove the first character '/' of the file name: {}", dstFileName);
             }
