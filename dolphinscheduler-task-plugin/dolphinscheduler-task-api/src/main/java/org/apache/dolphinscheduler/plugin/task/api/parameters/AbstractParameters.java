@@ -180,16 +180,12 @@ public abstract class AbstractParameters implements IParameters {
         if (CollectionUtils.isNotEmpty(propertyList) && MapUtils.isNotEmpty(prepareParamsMap)) {
             // try replace with input parameters
             for (Property info : propertyList) {
-                Property prepareProperty = prepareParamsMap.get(info.getProp());
-                if (prepareProperty != null) {
-                    String remoteLocalP_V = info.getValue();
-                    remoteLocalP_V = ParameterUtils.convertParameterPlaceholders(remoteLocalP_V, paramsStringMap);
-                    info.setValue(remoteLocalP_V);
-                    addPropertyToValPool(info);
-                } else {
-                    result.add(info);
-                    log.warn("Cannot find the output parameter {} in the prepare parameters", info.getProp());
-                }
+                String remoteLocalP_V = info.getValue();
+                remoteLocalP_V = ParameterUtils.convertParameterPlaceholders(remoteLocalP_V, paramsStringMap);
+                info.setValue(remoteLocalP_V);
+                addPropertyToValPool(info);
+                log.info("Replace the output parameter {} with the value {} in the prepare parameters.",
+                        info.getProp(), remoteLocalP_V);
             }
         }
         return result;
