@@ -190,28 +190,37 @@ public class ResourceTask extends AbstractTask {
                         "local param is not a [input] [file] param. param name: " + fileParamName);
             }
             sourceLocalAbsoluteFile = getLocalDownloadString(fileParamName);
-        } else if (StringUtils.isNotEmpty(parameter.getDynamicResource())) {
-            // 2.2 set with dynamic resource
-            final String dynamicResourceName = parseContent(parameter.getDynamicResource());
-            // set resource name
-            parameter.setResource(dynamicResourceName);
-            // download resource to local and add resource item
-            sourceLocalAbsoluteFile = downloadResourceWithAddResource(parameter.getTenant(),
-                    dynamicResourceName);
-            // if dynamic resource name is not equal to file name, copy file to new file
-            // enable output file exist
-            if (!dynamicResourceName.equals(parameter.getFileName())) {
-                String localNewFilePath = getLocalDownloadString(parameter.getFileName());
-                copyFileToNew(sourceLocalAbsoluteFile, localNewFilePath);
+        } else {
+            // if dynamic resource , download resource to local and add resource item
+            if (StringUtils.isNotEmpty(parameter.getDynamicResource())) {
+                // parse dynamic resource
+                final String dynamicResourceName = parseContent(parameter.getDynamicResource());
+                // set resource name
+                parameter.setResource(dynamicResourceName);
+                // download resource to local and add resource item
+                downloadResourceWithAddResource(parameter.getTenant(), dynamicResourceName);
             }
-        } else if (StringUtils.isNotEmpty(parameter.getResource())) {
-            // 2.3 set with resource
-            ResourceItem resourceItem = resourceItemMap.get(parameter.getResource());
-            if (resourceItem == null) {
-                throw new TaskException("resource item not exist in resource context. resource name: "
-                        + parameter.getResource());
+
+            if (StringUtils.isNotEmpty(parameter.getResource())) {
+                // 2.3 set with resource
+                ResourceItem resourceItem = resourceItemMap.get(parameter.getResource());
+                if (resourceItem == null) {
+                    throw new TaskException("resource item not exist in resource context. resource name: "
+                            + parameter.getResource());
+                }
+                // if dynamic resource name is not equal to file name, copy file to new file
+                // enable output file exist
+                sourceLocalAbsoluteFile = resourceItem.getResourceAbsolutePathInLocal();
+                if (!parameter.getResource().equals(parameter.getFileName())) {
+                    log.info("copy file. resource file: {}, outputFile: {}", sourceLocalAbsoluteFile,
+                            parameter.getFileName());
+                    String localNewFilePath = getLocalDownloadString(parameter.getFileName());
+                    copyFileToNew(sourceLocalAbsoluteFile, localNewFilePath);
+                    sourceLocalAbsoluteFile = localNewFilePath;
+                } else {
+                    log.info("resource file is equal to  outputFile, skip copy. file: {}", sourceLocalAbsoluteFile);
+                }
             }
-            sourceLocalAbsoluteFile = resourceItem.getResourceAbsolutePathInLocal();
         }
         return sourceLocalAbsoluteFile;
     }
