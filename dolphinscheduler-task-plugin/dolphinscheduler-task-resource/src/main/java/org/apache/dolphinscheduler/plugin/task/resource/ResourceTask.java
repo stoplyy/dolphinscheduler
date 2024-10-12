@@ -105,6 +105,11 @@ public class ResourceTask extends AbstractTask {
             // 1. file name parse with prepare params
             // 1.1 default file name
             String dstFileName = parseDstFileName(parameter);
+            if(dstFileName.startsWith(Constants.FOLDER_SEPARATOR)){ {
+                dstFileName = dstFileName.substring(1);
+                log.info("remove the first character '/' of the file name: {}", dstFileName);
+            }
+
             log.info("parse file name: {} -> {}", parameter.getFileName(), dstFileName);
             parameter.setFileName(dstFileName);
 
@@ -190,10 +195,15 @@ public class ResourceTask extends AbstractTask {
             final String dynamicResourceName = parseContent(parameter.getDynamicResource());
             // set resource name
             parameter.setResource(dynamicResourceName);
-
             // download resource to local and add resource item
             sourceLocalAbsoluteFile = downloadResourceWithAddResource(parameter.getTenant(),
                     dynamicResourceName);
+            // if dynamic resource name is not equal to file name, copy file to new file
+            // enable output file exist
+            if (!dynamicResourceName.equals(parameter.getFileName())) {
+                String localNewFilePath = getLocalDownloadString(parameter.getFileName());
+                copyFileToNew(sourceLocalAbsoluteFile, localNewFilePath);
+            }
         } else if (StringUtils.isNotEmpty(parameter.getResource())) {
             // 2.3 set with resource
             ResourceItem resourceItem = resourceItemMap.get(parameter.getResource());
@@ -204,6 +214,18 @@ public class ResourceTask extends AbstractTask {
             sourceLocalAbsoluteFile = resourceItem.getResourceAbsolutePathInLocal();
         }
         return sourceLocalAbsoluteFile;
+    }
+
+    private void copyFileToNew(String srcFilePath, String dstFilePath) {
+        try {
+            String context = readLocalFileWithAbsolutePath(srcFilePath);
+            FileUtils.writeContent2File(context, dstFilePath);
+        } catch (Exception e) {
+            String msg = String.format("copy file error: %s -> %s", srcFilePath, dstFilePath);
+            log.error(msg, e);
+
+            throw new TaskException(msg, e);
+        }
     }
 
     private String reWriteToLocalWithFileName(ResourceTaskParameter parameter) {
@@ -243,7 +265,7 @@ public class ResourceTask extends AbstractTask {
                         ? resourceAbsolutePathInStorage
                         : storageOperate.getResDir(tenant) + resourceAbsolutePathInStorage;
                 storageOperate.download(remoteFullPath, resourceAbsolutePathInLocal, true);
-                log.debug("Download resource file {} under: {} successfully", remoteFullPath,
+                log.info("Download resource file {} under: {} successfully", remoteFullPath,
                         resourceAbsolutePathInLocal);
                 FileUtils.setFileTo755(file);
             } catch (Exception ex) {
