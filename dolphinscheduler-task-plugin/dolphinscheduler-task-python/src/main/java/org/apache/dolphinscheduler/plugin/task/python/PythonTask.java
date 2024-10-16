@@ -175,7 +175,8 @@ public class PythonTask extends AbstractTask {
 
     /**
      * Build the python task command.
-     * If user have set the 'PYTHON_LAUNCHER' environment, we will use the 'PYTHON_LAUNCHER',
+     * If user have set the 'PYTHON_LAUNCHER' environment, we will use the
+     * 'PYTHON_LAUNCHER',
      * if not, we will default use python.
      *
      * @param pythonFile Python file, cannot be empty.
@@ -186,7 +187,9 @@ public class PythonTask extends AbstractTask {
 
         String pythonHome = String.format("${%s}", PYTHON_LAUNCHER);
 
-        return pythonHome + " " + pythonFile;
+        return "chmod +x " + pythonFile
+                + System.lineSeparator()
+                + pythonHome + " " + pythonFile;
     }
 
 }
