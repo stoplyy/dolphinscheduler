@@ -188,7 +188,7 @@ public class PythonTask extends AbstractTask {
         String pythonHome = String.format("${%s}", PYTHON_LAUNCHER);
 
         String printCurrentUser = "echo '当前执行脚本的用户是：'$(whoami); ";
-        String printPython = String.format("PYTHON_LAUNCHER: %s", pythonHome);
+        String printPython = String.format("echo 'PYTHON_LAUNCHER: $%s'", PYTHON_LAUNCHER);
 
         return printCurrentUser + System.lineSeparator() +
                 printPython + System.lineSeparator() +
