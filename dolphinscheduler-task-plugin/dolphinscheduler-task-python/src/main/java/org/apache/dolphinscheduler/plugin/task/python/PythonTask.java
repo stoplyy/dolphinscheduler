@@ -186,15 +186,12 @@ public class PythonTask extends AbstractTask {
         Preconditions.checkNotNull(pythonFile, "Python file cannot be null");
 
         String pythonHome = String.format("${%s}", PYTHON_LAUNCHER);
-        String printCurrentUser = "echo '当前执行脚本的用户是：'$(whoami); ";
 
-        String checkPythonLauncher = "if [ -z \"" + pythonHome
-                + "\" ]; then echo '环境变量 PYTHON_LAUNCHER 未设置.'; exit 1; fi; " +
-                "if ! " + pythonHome
-                + " --version >/dev/null 2>&1; then echo 'PYTHON_LAUNCHER 未指向有效的 Python 解释器.'; exit 1; fi; ";
+        String printCurrentUser = "echo '当前执行脚本的用户是：'$(whoami); ";
+        String printPython = String.format("PYTHON_LAUNCHER: %s", pythonHome);
 
         return printCurrentUser + System.lineSeparator() +
-                checkPythonLauncher + System.lineSeparator() +
+                printPython + System.lineSeparator() +
                 "chmod +x " + pythonFile + System.lineSeparator() +
                 pythonHome + " " + pythonFile;
     }
