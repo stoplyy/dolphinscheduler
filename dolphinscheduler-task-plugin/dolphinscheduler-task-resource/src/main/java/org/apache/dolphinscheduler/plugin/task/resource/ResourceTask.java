@@ -200,17 +200,18 @@ public class ResourceTask extends AbstractTask {
                 final String dynamicResourceName = parseContent(parameter.getDynamicResource());
                 // set resource name
                 parameter.setResource(dynamicResourceName);
-                // download resource to local and add resource item
-                downloadResourceWithAddResource(parameter.getTenant(), dynamicResourceName);
             }
 
             if (StringUtils.isNotEmpty(parameter.getResource())) {
+                // download resource to local and add resource item
+                downloadResourceWithAddResourceIfNeed(parameter.getTenant(), parameter.getResource());
                 // 2.3 set with resource
                 ResourceItem resourceItem = resourceItemMap.get(parameter.getResource());
                 if (resourceItem == null) {
                     throw new TaskException("resource item not exist in resource context. resource name: "
                             + parameter.getResource());
                 }
+
                 // if dynamic resource name is not equal to file name, copy file to new file
                 // enable output file exist
                 sourceLocalAbsoluteFile = resourceItem.getResourceAbsolutePathInLocal();
@@ -267,7 +268,7 @@ public class ResourceTask extends AbstractTask {
         }
     }
 
-    private String downloadResourceWithAddResource(String tenant, String resourceAbsolutePathInStorage) {
+    private String downloadResourceWithAddResourceIfNeed(String tenant, String resourceAbsolutePathInStorage) {
         String resourceRelativePath = storageOperate.getResourceFileName(tenant, resourceAbsolutePathInStorage);
         String resourceAbsolutePathInLocal = Paths.get(taskExecutionContext.getExecutePath(), resourceRelativePath)
                 .toString();
