@@ -994,6 +994,8 @@ public class ProcessServiceImpl implements ProcessService {
                         joinGlobalParams(parentInstance.getGlobalParams(), subProcessInstance.getGlobalParams()));
                 subProcessInstance
                         .setVarPool(joinVarPool(parentInstance.getVarPool(), subProcessInstance.getVarPool()));
+                // follow the parent instance's tenant code
+                subProcessInstance.setTenantCode(parentInstance.getTenantCode());
                 processInstanceDao.upsertProcessInstance(subProcessInstance);
             } else {
                 log.error("sub process command params error, cannot find parent instance: {} ", cmdParam);

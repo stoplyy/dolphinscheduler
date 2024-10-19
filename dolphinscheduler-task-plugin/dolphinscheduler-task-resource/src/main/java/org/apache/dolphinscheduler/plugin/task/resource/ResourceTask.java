@@ -277,29 +277,36 @@ public class ResourceTask extends AbstractTask {
         String resourceAbsolutePathInLocal = Paths.get(taskExecutionContext.getExecutePath(), resourceRelativePath)
                 .toString();
         File file = new File(resourceAbsolutePathInLocal);
+
         if (!file.exists()) {
             try {
                 String remoteFullPath = resourceAbsolutePathInStorage.startsWith(Constants.FOLDER_SEPARATOR)
                         ? resourceAbsolutePathInStorage
                         : storageOperate.getResDir(tenant) + resourceAbsolutePathInStorage;
-                storageOperate.download(remoteFullPath, resourceAbsolutePathInLocal, true);
                 log.info("Download resource file {} under: {} successfully", remoteFullPath,
                         resourceAbsolutePathInLocal);
+                storageOperate.download(remoteFullPath, resourceAbsolutePathInLocal, true);
                 FileUtils.setFileTo755(file);
             } catch (Exception ex) {
                 throw new TaskException(
                         String.format("Download resource file: %s error", resourceAbsolutePathInStorage), ex);
             }
         } else {
-            log.warn("resource file already exist, skip download. file: {}", resourceAbsolutePathInLocal);
+            log.info("resource file already exist, skip download. file: {}", resourceAbsolutePathInLocal);
         }
 
-        ResourceContext.ResourceItem resourceItem = ResourceContext.ResourceItem.builder()
-                .resourceAbsolutePathInStorage(resourceAbsolutePathInStorage)
-                .resourceRelativePath(resourceRelativePath)
-                .resourceAbsolutePathInLocal(resourceAbsolutePathInLocal)
-                .build();
-        taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
+        if (!resourceItemMap.containsKey(resourceAbsolutePathInStorage)) {
+            ResourceContext.ResourceItem resourceItem = ResourceContext.ResourceItem.builder()
+                    .resourceAbsolutePathInStorage(resourceAbsolutePathInStorage)
+                    .resourceRelativePath(resourceRelativePath)
+                    .resourceAbsolutePathInLocal(resourceAbsolutePathInLocal)
+                    .build();
+            log.info("resource item not exist, add resource item: {}", resourceItem);
+            taskExecutionContext.getResourceContext().addResourceItem(resourceItem);
+        } else {
+            log.info("resource item already exist, skip add resource item. file: {}", resourceAbsolutePathInLocal);
+        }
+
         return resourceAbsolutePathInLocal;
     }
 
