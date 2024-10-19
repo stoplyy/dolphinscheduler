@@ -234,6 +234,10 @@ public class ResourceTask extends AbstractTask {
         try {
             Path srcPath = Paths.get(srcFilePath);
             Path dstPath = Paths.get(dstFilePath);
+            // dstFilePath 相关目录不存在就创建
+            if (!Files.exists(dstPath.getParent())) {
+                FileUtils.createDirectoryWith755(dstPath.getParent());
+            }
             Files.copy(srcPath, dstPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             String msg = String.format("copy file error: %s -> %s", srcFilePath, dstFilePath);
