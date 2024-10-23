@@ -51,6 +51,7 @@ public abstract class AbstractParameters implements IParameters {
 
     /**
      * local parameters
+     * 当前任务的局部参数
      */
     public List<Property> localParams;
 

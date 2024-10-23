@@ -5,6 +5,7 @@ import static org.apache.dolphinscheduler.common.constants.PlatformConstant.CLUS
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.NODE_PARAM_NAME;
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.NODE_PARAM_PROPS_NAME;
 import static org.apache.dolphinscheduler.common.constants.PlatformConstant.PARAM_VALUE_SEPARATOR;
+import static org.apache.dolphinscheduler.common.constants.PlatformConstant.DATASOURCE_PARAM_NAME;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,6 +134,16 @@ public class PlatformTaskParamHelper {
                 // 多个节点时 value为 array
                 startParams.put(NODE_PARAM_PROPS_NAME, JSONUtils.toJsonString(appendNodeParamsList));
             }
+        }
+
+        // platform.datasource fill
+        List<Integer> sourceIds = taskNodes.stream().map(ProjectNode::getDataSourceCode).distinct()
+                .collect(Collectors.toList());
+        if (sourceIds.size() > 0&& startParams.containsKey(DATASOURCE_PARAM_NAME)) {
+            String ids = startParams.getOrDefault(DATASOURCE_PARAM_NAME, "");
+            Set<String> setId = new HashSet<>(Arrays.asList(ids.split(PARAM_VALUE_SEPARATOR)));
+            setId.addAll(sourceIds.stream().map(String::valueOf).collect(Collectors.toSet()));
+            startParams.put(DATASOURCE_PARAM_NAME, String.join(PARAM_VALUE_SEPARATOR, setId));
         }
 
         if (clusterIdsInt.size() > 0) {
@@ -317,7 +328,8 @@ public class PlatformTaskParamHelper {
     public static Map<String, String> systemNodeParam(@NotNull ProjectCluster cluster, @NotNull ProjectNode node) {
         Map<String, String> params = new HashMap<>();
         params.putAll(systemClusterParam(cluster));
-        params.put("node_source", node.getDataSourceCode() == null ? "-1" : String.valueOf(node.getDataSourceCode()));
+        params.put(PlatformConstant.NODE_DATASOURCE_PARAM_NAME,
+                node.getDataSourceCode() == null ? "-1" : String.valueOf(node.getDataSourceCode()));
         params.put("node_name", node.getNodeName());
         params.put("node_id", String.valueOf(node.getNodeId()));
         params.put("node_key", node.getNodeKey());

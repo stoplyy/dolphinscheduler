@@ -17,11 +17,34 @@
 import { useI18n } from 'vue-i18n'
 import { useCustomParams } from '.'
 import type { IJsonItem } from '../types'
+import { computed, vShow } from 'vue'
 
 export function useRemoteShell(model: { [field: string]: any }): IJsonItem[] {
   const { t } = useI18n()
 
   return [
+    {
+      type: 'switch',
+      field: 'enablePlatformSource',
+      span: 8,
+      name: '使用平台数据源',
+      itemProps: {
+        labelPlacement: "left",
+      }
+    },
+    {
+      type: 'input',
+      field: 'platformSourceParamName',
+      name: '动态数据源参数',
+      span: 16,
+      props: {
+        placeholder: '默认为:${platform.node.node_source}',
+        disabled: computed(() => { return !model.enablePlatformSource }),
+      },
+      itemProps: {
+        labelPlacement: "left",
+      }
+    },
     {
       type: 'editor',
       field: 'rawScript',

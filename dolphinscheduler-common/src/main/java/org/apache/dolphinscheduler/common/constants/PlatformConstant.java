@@ -27,6 +27,15 @@ public class PlatformConstant {
      */
     public static final String NODE_PARAM_NAME = "platform.node";
     /**
+     * task 任务的 node对应的sourceID 参数值名称
+     */
+    public static final String NODE_DATASOURCE_PARAM_NAME = "node_source";
+
+    public static String getNodeDataSourceParamName() {
+        return NODE_PARAM_NAME + "." + NODE_DATASOURCE_PARAM_NAME;
+    }
+
+    /**
      * task 任务的 cluster 参数名称
      */
     public static final String CLUSTER_PARAM_NAME = "platform.cluster";

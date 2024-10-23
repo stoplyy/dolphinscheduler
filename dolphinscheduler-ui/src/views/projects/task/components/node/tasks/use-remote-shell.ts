@@ -45,7 +45,9 @@ export function useRemoteShell({
     workerGroup: 'default',
     delayTime: 0,
     type: 'SSH',
-    rawScript: ''
+    rawScript: '',
+    enablePlatformSource: false,
+    platformSourceParamName: ''
   } as INodeData)
 
   return {

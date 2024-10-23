@@ -498,6 +498,8 @@ export function formatParams(data: INodeData): {
   if (data.taskType === 'REMOTESHELL') {
     taskParams.type = data.type
     taskParams.datasource = data.datasource
+    taskParams.enablePlatformSource = data.enablePlatformSource
+    taskParams.platformSourceParamName = data.platformSourceParamName
   }
 
   if (data.taskType === 'DYNAMIC') {

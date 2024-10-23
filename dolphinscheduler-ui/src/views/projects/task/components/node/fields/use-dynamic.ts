@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
+import { NAlert, NInput, NTag, NTooltip } from 'naive-ui'
 import type { IJsonItem } from '../types'
 import { useI18n } from 'vue-i18n'
+import { h } from 'vue'
 
 export function useDynamic(model: { [field: string]: any }): IJsonItem[] {
   const { t } = useI18n()
@@ -39,6 +41,24 @@ export function useDynamic(model: { [field: string]: any }): IJsonItem[] {
       validate: {
         required: true
       }
+    },
+    {
+      type: 'custom',
+      field: 'custom-title-source',
+      span: 22,
+      widget: h(
+        NTooltip,
+        {},
+        {
+          trigger: () => h(NAlert, { type: 'info', size: 'small' }, { default: () => '提示！' }),
+          default: () => h('div', {}, [
+            h('p', {}, 'name:拆分后，此参数对应的参数名，传入子节点'),
+            h('p', {}, 'params or value:拆分的源字符串，支持参数配置，将对此值进行拆分'),
+            h('p', {}, '1. 分隔符 LIST 用于分割 数组类型的 JSON 字符串'),
+            h('p', {}, '2. 项目节点如果多选,节点数组的系统参数为\$\{platform.node.props}, 取值name建议配置为platform.node')
+          ])
+        }
+      )
     },
     {
       type: 'custom-parameters',

@@ -334,6 +334,7 @@ export default defineComponent({
         onCancel={this.hideModal}
         onConfirm={this.handleStart}
         confirmLoading={this.saving}
+        style={{ width: '50%' }}
       >
         <NForm label-placement="left" label-width="auto" ref='startFormRef' model={this.startForm} rules={this.rules}>
           <NFormItem
@@ -597,10 +598,11 @@ export default defineComponent({
               {this.startForm.isPlatform && (
                 <NSpace inline align="center">
                   <NTag type="info">{PlatformConst.P_DATASOURCE_PARAM_NAME}</NTag> :
-                  <NInput
-                    disabled
-                    placeholder="选择源时 自动填充."
-                    value={this.taskPlatformSourceParam}/>
+                  {h(NTooltip, {}, {
+                    trigger: () =>
+                      <NInput disabled placeholder='自动填充' value={this.taskPlatformSourceParam}></NInput>,
+                    default: () => '启动参数通过选择Platform源时填充 & 项目节点如果关联源,任务执行时也会自动填充 '
+                  })}
               </NSpace>)}
               </NSpace>
           </NFormItem>

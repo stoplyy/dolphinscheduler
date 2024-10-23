@@ -47,6 +47,9 @@ export function useTimeoutAlarm(model: { [field: string]: any }): IJsonItem[] {
             if (!model.timeout) model.timeout = 30
           }
         }
+      },
+      itemProps: {
+        labelPlacement: "left",
       }
     },
     {
@@ -62,6 +65,9 @@ export function useTimeoutAlarm(model: { [field: string]: any }): IJsonItem[] {
             return new Error(t('project.node.timeout_strategy_tips'))
           }
         }
+      },
+      itemProps: {
+        labelPlacement: "left",
       }
     },
     {
@@ -82,6 +88,9 @@ export function useTimeoutAlarm(model: { [field: string]: any }): IJsonItem[] {
             return new Error(t('project.node.timeout_period_tips'))
           }
         }
+      },
+      itemProps: {
+        labelPlacement: "left",
       }
     }
   ]

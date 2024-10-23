@@ -421,6 +421,8 @@ interface ITaskParams {
   sagemakerRequestJson?: string
   script?: string
   scriptParams?: string
+  enablePlatformSource?: boolean
+  platformSourceParamName?: string
   pythonPath?: string
   isCreateEnvironment?: string
   pythonCommand?: string

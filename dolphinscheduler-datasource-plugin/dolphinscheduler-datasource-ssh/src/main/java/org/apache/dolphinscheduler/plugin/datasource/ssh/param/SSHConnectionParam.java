@@ -36,4 +36,14 @@ public class SSHConnectionParam implements ConnectionParam {
     protected String host;
 
     protected int port = 22;
+
+    public String getLogString() {
+        return "SSHConnectionParam{" +
+                "user='" + user + '\'' +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", password= *** " +
+                ", publicKey= *** " +
+                '}';
+    }
 }

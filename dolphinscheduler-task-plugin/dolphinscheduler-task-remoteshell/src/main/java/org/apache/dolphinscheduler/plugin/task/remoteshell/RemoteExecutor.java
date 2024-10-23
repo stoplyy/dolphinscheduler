@@ -99,7 +99,7 @@ public class RemoteExecutor implements AutoCloseable {
             return session;
         }
         try {
-            log.info("SSH connection params:{}", sshConnectionParam);
+            log.info("SSH connection params:{}", sshConnectionParam.getLogString());
             session = SSHUtils.getSession(sshClient, sshConnectionParam);
             if (session == null || !session.auth().verify().isSuccess()) {
                 throw new TaskException("SSH connection failed");
