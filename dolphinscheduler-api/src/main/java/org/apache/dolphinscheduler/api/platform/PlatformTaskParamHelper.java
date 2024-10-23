@@ -139,10 +139,11 @@ public class PlatformTaskParamHelper {
         // platform.datasource fill
         List<Integer> sourceIds = taskNodes.stream().map(ProjectNode::getDataSourceCode).distinct()
                 .collect(Collectors.toList());
-        if (sourceIds.size() > 0&& startParams.containsKey(DATASOURCE_PARAM_NAME)) {
+        if (sourceIds.size() > 0 && startParams.containsKey(DATASOURCE_PARAM_NAME)) {
             String ids = startParams.getOrDefault(DATASOURCE_PARAM_NAME, "");
             Set<String> setId = new HashSet<>(Arrays.asList(ids.split(PARAM_VALUE_SEPARATOR)));
             setId.addAll(sourceIds.stream().map(String::valueOf).collect(Collectors.toSet()));
+            setId.removeIf(s -> s.isEmpty() || !s.matches("\\d+"));
             startParams.put(DATASOURCE_PARAM_NAME, String.join(PARAM_VALUE_SEPARATOR, setId));
         }
 
