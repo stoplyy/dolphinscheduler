@@ -175,6 +175,7 @@ public class DqRuleServiceImpl extends BaseServiceImpl implements DqRuleService 
 
             pageInfo.setTotal((int) dqRulePage.getTotal());
             pageInfo.setTotalList(dataList);
+            pageInfo.setTotalPage((int) dqRulePage.getPages());
         }
 
         return pageInfo;

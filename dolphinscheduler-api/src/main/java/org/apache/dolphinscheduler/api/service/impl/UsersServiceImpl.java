@@ -343,6 +343,7 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
         PageInfo<User> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) scheduleList.getTotal());
         pageInfo.setTotalList(scheduleList.getRecords());
+        pageInfo.setTotalPage((int) scheduleList.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
 

@@ -540,6 +540,7 @@ public class ResourcesServiceImpl extends BaseServiceImpl implements ResourcesSe
 
         pageInfo.setTotal(filteredResourceList.size());
         pageInfo.setTotalList(slicedResourcesList);
+        pageInfo.setTotalPage((int) Math.ceil((double) filteredResourceList.size() / pageSize));
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
         return result;

@@ -446,6 +446,7 @@ public class ProjectServiceImpl extends BaseServiceImpl implements ProjectServic
 
         pageInfo.setTotal((int) projectIPage.getTotal());
         pageInfo.setTotalList(projectList);
+        pageInfo.setTotalPage((int) projectIPage.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
         return result;

@@ -104,6 +104,7 @@ public class AuditServiceImpl extends BaseServiceImpl implements AuditService {
         PageInfo<AuditDto> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) auditDtos.size());
         pageInfo.setTotalList(auditDtos);
+        pageInfo.setTotalPage((int) logIPage.getPages());
         return pageInfo;
     }
 

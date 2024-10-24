@@ -69,6 +69,7 @@ public class PageInfo<T> {
         PageInfo<T> pageInfo = new PageInfo<>((int) iPage.getCurrent(), (int) iPage.getSize());
         pageInfo.setTotalList(iPage.getRecords());
         pageInfo.setTotal((int) iPage.getTotal());
+        pageInfo.setTotalPage((int) iPage.getPages());
         return pageInfo;
     }
 

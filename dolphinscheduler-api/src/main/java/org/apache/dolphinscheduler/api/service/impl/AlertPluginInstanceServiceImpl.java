@@ -250,6 +250,7 @@ public class AlertPluginInstanceServiceImpl extends BaseServiceImpl implements A
         PageInfo<AlertPluginInstanceVO> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) alertPluginInstanceIPage.getTotal());
         pageInfo.setTotalList(buildPluginInstanceVOList(alertPluginInstanceIPage.getRecords()));
+        pageInfo.setTotalPage((int) alertPluginInstanceIPage.getPages());
         return pageInfo;
     }
 

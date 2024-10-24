@@ -470,6 +470,7 @@ public class SchedulerServiceImpl extends BaseServiceImpl implements SchedulerSe
         PageInfo<ScheduleVO> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) schedulePage.getTotal());
         pageInfo.setTotalList(scheduleList);
+        pageInfo.setTotalPage((int) schedulePage.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
         return result;
@@ -505,6 +506,7 @@ public class SchedulerServiceImpl extends BaseServiceImpl implements SchedulerSe
                 new PageInfo<>(scheduleFilterRequest.getPageNo(), scheduleFilterRequest.getPageSize());
         pageInfo.setTotal((int) scheduleIPage.getTotal());
         pageInfo.setTotalList(scheduleIPage.getRecords());
+        pageInfo.setTotalPage((int) scheduleIPage.getPages());
 
         return pageInfo;
     }

@@ -597,6 +597,7 @@ public class ProcessDefinitionServiceImpl extends BaseServiceImpl implements Pro
         PageInfo<ProcessDefinition> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) processDefinitionsPageListingResult.getTotalCount());
         pageInfo.setTotalList(processDefinitions);
+        pageInfo.setTotalPage((int) processDefinitionsPageListingResult.getPages());
 
         return pageInfo;
     }
@@ -637,7 +638,7 @@ public class ProcessDefinitionServiceImpl extends BaseServiceImpl implements Pro
                 new PageInfo<>(workflowFilterRequest.getPageNo(), workflowFilterRequest.getPageSize());
         pageInfo.setTotal((int) processDefinitionIPage.getTotal());
         pageInfo.setTotalList(processDefinitionIPage.getRecords());
-
+        pageInfo.setTotalPage((int) processDefinitionIPage.getPages());
         return pageInfo;
     }
 
@@ -2296,6 +2297,7 @@ public class ProcessDefinitionServiceImpl extends BaseServiceImpl implements Pro
 
         pageInfo.setTotalList(processDefinitionLogs);
         pageInfo.setTotal((int) processDefinitionVersionsPaging.getTotal());
+        pageInfo.setTotalPage((int) processDefinitionVersionsPaging.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
         return result;

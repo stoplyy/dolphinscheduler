@@ -77,6 +77,7 @@ public class AccessTokenServiceImpl extends BaseServiceImpl implements AccessTok
         IPage<AccessToken> accessTokenList = accessTokenMapper.selectAccessTokenPage(page, searchVal, userId);
         pageInfo.setTotal((int) accessTokenList.getTotal());
         pageInfo.setTotalList(accessTokenList.getRecords());
+        pageInfo.setTotalPage((int) accessTokenList.getPages());
         return pageInfo;
     }
 
