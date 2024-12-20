@@ -47,7 +47,7 @@ export const platformDef = () => {
           {
             label: node.nodeName,
             value: node.dataSourceCode,
-            key: node.id,
+            key: node,
             disabled: node.dataSourceCode == undefined || node.dataSourceCode == null || node.dataSourceCode <= 0
           })
         return option;

@@ -65,7 +65,10 @@ import { IDefinitionData } from '../types'
 import { IParam } from './types'
 import { useForm } from './use-form'
 import { useModal } from './use-modal'
-import { PlatformConst } from '@/service/modules/project-platform/platform'
+import {
+  PlatformConst,
+  ProjectNode
+} from '@/service/modules/project-platform/platform'
 import SourceModal from './sourceModal.'
 
 const props = {
@@ -832,7 +835,9 @@ export default defineComponent({
                   renderLabel={(option: CascaderOption, checked: boolean) =>
                     h(
                       NTooltip,
-                      {},
+                      {
+                        placement: 'right-end'
+                      },
                       {
                         trigger: () =>
                           h(
@@ -843,7 +848,24 @@ export default defineComponent({
                             },
                             { default: () => option.label }
                           ),
-                        default: () => option.value + ':' + option.label
+                        default: () => {
+                          let it = option.key as ProjectNode
+                          return h(
+                            'div',
+                            { style: 'min-width:200px; padding:4px;' },
+                            [
+                              h('div', {}, [h('b', {}, 'node_code: '), it.id]),
+                              h('div', {}, [
+                                h('b', {}, 'node_name: '),
+                                it.nodeName
+                              ]),
+                              h('div', {}, [
+                                h('b', {}, 'node_key: '),
+                                it.nodeKey
+                              ])
+                            ]
+                          )
+                        }
                       }
                     )
                   }
