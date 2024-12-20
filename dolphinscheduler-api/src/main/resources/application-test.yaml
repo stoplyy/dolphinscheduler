@@ -212,12 +212,12 @@ security:
       enable: true
       provider:
         tuhu:
-          authorizationUri: "https://sso.tuhu.work/connect/authorize?scope=openid email"
+          authorizationUri: "https://sso.tuhutest.cn/connect/authorize?scope=openid email"
           redirectUri: "https://stellarops-api.tuhu.work/dolphinscheduler/redirect/login/oauth2"
           clientId: "int-service-arch-stellarops-api"
           clientSecret: "fCtNkd2etHC/U7yzzUnTraqMuPeEJeXqpor8VX/1ih0="
-          tokenUri: "https://sso.tuhu.work/connect/token"
-          userInfoUri: "https://sso.tuhu.work/connect/userinfo"
+          tokenUri: "https://sso.tuhutest.cn/connect/token"
+          userInfoUri: "https://sso.tuhutest.cn/connect/userinfo"
           callbackUrl: "https://stellarops-web.tuhu.work/login"
           iconUri: "https://res.tuhu.org/images/hongbao-tiger.png"
           provider: tuhu
