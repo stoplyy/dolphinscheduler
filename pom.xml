@@ -100,10 +100,31 @@
 
         <skipUT>false</skipUT>
         <skipIT>true</skipIT>
+        <tuhu.dolphin.version>2.2.3</tuhu.dolphin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.tuhu.inf</groupId>
+                <artifactId>tuhu-spring-cloud-framework-bom</artifactId>
+                <version>3.2.8-RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+
+        <dependency>
+            <groupId>com.tuhu.dolphin</groupId>
+            <artifactId>tuhu-spring-cloud-starter-dolphin</artifactId>
+            <version>${tuhu.dolphin.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tuhu.dolphin</groupId>
+            <artifactId>tuhu-spring-cloud-starter-dolphin-mybatis</artifactId>
+            <version>${tuhu.dolphin.version}</version>
+        </dependency>
             <dependency>
                 <groupId>org.apache.dolphinscheduler</groupId>
                 <artifactId>dolphinscheduler-master</artifactId>
@@ -129,6 +150,12 @@
                 <artifactId>dolphinscheduler-standalone-server</artifactId>
                 <version>${project.version}</version>
             </dependency> -->
+
+        <dependency>
+            <artifactId>org.jacoco.agent</artifactId>
+            <groupId>org.jacoco</groupId>
+            <version>${jacoco.version}</version>
+        </dependency>
             <dependency>
                 <groupId>org.apache.dolphinscheduler</groupId>
                 <artifactId>dolphinscheduler-ui</artifactId>
@@ -307,6 +334,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk15on</artifactId>
+                <version>1.69</version>
+            </dependency>
         </dependencies>
 
     </dependencyManagement>
@@ -356,7 +388,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
-            <version>${spring.boot.version}</version>
+            <!-- <version>${spring.boot.version}</version> -->
             <optional>true</optional>
         </dependency>
         <dependency>
