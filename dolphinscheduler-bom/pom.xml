@@ -100,7 +100,8 @@
         <snakeyaml.version>1.33</snakeyaml.version>
         <htrace.version>4.1.1</htrace.version>
         <datasync.version>2.17.282</datasync.version>
-        <springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version>
+        <springdoc-openapi-ui.version>1.6.9</springdoc-openapi-ui.version>
+        <!-- <springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version> -->
         <aspectj.version>1.9.7</aspectj.version>
         <zt-zip.version>1.15</zt-zip.version>
         <trino-jdbc.version>402</trino-jdbc.version>
