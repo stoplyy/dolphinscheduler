@@ -238,7 +238,7 @@ public class ExecutorServiceImpl extends BaseServiceImpl implements ExecutorServ
             Map<String, String> startParams, Integer expectedParallelismNumber,
             int dryRun, int testFlag,
             ComplementDependentMode complementDependentMode, Integer version,
-            boolean allLevelDependent, ExecutionOrder executionOrder) {
+            boolean allLevelDependent, ExecutionOrder executionOrder, boolean delayStart) {
         Project project = projectMapper.queryByCode(projectCode);
         // check user access for project
         projectService.checkProjectAndAuth(loginUser, project, projectCode, WORKFLOW_START);
@@ -279,20 +279,21 @@ public class ExecutorServiceImpl extends BaseServiceImpl implements ExecutorServ
         /**
          * create command
          */
-        int create = this.createCommand(triggerCode, commandType, processDefinition.getCode(), taskDependType,
+        int[] create = this.createCommand(triggerCode, commandType, processDefinition.getCode(), taskDependType,
                 failureStrategy,
                 startNodeList,
                 cronTime, warningType, loginUser.getId(), warningGroupId, runMode, processInstancePriority,
                 workerGroup, tenantCode,
                 environmentCode, startParams, expectedParallelismNumber, dryRun, testFlag,
-                complementDependentMode, allLevelDependent, executionOrder);
+                complementDependentMode, allLevelDependent, executionOrder,delayStart);
 
-        if (create > 0) {
+        if (create[0] > 0) {
             processDefinition.setWarningGroupId(warningGroupId);
             processDefinitionMapper.updateById(processDefinition);
             log.info("Create command complete, processDefinitionCode:{}, commandCount:{}.",
                     processDefinition.getCode(), create);
             result.put(Constants.DATA_LIST, triggerCode);
+            result.put("commandId", create[1]);
             putMsg(result, Status.SUCCESS);
         } else {
             log.error("Start process instance failed because create command error, processDefinitionCode:{}.",
@@ -746,14 +747,14 @@ public class ExecutorServiceImpl extends BaseServiceImpl implements ExecutorServ
      * @param executionOrder          executionOrder
      * @return command id
      */
-    private int createCommand(Long triggerCode, CommandType commandType, long processDefineCode, TaskDependType nodeDep,
+    private int[] createCommand(Long triggerCode, CommandType commandType, long processDefineCode, TaskDependType nodeDep,
             FailureStrategy failureStrategy, String startNodeList, String schedule,
             WarningType warningType, int executorId, Integer warningGroupId, RunMode runMode,
             Priority processInstancePriority, String workerGroup, String tenantCode,
             Long environmentCode,
             Map<String, String> startParams, Integer expectedParallelismNumber, int dryRun,
             int testFlag, ComplementDependentMode complementDependentMode,
-            boolean allLevelDependent, ExecutionOrder executionOrder) {
+            boolean allLevelDependent, ExecutionOrder executionOrder,boolean delayStart) {
 
         /**
          * instantiate command schedule instance
@@ -805,21 +806,22 @@ public class ExecutorServiceImpl extends BaseServiceImpl implements ExecutorServ
             if (schedule == null || StringUtils.isEmpty(schedule)) {
                 log.error("Create {} type command error because parameter schedule is invalid.",
                         command.getCommandType().getDescp());
-                return 0;
+                return new int[]{0,0};
             }
             if (!isValidateScheduleTime(schedule)) {
-                return 0;
+                return new int[]{0,0};
             }
             try {
                 log.info("Start to create {} command, processDefinitionCode:{}.",
                         command.getCommandType().getDescp(), processDefineCode);
-                return createComplementCommandList(triggerCode, schedule, runMode, command, expectedParallelismNumber,
+                int count = createComplementCommandList(triggerCode, schedule, runMode, command, expectedParallelismNumber,
                         complementDependentMode, allLevelDependent, executionOrder);
+                return new int[]{count,command.getId()};
             } catch (CronParseException cronParseException) {
                 // We catch the exception here just to make compiler happy, since we have
                 // already validated the schedule
                 // cron expression before
-                return 0;
+                return new int[]{0,0};
             }
         } else {
             command.setCommandParam(JSONUtils.toJsonString(cmdParam));
@@ -827,7 +829,7 @@ public class ExecutorServiceImpl extends BaseServiceImpl implements ExecutorServ
             if (count > 0) {
                 triggerRelationService.saveTriggerToDb(ApiTriggerType.COMMAND, triggerCode, command.getId());
             }
-            return count;
+            return new int[]{count,command.getId()};
         }
     }
 
