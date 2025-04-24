@@ -40,7 +40,7 @@
             <dependency>
                 <groupId>com.tuhu.inf</groupId>
                 <artifactId>tuhu-spring-cloud-framework-bom</artifactId>
-                <version>3.2.1-RELEASE</version>
+                <version>3.3.0-RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
