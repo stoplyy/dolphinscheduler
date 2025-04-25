@@ -35,6 +35,12 @@ public class CreateExecutorRequest extends CreateExecutorDefault {
     private String scheduleTime;
 
     /**
+     * 针对项目下某一集群操作，appId标识集群
+     * 如果paramsMap中有入参platform.cluster，则appId无效
+     */
+    private String tuhuAppId;
+
+    /**
      * 启动参数
      * eq:{"a":"4","platform.datasource":"4","platform.cluster":"2,3","platform.node":"14,15,31"}
      */

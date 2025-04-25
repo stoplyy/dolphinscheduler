@@ -201,4 +201,20 @@ public class ProjectClusterServiceImpl extends BaseServiceImpl implements Projec
         }
         return result;
     }
+
+    @Override
+    public Result<ProjectCluster> queryClusterByAppId(long projectCode, String appId) {
+        Result<ProjectCluster> result = new Result<>();
+        ProjectCluster projectCluster = projectClusterMapper
+                .selectOne(new QueryWrapper<ProjectCluster>().lambda()
+                        .eq(ProjectCluster::getProjectCode, projectCode)
+                        .eq(ProjectCluster::getAppId, appId));
+        if (projectCluster != null) {
+            result.setData(projectCluster);
+            putMsg(result, Status.SUCCESS);
+        } else {
+            putMsg(result, Status.PROJECT_CLUSTER_NOT_EXIST, projectCode, appId);
+        }
+        return result;
+    }
 }

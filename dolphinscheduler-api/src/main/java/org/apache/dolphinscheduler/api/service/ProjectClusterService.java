@@ -47,6 +47,15 @@ public interface ProjectClusterService {
     Result<List<ProjectCluster>> queryClusterListPaging(long projectCode);
 
     /**
+     * query project by name
+     *
+     * @param projectCode project code
+     * @param name        project name
+     * @return project list which the login user have permission to see
+     */
+    Result<ProjectCluster> queryClusterByAppId(long projectCode, String appId);
+
+    /**
      * delete project by code
      *
      * @param loginUser   login user
