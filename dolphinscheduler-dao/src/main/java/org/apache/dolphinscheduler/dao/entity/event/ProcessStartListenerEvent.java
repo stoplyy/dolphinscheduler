@@ -46,6 +46,10 @@ public class ProcessStartListenerEvent implements AbstractListenerEvent {
     private Flag recovery;
     private Date processStartTime;
 
+    private String projectClusterId;
+    private String projectClusterName;
+    private String projectAppId;
+
     @Override
     public ListenerEventType getEventType() {
         return ListenerEventType.PROCESS_START;

@@ -23,28 +23,30 @@ apollo:
   autoUpdateInjectedSpringProperties: true
 
 spring:
+  cloud.kubernetes.enabled: false
+  banner:
+    charset: UTF-8
+  jackson:
+    time-zone: UTC
+    date-format: "yyyy-MM-dd HH:mm:ss"
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
-    username: root
-    password: xj2022
+    url: jdbc:mysql://172.16.28.81:3306/stellarops
+    username: user_stellarops
+    password: fjTKDygRTw43oda
   quartz:
     properties:
       org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
 
-master:
-  server-load-protection:
-    # If set true, will open master overload protection
-    enabled: true
-    # Master max cpu usage, when the master's cpu usage is smaller then this value, master server can execute workflow.
-    max-cpu-usage-percentage-thresholds: 9.9
-    # Master max JVM memory usage , when the master's jvm memory usage is smaller then this value, master server can execute workflow.
-    max-jvm-memory-usage-percentage-thresholds: 9.9
-    # Master max System memory usage , when the master's system memory usage is smaller then this value, master server can execute workflow.
-    max-system-memory-usage-percentage-thresholds: 9.9
-    # Master max disk usage , when the master's disk usage is smaller then this value, master server can execute workflow.
-    max-disk-usage-percentage-thresholds: 9.9
 
+alert:
+  port: 50052
+  # Mark each alert of alert server if late after x milliseconds as failed.
+  # Define value is (0 = infinite), and alert server would be waiting alert result.
+  wait-timeout: 0
+  max-heartbeat-interval: 60s
+  query_alert_threshold: 100
+  
 registry:
   type: zookeeper
   zookeeper:

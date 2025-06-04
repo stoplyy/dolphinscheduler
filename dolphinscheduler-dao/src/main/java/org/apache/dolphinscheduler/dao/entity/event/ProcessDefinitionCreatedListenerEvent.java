@@ -67,7 +67,7 @@ public class ProcessDefinitionCreatedListenerEvent implements AbstractListenerEv
     /**
      * project code
      */
-    private long projectCode;
+    private Long projectCode;
 
     /**
      * description
@@ -158,6 +158,10 @@ public class ProcessDefinitionCreatedListenerEvent implements AbstractListenerEv
      *
      */
     List<ProcessTaskRelationLog> taskRelationList;
+
+    private String projectClusterId;
+    private String projectClusterName;
+    private String projectAppId;
 
     public ProcessDefinitionCreatedListenerEvent(ProcessDefinition processDefinition) {
         this.setId(processDefinition.getId());

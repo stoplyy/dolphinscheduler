@@ -17,11 +17,19 @@
 
 package org.apache.dolphinscheduler.plugin.alert.http;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.alert.api.AlertResult;
 import org.apache.dolphinscheduler.alert.api.HttpServiceRetryStrategy;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -33,18 +41,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 public final class HttpSender {
@@ -66,6 +65,7 @@ public final class HttpSender {
     private final int timeout;
     private String url;
     private HttpRequestBase httpRequest;
+    private final FreemarkerHelper freemarkerHelper;
 
     public HttpSender(Map<String, String> paramsMap) {
 
@@ -77,10 +77,11 @@ public final class HttpSender {
         timeout = StringUtils.isNotBlank(paramsMap.get(HttpAlertConstants.NAME_TIMEOUT))
                 ? Integer.parseInt(paramsMap.get(HttpAlertConstants.NAME_TIMEOUT))
                 : HttpAlertConstants.DEFAULT_TIMEOUT;
+        freemarkerHelper = new FreemarkerHelper();
     }
 
     public AlertResult send(String msg) {
-
+        log.info("send http alert msg: {}", msg);
         AlertResult alertResult = new AlertResult();
 
         try {
@@ -186,11 +187,15 @@ public final class HttpSender {
         try {
             ObjectNode objectNode = JSONUtils.createObjectNode();
             if (StringUtils.isNotBlank(bodyParams)) {
-                objectNode = JSONUtils.parseObject(bodyParams);
+                String renderBodyParams = freemarkerHelper.paseWithMultiParams(bodyParams,
+                        JSONUtils.toList(msg, Map.class));
+                objectNode = JSONUtils.parseObject(renderBodyParams);
             }
             // set msg content field
             objectNode.put(contentField, msg);
-            StringEntity entity = new StringEntity(JSONUtils.toJsonString(objectNode), DEFAULT_CHARSET);
+            final String bodyString = JSONUtils.toJsonString(objectNode);
+            log.info("http request body: {}", bodyString);
+            StringEntity entity = new StringEntity(bodyString, DEFAULT_CHARSET);
             ((HttpPost) httpRequest).setEntity(entity);
         } catch (Exception e) {
             log.error("send http alert msg  exception : {}", e.getMessage());

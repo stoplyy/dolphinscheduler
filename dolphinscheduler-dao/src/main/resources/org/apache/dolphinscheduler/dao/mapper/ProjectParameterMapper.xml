@@ -49,6 +49,13 @@
         where param_name = #{paramName}
     </select>
 
+    <select id="queryByNameAndProjectCode" resultType="org.apache.dolphinscheduler.dao.entity.ProjectParameter">
+        select
+        <include refid="baseSql"/>
+        from t_ds_project_parameter
+        where param_name = #{paramName} and project_code = #{projectCode}
+    </select>
+
     <select id="queryProjectParameterListPaging" resultType="org.apache.dolphinscheduler.dao.entity.ProjectParameter">
         select
         <include refid="baseSql"/>

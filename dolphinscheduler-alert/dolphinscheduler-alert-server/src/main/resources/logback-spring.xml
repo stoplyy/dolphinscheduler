@@ -17,12 +17,13 @@
   -->
 
 <configuration scan="true" scanPeriod="120 seconds">
-    <property name="log.base" value="logs"/>
+    <property name="log.base" value="logs" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
+        <!-- 颜色区分不同日志级别 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
-                [%level] %date{yyyy-MM-dd HH:mm:ss.SSS Z} %logger{96}:[%line] - %msg%n
+                %highlight([%d{HH:mm:ss.SSS}]) [%thread] %-5level %logger{36}:%line - %msg%n%throwable
             </pattern>
             <charset>UTF-8</charset>
         </encoder>
@@ -39,18 +40,27 @@
         </rollingPolicy>
         <encoder>
             <pattern>
-                [%level] %date{yyyy-MM-dd HH:mm:ss.SSS Z} %logger{96}:[%line] - %msg%n
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger{36}:%line - %msg%n%throwable
             </pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>
 
-    <root level="INFO">
-        <if condition="${DOCKER:-false}">
-            <then>
-                <appender-ref ref="STDOUT"/>
-            </then>
-        </if>
-        <appender-ref ref="ALERTLOGFILE"/>
-    </root>
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="ALERTLOGFILE" />
+        </root>
+    </springProfile>
+
+    <springProfile name="!local">
+        <root level="INFO">
+            <if condition="${DOCKER:-false}">
+                <then>
+                    <appender-ref ref="STDOUT" />
+                </then>
+            </if>
+            <appender-ref ref="ALERTLOGFILE" />
+        </root>
+    </springProfile>
 </configuration>

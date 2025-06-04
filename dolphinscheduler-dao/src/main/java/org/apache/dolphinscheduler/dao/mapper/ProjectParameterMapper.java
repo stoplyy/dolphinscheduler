@@ -31,6 +31,8 @@ public interface ProjectParameterMapper extends BaseMapper<ProjectParameter> {
 
     ProjectParameter queryByCode(@Param("code") long code);
 
+    ProjectParameter queryByNameAndProjectCode(@Param("paramName") String paramName, @Param("projectCode") long projectCode);
+
     List<ProjectParameter> queryByCodes(@Param("codes") Collection<Long> codes);
 
     ProjectParameter queryByName(@Param("paramName") String paramName);

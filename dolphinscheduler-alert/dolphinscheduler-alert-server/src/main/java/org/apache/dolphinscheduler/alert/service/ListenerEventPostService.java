@@ -17,6 +17,18 @@
 
 package org.apache.dolphinscheduler.alert.service;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.curator.shaded.com.google.common.collect.Lists;
 import org.apache.dolphinscheduler.alert.api.AlertChannel;
 import org.apache.dolphinscheduler.alert.api.AlertData;
 import org.apache.dolphinscheduler.alert.api.AlertInfo;
@@ -34,6 +46,9 @@ import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.AlertPluginInstance;
 import org.apache.dolphinscheduler.dao.entity.AlertSendStatus;
 import org.apache.dolphinscheduler.dao.entity.ListenerEvent;
+import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
+import org.apache.dolphinscheduler.dao.entity.Project;
+import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
 import org.apache.dolphinscheduler.dao.entity.event.AbstractListenerEvent;
 import org.apache.dolphinscheduler.dao.entity.event.ProcessDefinitionCreatedListenerEvent;
 import org.apache.dolphinscheduler.dao.entity.event.ProcessDefinitionDeletedListenerEvent;
@@ -47,25 +62,16 @@ import org.apache.dolphinscheduler.dao.entity.event.TaskFailListenerEvent;
 import org.apache.dolphinscheduler.dao.entity.event.TaskStartListenerEvent;
 import org.apache.dolphinscheduler.dao.mapper.AlertPluginInstanceMapper;
 import org.apache.dolphinscheduler.dao.mapper.ListenerEventMapper;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.curator.shaded.com.google.common.collect.Lists;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
-
-import lombok.extern.slf4j.Slf4j;
-
+import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
+import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
+import org.apache.dolphinscheduler.dao.mapper.ProjectParameterMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.github.pagehelper.util.StringUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -82,6 +88,15 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
     @Autowired
     private AlertConfig alertConfig;
 
+    @Autowired
+    private ProjectParameterMapper projectParameterMapper;
+
+    @Autowired
+    private ProjectMapper projectMapper;
+
+    @Autowired
+    private ProcessDefinitionMapper processDefinitionMapper;
+
     public ListenerEventPostService() {
         super("ListenerEventPostService");
     }
@@ -97,6 +112,12 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
                     log.debug("There is no waiting listener events");
                     continue;
                 }
+                log.info("There are {} listener events to be posted", listenerEvents.size());
+                listenerEvents.forEach(event -> {
+                    log.info("Listener event id: {}, type: {}, content: {} postStatus: {} log: {}",
+                            event.getId(), event.getEventType(), event.getContent(), event.getPostStatus(),
+                            event.getLog());
+                });
                 this.send(listenerEvents);
             } catch (Exception e) {
                 log.error("listener event post thread meet an exception", e);
@@ -110,8 +131,8 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
     public void send(List<ListenerEvent> listenerEvents) {
         for (ListenerEvent listenerEvent : listenerEvents) {
             int eventId = listenerEvent.getId();
-            List<AlertPluginInstance> globalAlertInstanceList =
-                    alertPluginInstanceMapper.queryAllGlobalAlertPluginInstanceList();
+            List<AlertPluginInstance> globalAlertInstanceList = alertPluginInstanceMapper
+                    .queryAllGlobalAlertPluginInstanceList();
             if (CollectionUtils.isEmpty(globalAlertInstanceList)) {
                 log.error("post listener event fail,no bind global plugin instance.");
                 listenerEventMapper.updateListenerEvent(eventId, AlertStatus.EXECUTION_FAILURE,
@@ -133,6 +154,7 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
                     .title(event.getTitle())
                     .warnType(WarningType.GLOBAL.getCode())
                     .alertType(event.getEventType().getCode())
+                    .listenerEventType(event.getEventType())
                     .build();
 
             int sendSuccessCount = 0;
@@ -160,8 +182,8 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
             if (sendSuccessCount == globalAlertInstanceList.size()) {
                 listenerEventMapper.deleteById(eventId);
             } else {
-                AlertStatus alertStatus =
-                        sendSuccessCount == 0 ? AlertStatus.EXECUTION_FAILURE : AlertStatus.EXECUTION_PARTIAL_SUCCESS;
+                AlertStatus alertStatus = sendSuccessCount == 0 ? AlertStatus.EXECUTION_FAILURE
+                        : AlertStatus.EXECUTION_PARTIAL_SUCCESS;
                 listenerEventMapper.updateListenerEvent(eventId, alertStatus, JSONUtils.toJsonString(failedPostResults),
                         new Date());
             }
@@ -180,10 +202,10 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
         int pluginDefineId = instance.getPluginDefineId();
         Optional<AlertChannel> alertChannelOptional = alertPluginManager.getAlertChannel(instance.getPluginDefineId());
         if (!alertChannelOptional.isPresent()) {
-            String message =
-                    String.format("Global Alert Plugin %s send error: the channel doesn't exist, pluginDefineId: %s",
-                            pluginInstanceName,
-                            pluginDefineId);
+            String message = String.format(
+                    "Global Alert Plugin %s send error: the channel doesn't exist, pluginDefineId: %s",
+                    pluginInstanceName,
+                    pluginDefineId);
             log.error("Global Alert Plugin {} send error : not found plugin {}", pluginInstanceName, pluginDefineId);
             return new AlertResult("false", message);
         }
@@ -232,29 +254,126 @@ public final class ListenerEventPostService extends BaseDaemonThread implements 
         String content = listenerEvent.getContent();
         switch (listenerEvent.getEventType()) {
             case SERVER_DOWN:
-                return JSONUtils.parseObject(content, ServerDownListenerEvent.class);
+                ServerDownListenerEvent event = JSONUtils.parseObject(content, ServerDownListenerEvent.class);
+                return event;
             case PROCESS_DEFINITION_CREATED:
-                return JSONUtils.parseObject(content, ProcessDefinitionCreatedListenerEvent.class);
+                ProcessDefinitionCreatedListenerEvent processDefinitionCreatedEvent = JSONUtils.parseObject(content,
+                        ProcessDefinitionCreatedListenerEvent.class);
+                if (processDefinitionCreatedEvent != null) {
+                    processDefinitionCreatedEvent
+                            .setProjectAppId(tryFillProjectClusterInfo(processDefinitionCreatedEvent));
+                    if (StringUtil.isEmpty(processDefinitionCreatedEvent.getProjectName())) {
+                        Project project = getProjectInfoByProjectCode(processDefinitionCreatedEvent.getProjectCode());
+                        if (project != null) {
+                            processDefinitionCreatedEvent.setProjectName(project.getName());
+                        }
+                    }
+                }
+                return processDefinitionCreatedEvent;
             case PROCESS_DEFINITION_UPDATED:
-                return JSONUtils.parseObject(content, ProcessDefinitionUpdatedListenerEvent.class);
+                ProcessDefinitionUpdatedListenerEvent processDefinitionUpdatedEvent = JSONUtils.parseObject(content,
+                        ProcessDefinitionUpdatedListenerEvent.class);
+                if (processDefinitionUpdatedEvent != null) {
+                    processDefinitionUpdatedEvent
+                            .setProjectAppId(tryFillProjectClusterInfo(processDefinitionUpdatedEvent));
+                    if (StringUtil.isEmpty(processDefinitionUpdatedEvent.getProjectName())) {
+                        Project project = getProjectInfoByProjectCode(processDefinitionUpdatedEvent.getProjectCode());
+                        if (project != null) {
+                            processDefinitionUpdatedEvent.setProjectName(project.getName());
+                        }
+                    }
+                }
+                return processDefinitionUpdatedEvent;
             case PROCESS_DEFINITION_DELETED:
-                return JSONUtils.parseObject(content, ProcessDefinitionDeletedListenerEvent.class);
+                ProcessDefinitionDeletedListenerEvent processDefinitionDeletedEvent = JSONUtils.parseObject(content,
+                        ProcessDefinitionDeletedListenerEvent.class);
+                if (processDefinitionDeletedEvent != null) {
+                    processDefinitionDeletedEvent
+                            .setProjectAppId(tryFillProjectClusterInfo(processDefinitionDeletedEvent));
+                    if (StringUtil.isEmpty(processDefinitionDeletedEvent.getProjectName())) {
+                        Project project = getProjectInfoByProjectCode(processDefinitionDeletedEvent.getProjectCode());
+                        if (project != null) {
+                            processDefinitionDeletedEvent.setProjectName(project.getName());
+                        }
+                    }
+                }
+                return processDefinitionDeletedEvent;
             case PROCESS_START:
-                return JSONUtils.parseObject(content, ProcessStartListenerEvent.class);
+                ProcessStartListenerEvent processStartEvent = JSONUtils.parseObject(content,
+                        ProcessStartListenerEvent.class);
+                if (processStartEvent != null) {
+                    processStartEvent.setProjectAppId(tryFillProjectClusterInfo(processStartEvent));
+                }
+                return processStartEvent;
             case PROCESS_END:
-                return JSONUtils.parseObject(content, ProcessEndListenerEvent.class);
+                ProcessEndListenerEvent processEndEvent = JSONUtils.parseObject(content, ProcessEndListenerEvent.class);
+                if (processEndEvent != null) {
+                    processEndEvent.setProjectAppId(tryFillProjectClusterInfo(processEndEvent));
+                }
+                return processEndEvent;
             case PROCESS_FAIL:
-                return JSONUtils.parseObject(content, ProcessFailListenerEvent.class);
+                ProcessFailListenerEvent processFailEvent = JSONUtils.parseObject(content,
+                        ProcessFailListenerEvent.class);
+                if (processFailEvent != null) {
+                    processFailEvent.setProjectAppId(tryFillProjectClusterInfo(processFailEvent));
+                }
+                return processFailEvent;
             case TASK_START:
-                return JSONUtils.parseObject(content, TaskStartListenerEvent.class);
+                TaskStartListenerEvent taskStartEvent = JSONUtils.parseObject(content, TaskStartListenerEvent.class);
+                if (taskStartEvent != null) {
+                    taskStartEvent.setProjectAppId(tryFillProjectClusterInfo(taskStartEvent));
+                }
+                return taskStartEvent;
             case TASK_END:
-                return JSONUtils.parseObject(content, TaskEndListenerEvent.class);
+                TaskEndListenerEvent taskEndEvent = JSONUtils.parseObject(content, TaskEndListenerEvent.class);
+                if (taskEndEvent != null) {
+                    taskEndEvent.setProjectAppId(tryFillProjectClusterInfo(taskEndEvent));
+                }
+                return taskEndEvent;
             case TASK_FAIL:
-                return JSONUtils.parseObject(content, TaskFailListenerEvent.class);
+                TaskFailListenerEvent taskFailEvent = JSONUtils.parseObject(content, TaskFailListenerEvent.class);
+                if (taskFailEvent != null) {
+                    taskFailEvent.setProjectAppId(tryFillProjectClusterInfo(taskFailEvent));
+                }
+                return taskFailEvent;
             default:
                 return null;
         }
     }
+
+    private String tryFillProjectClusterInfo(AbstractListenerEvent eventMap) {
+        Long projectCode = eventMap.getProjectCode();
+        if (projectCode != null && projectCode > 0) {
+            return getProjectAppIdByProjectId(projectCode);
+        }
+        return null;
+    }
+
+    private ProcessDefinition getProcessDefinitionByCode(Long processDefinitionCode) {
+        if (processDefinitionCode != null && processDefinitionCode > 0) {
+            return processDefinitionMapper.queryByCode(processDefinitionCode);
+        }
+        return null;
+    }
+
+    private String getProjectAppIdByProjectId(Long projectCode) {
+        ProjectParameter projectParameter = projectParameterMapper.queryByNameAndProjectCode("platform_appid",
+                projectCode);
+        if (projectParameter != null) {
+            return projectParameter.getParamValue();
+        }
+        return null;
+    }
+
+    private Project getProjectInfoByProjectCode(Long projectCode) {
+        Project project = projectMapper.queryByCode(projectCode);
+        if (project != null) {
+            return project;
+        }
+        return null;
+    }
+
+
     @Override
     public void close() {
         log.info("Closed ListenerEventPostService...");

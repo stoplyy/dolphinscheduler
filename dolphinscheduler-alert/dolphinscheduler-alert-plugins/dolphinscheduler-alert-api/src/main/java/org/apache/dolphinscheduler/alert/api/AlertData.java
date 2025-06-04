@@ -19,6 +19,8 @@
 
 package org.apache.dolphinscheduler.alert.api;
 
+import org.apache.dolphinscheduler.common.enums.ListenerEventType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -65,5 +67,7 @@ public class AlertData {
      * AlertType#code
      */
     private int alertType;
+
+    private ListenerEventType listenerEventType;
 
 }

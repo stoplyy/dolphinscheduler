@@ -15,17 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.dolphinscheduler.dao.entity.event;
+package org.apache.dolphinscheduler.plugin.alert.hermes;
 
-import org.apache.dolphinscheduler.common.enums.ListenerEventType;
+import org.apache.dolphinscheduler.alert.api.AlertChannel;
+import org.apache.dolphinscheduler.alert.api.AlertData;
+import org.apache.dolphinscheduler.alert.api.AlertInfo;
+import org.apache.dolphinscheduler.alert.api.AlertResult;
 
-public interface AbstractListenerEvent {
+import java.util.Map;
 
-    ListenerEventType getEventType();
+public final class HermesAlertChannel implements AlertChannel {
 
-    String getTitle();
-
-    default Long getProjectCode(){
-        return 0L;
+    @Override
+    public AlertResult process(AlertInfo alertInfo) {
+        AlertData alertData = alertInfo.getAlertData();
+        Map<String, String> paramsMap = alertInfo.getAlertParams();
+        if (null == paramsMap) {
+            return new AlertResult("false", "http params is null");
+        }
+        
+        return new HermesSender(paramsMap).send(alertData);
     }
 }

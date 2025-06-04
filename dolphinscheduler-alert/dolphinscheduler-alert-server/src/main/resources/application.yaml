@@ -14,8 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+datasource.plugin: mysql
+elk.enable: false
+
+dolphin.force.master.mapper-packages: org.apache.dolphinscheduler
+spring.main.allow-circular-references: true
+poseidon.soter.enabled: false
 
 spring:
+  cloud.kubernetes.enabled: false
   profiles:
     active: postgresql
   jackson:
@@ -54,6 +61,28 @@ mybatis-plus:
       id-type: auto
     banner: false
 
+registry:
+  type: zookeeper
+  zookeeper:
+    namespace: stellarops
+    connect-string: 127.0.0.1:2181
+    retry-policy:
+      base-sleep-time: 60ms
+      max-sleep: 300ms
+      max-retries: 5
+    session-timeout: 30s
+    connection-timeout: 9s
+    block-until-connected: 600ms
+    digest: ~
+
+alert:
+  port: 50052
+  # Mark each alert of alert server if late after x milliseconds as failed.
+  # Define value is (0 = infinite), and alert server would be waiting alert result.
+  wait-timeout: 0
+  max-heartbeat-interval: 60s
+  query_alert_threshold: 100
+  
 server:
   port: 50053
 
@@ -75,40 +104,5 @@ management:
     tags:
       application: ${spring.application.name}
 
-alert:
-  port: 50052
-  # Mark each alert of alert server if late after x milliseconds as failed.
-  # Define value is (0 = infinite), and alert server would be waiting alert result.
-  wait-timeout: 0
-  max-heartbeat-interval: 60s
-  query_alert_threshold: 100
-
-registry:
-  type: zookeeper
-  zookeeper:
-    namespace: dolphinscheduler
-    connect-string: localhost:2181
-    retry-policy:
-      base-sleep-time: 60ms
-      max-sleep: 300ms
-      max-retries: 5
-    session-timeout: 30s
-    connection-timeout: 9s
-    block-until-connected: 600ms
-    digest: ~
-
 metrics:
   enabled: true
-
-# Override by profile
-
----
-spring:
-  config:
-    activate:
-      on-profile: mysql
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
-    username: root
-    password: root

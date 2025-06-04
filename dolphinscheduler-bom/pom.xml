@@ -126,10 +126,16 @@
         <aliyun-voice.version>2.1.4</aliyun-voice.version>
         <curator.version>4.3.0</curator.version>
         <zookeeper.version>3.4.14</zookeeper.version>
+        <freemarker.version>2.3.31</freemarker.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>${freemarker.version}</version>
+            </dependency>
             <!-- aspectj -->
             <dependency>
                 <groupId>org.aspectj</groupId>

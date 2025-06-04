@@ -46,6 +46,10 @@ public class ProcessEndListenerEvent implements AbstractListenerEvent {
     private Date processStartTime;
     private Date processEndTime;
     private String processHost;
+    
+    private String projectClusterId;
+    private String projectClusterName;
+    private String projectAppId;
 
     @Override
     public ListenerEventType getEventType() {
