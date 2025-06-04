@@ -17,6 +17,13 @@
 
 package org.apache.dolphinscheduler.service.alert;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.dolphinscheduler.common.enums.AlertStatus;
 import org.apache.dolphinscheduler.common.enums.ListenerEventType;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
@@ -43,20 +50,11 @@ import org.apache.dolphinscheduler.dao.entity.event.TaskFailListenerEvent;
 import org.apache.dolphinscheduler.dao.entity.event.TaskStartListenerEvent;
 import org.apache.dolphinscheduler.dao.mapper.AlertPluginInstanceMapper;
 import org.apache.dolphinscheduler.dao.mapper.ListenerEventMapper;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.collections4.CollectionUtils;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -80,9 +78,9 @@ public class ListenerEventAlertManager {
     }
 
     public void publishProcessDefinitionCreatedListenerEvent(User user,
-                                                             ProcessDefinition processDefinition,
-                                                             List<TaskDefinitionLog> taskDefinitionLogs,
-                                                             List<ProcessTaskRelationLog> processTaskRelationLogs) {
+            ProcessDefinition processDefinition,
+            List<TaskDefinitionLog> taskDefinitionLogs,
+            List<ProcessTaskRelationLog> processTaskRelationLogs) {
         ProcessDefinitionCreatedListenerEvent event = new ProcessDefinitionCreatedListenerEvent(processDefinition);
         event.setUserName(user.getUserName());
         event.setModifyBy(user.getUserName());
@@ -92,8 +90,8 @@ public class ListenerEventAlertManager {
     }
 
     public void publishProcessDefinitionUpdatedListenerEvent(User user, ProcessDefinition processDefinition,
-                                                             List<TaskDefinitionLog> taskDefinitionLogs,
-                                                             List<ProcessTaskRelationLog> processTaskRelationLogs) {
+            List<TaskDefinitionLog> taskDefinitionLogs,
+            List<ProcessTaskRelationLog> processTaskRelationLogs) {
         ProcessDefinitionUpdatedListenerEvent event = new ProcessDefinitionUpdatedListenerEvent(processDefinition);
         event.setTaskDefinitionLogs(taskDefinitionLogs);
         event.setTaskRelationList(processTaskRelationLogs);
@@ -103,7 +101,7 @@ public class ListenerEventAlertManager {
     }
 
     public void publishProcessDefinitionDeletedListenerEvent(User user, Project project,
-                                                             ProcessDefinition processDefinition) {
+            ProcessDefinition processDefinition) {
         ProcessDefinitionDeletedListenerEvent event = new ProcessDefinitionDeletedListenerEvent();
         event.setProjectId(project.getId());
         event.setProjectCode(project.getCode());
@@ -153,7 +151,7 @@ public class ListenerEventAlertManager {
     }
 
     public void publishProcessFailListenerEvent(ProcessInstance processInstance,
-                                                ProjectUser projectUser) {
+            ProjectUser projectUser) {
         ProcessFailListenerEvent event = new ProcessFailListenerEvent();
         event.setProjectCode(projectUser.getProjectCode());
         event.setProjectName(projectUser.getProjectName());
@@ -172,8 +170,8 @@ public class ListenerEventAlertManager {
     }
 
     public void publishTaskStartListenerEvent(ProcessInstance processInstance,
-                                              TaskInstance taskInstance,
-                                              ProjectUser projectUser) {
+            TaskInstance taskInstance,
+            ProjectUser projectUser) {
         TaskStartListenerEvent event = new TaskStartListenerEvent();
         event.setProjectCode(projectUser.getProjectCode());
         event.setProjectName(projectUser.getProjectName());
@@ -193,8 +191,8 @@ public class ListenerEventAlertManager {
     }
 
     public void publishTaskEndListenerEvent(ProcessInstance processInstance,
-                                            TaskInstance taskInstance,
-                                            ProjectUser projectUser) {
+            TaskInstance taskInstance,
+            ProjectUser projectUser) {
         TaskEndListenerEvent event = new TaskEndListenerEvent();
         event.setProjectCode(projectUser.getProjectCode());
         event.setProjectName(projectUser.getProjectName());
@@ -214,8 +212,8 @@ public class ListenerEventAlertManager {
     }
 
     public void publishTaskFailListenerEvent(ProcessInstance processInstance,
-                                             TaskInstance taskInstance,
-                                             ProjectUser projectUser) {
+            TaskInstance taskInstance,
+            ProjectUser projectUser) {
         TaskFailListenerEvent event = new TaskFailListenerEvent();
         event.setProjectCode(projectUser.getProjectCode());
         event.setProjectName(projectUser.getProjectName());
@@ -271,8 +269,8 @@ public class ListenerEventAlertManager {
     }
 
     private boolean needSendGlobalListenerEvent() {
-        List<AlertPluginInstance> globalPluginInstanceList =
-                alertPluginInstanceMapper.queryAllGlobalAlertPluginInstanceList();
+        List<AlertPluginInstance> globalPluginInstanceList = alertPluginInstanceMapper
+                .queryAllGlobalAlertPluginInstanceList();
         return CollectionUtils.isNotEmpty(globalPluginInstanceList);
     }
 }

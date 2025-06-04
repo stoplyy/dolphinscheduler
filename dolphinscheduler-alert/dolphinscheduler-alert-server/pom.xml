@@ -16,7 +16,7 @@
   ~ limitations under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
@@ -26,12 +26,41 @@
     <artifactId>dolphinscheduler-alert-server</artifactId>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
-    <dependencies>
-        <!-- dolphinscheduler -->
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <artifactId>org.jacoco.agent</artifactId>
+                <groupId>org.jacoco</groupId>
+                <version>0.8.8</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.dolphinscheduler</groupId>
+                <artifactId>dolphinscheduler-bom</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.tuhu.inf</groupId>
+                <artifactId>tuhu-spring-cloud-framework-bom</artifactId>
+                <version>3.3.0-RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-meter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>org.jacoco.agent</artifactId>
+                    <groupId>org.jacoco</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
@@ -39,19 +68,63 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-dao</artifactId>
+            <groupId>com.tuhu</groupId>
+            <artifactId>tuhu-boot-starter-logger</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.dolphinscheduler</groupId>
-                    <artifactId>dolphinscheduler-storage-api</artifactId>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-autoconfigure</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.tuhu.dolphin</groupId>
+            <artifactId>tuhu-spring-cloud-starter-dolphin</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.tuhu.commons</groupId>
+                    <artifactId>commons-log</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.tuhu.orion</groupId>
+            <artifactId>orion-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.4</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.33</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.dolphinscheduler</groupId>
+            <artifactId>dolphinscheduler-dao</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-registry-all</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jsqlparser</artifactId>
+                    <groupId>com.github.jsqlparser</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>auto-service-annotations</artifactId>
+                    <groupId>com.google.auto.service</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -68,10 +141,16 @@
             <artifactId>janino</artifactId>
         </dependency>
 
-        <dependency>
+        <!-- <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-kubernetes-client-config</artifactId>
-        </dependency>
+            <exclusions>
+                <exclusion>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                    <groupId>org.bouncycastle</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency> -->
     </dependencies>
 
     <build>
@@ -79,11 +158,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
-                    <excludes>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>org.apache.dolphinscheduler.alert.AlertServer</mainClass>
+                        </manifest>
+                    </archive>
+                    <!-- <excludes>
                         <exclude>*.yaml</exclude>
                         <exclude>*.xml</exclude>
-                    </excludes>
+                    </excludes> -->
                 </configuration>
             </plugin>
             <plugin>
@@ -96,7 +182,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <finalName>alert-server</finalName>
+                            <!-- <finalName>alert-server</finalName> -->
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-alert-server.xml</descriptor>
                             </descriptors>

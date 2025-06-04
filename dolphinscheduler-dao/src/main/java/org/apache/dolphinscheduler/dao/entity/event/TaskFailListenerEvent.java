@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TaskFailListenerEvent implements AbstractListenerEvent {
 
-    private long projectCode;
+    private Long projectCode;
     private String projectName;
     private String owner;
     private long processId;
@@ -46,6 +46,10 @@ public class TaskFailListenerEvent implements AbstractListenerEvent {
     private Date taskEndTime;
     private String taskHost;
     private String logPath;
+
+    private String projectClusterId;
+    private String projectClusterName;
+    private String projectAppId;
 
     @Override
     public ListenerEventType getEventType() {

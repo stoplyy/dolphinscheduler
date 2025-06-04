@@ -55,4 +55,13 @@ public enum AlertType {
     public String getDescp() {
         return descp;
     }
+
+    public static AlertType of(int code) {
+        for (AlertType alertType : AlertType.values()) {
+            if (alertType.getCode() == code) {
+                return alertType;
+            }
+        }
+        return null;
+    }
 }

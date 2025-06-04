@@ -53,3 +53,6 @@ dolphinscheduler-master/logs
 dolphinscheduler-api/logs
 deploy/docker/mysql/**
 **/bin
+.vscode/**
+**/.vscode/**
+

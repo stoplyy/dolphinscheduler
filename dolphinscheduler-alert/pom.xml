@@ -36,9 +36,21 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <artifactId>org.jacoco.agent</artifactId>
+                <groupId>org.jacoco</groupId>
+                <version>0.8.8</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.dolphinscheduler</groupId>
                 <artifactId>dolphinscheduler-bom</artifactId>
                 <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.tuhu.inf</groupId>
+                <artifactId>tuhu-spring-cloud-framework-bom</artifactId>
+                <version>2.5.2-RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

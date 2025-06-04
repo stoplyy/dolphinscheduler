@@ -40,6 +40,10 @@ public class ProcessDefinitionDeletedListenerEvent implements AbstractListenerEv
     private Integer userId;
     private String modifiedBy;
     private Date eventTime;
+    
+    private String projectClusterId;
+    private String projectClusterName;
+    private String projectAppId;
     @Override
     public ListenerEventType getEventType() {
         return ListenerEventType.PROCESS_DEFINITION_DELETED;

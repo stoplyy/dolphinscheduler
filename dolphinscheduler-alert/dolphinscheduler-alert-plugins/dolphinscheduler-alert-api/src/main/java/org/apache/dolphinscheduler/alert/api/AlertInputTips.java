@@ -58,7 +58,13 @@ public enum AlertInputTips {
     ALIYUN_VIICE_ACCESSKEYID("please input accessKeyId", "请输入accessKeyId"),
     ALIYUN_VIICE_ACCESSKEY_SECRET("please input accessKeySecret", "请输入accessKeySecret"),
     ANNOTATION("please input annotation in json form", "请输入json格式的annotation"),
-    GENERATOR_URL("please input Generator URL", "请输入生成地址");
+    GENERATOR_URL("please input Generator URL", "请输入生成地址"),
+    //hermes alert
+    FILTER_TASK_TYPE_CODE("please input filter task type code, use `,` to separate multiple task type codes", "请输入过滤任务类型, 使用 `,` 来分割多个任务类型代码"), 
+    HERMES_EVENT_CODE("please input hermes event code", "请输入hermes事件代码"), 
+    IGNORE_PROJECT_CODE("please input ignore project code, use `,` to separate multiple project codes", "请输入忽略项目代码, 使用 `,` 来分割多个项目代码"), 
+    TOKEN("please input token", "请输入token"),
+    ENV("please input env", "请输入环境 work/prod");
 
     private final String enMsg;
     private final String zhMsg;
