@@ -182,7 +182,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <!-- <finalName>alert-server</finalName> -->
+                            <finalName>alert-server</finalName>
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-alert-server.xml</descriptor>
                             </descriptors>
