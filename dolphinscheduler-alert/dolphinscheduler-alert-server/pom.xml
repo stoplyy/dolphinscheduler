@@ -25,7 +25,7 @@
     </parent>
     <artifactId>dolphinscheduler-alert-server</artifactId>
     <packaging>jar</packaging>
-    <name>${project.artifactId}</name>
+    <!-- <name>${project.artifactId}</name> -->
 
     <dependencyManagement>
         <dependencies>
