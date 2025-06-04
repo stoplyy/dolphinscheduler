@@ -154,6 +154,7 @@
     </dependencies>
 
     <build>
+        <finalName>alert-server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -182,7 +183,6 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <finalName>alert-server</finalName>
                             <descriptors>
                                 <descriptor>src/main/assembly/dolphinscheduler-alert-server.xml</descriptor>
                             </descriptors>
