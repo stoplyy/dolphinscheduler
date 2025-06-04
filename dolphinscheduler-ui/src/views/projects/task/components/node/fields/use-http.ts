@@ -56,7 +56,8 @@ export function useHttp(model: { [field: string]: any }): IJsonItem[] {
           if (!value) {
             return new Error(t('project.node.http_url_tips'))
           }
-          if (value.search(new RegExp(/http[s]{0,1}:\/\/\S*/, 'i'))) {
+          // 修改正则表达式以允许以 ${xxx} 开头或者输入 https 或 http 开头的字符串
+          if (!value.match(/^(?:\$\{[^}]+\}|http[s]?:\/\/\S*)/i)) {
             return new Error(t('project.node.http_url_validator'))
           }
         }
@@ -168,7 +169,7 @@ export function useHttp(model: { [field: string]: any }): IJsonItem[] {
           if (!Number.isInteger(parseInt(value))) {
             return new Error(
               t('project.node.connect_timeout') +
-                t('project.node.positive_integer_tips')
+              t('project.node.positive_integer_tips')
             )
           }
         }
@@ -191,7 +192,7 @@ export function useHttp(model: { [field: string]: any }): IJsonItem[] {
           if (!Number.isInteger(parseInt(value))) {
             return new Error(
               t('project.node.socket_timeout') +
-                t('project.node.positive_integer_tips')
+              t('project.node.positive_integer_tips')
             )
           }
         }

@@ -19,17 +19,17 @@ package org.apache.dolphinscheduler.plugin.datasource.ssh;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sshd.client.SshClient;
-import org.apache.sshd.client.session.ClientSession;
-import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
-import org.apache.sshd.common.util.security.SecurityUtils;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.time.Duration;
 import java.util.Collection;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
+import org.apache.sshd.common.util.security.SecurityUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,9 +41,9 @@ public class SshClientWrapper implements AutoCloseable {
     private final ClientSession clientSession;
 
     public SshClientWrapper(
-                            String ip, Integer port, String userName, String password, String privateKey)
-                                                                                                          throws IOException,
-                                                                                                          GeneralSecurityException {
+            String ip, Integer port, String userName, String password, String privateKey)
+            throws IOException,
+            GeneralSecurityException {
         checkNotNull(ip);
         checkNotNull(port);
         checkNotNull(userName);
@@ -51,9 +51,11 @@ public class SshClientWrapper implements AutoCloseable {
         if (StringUtils.isNotEmpty(password)) {
             clientSession.addPasswordIdentity(password);
         }
-        if (StringUtils.isNotEmpty(privateKey)) {
+        String privateKString = privateKey;
+        if (StringUtils.isNotEmpty(privateKString)) {
+            privateKString = SSHUtils.loadSystemPrivateKey(privateKString);
             KeyPairResourceLoader loader = SecurityUtils.getKeyPairResourceParser();
-            Collection<KeyPair> keyPairCollection = loader.loadKeyPairs(null, null, null, privateKey);
+            Collection<KeyPair> keyPairCollection = loader.loadKeyPairs(null, null, null, privateKString);
             for (KeyPair keyPair : keyPairCollection) {
                 clientSession.addPublicKeyIdentity(keyPair);
             }

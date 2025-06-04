@@ -700,6 +700,7 @@ public class TaskDefinitionServiceImpl extends BaseServiceImpl implements TaskDe
                 new PageInfo<>(taskFilterRequest.getPageNo(), taskFilterRequest.getPageSize());
         pageInfo.setTotal((int) taskDefinitionIPage.getTotal());
         pageInfo.setTotalList(taskDefinitionIPage.getRecords());
+        pageInfo.setTotalPage((int)taskDefinitionIPage.getPages());
         return pageInfo;
     }
 
@@ -1104,6 +1105,7 @@ public class TaskDefinitionServiceImpl extends BaseServiceImpl implements TaskDe
 
         pageInfo.setTotalList(taskDefinitionLogs);
         pageInfo.setTotal((int) taskDefinitionVersionsPaging.getTotal());
+        pageInfo.setTotalPage((int) taskDefinitionVersionsPaging.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
         return result;
@@ -1203,6 +1205,7 @@ public class TaskDefinitionServiceImpl extends BaseServiceImpl implements TaskDe
         PageInfo<TaskMainInfo> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) taskMainInfoIPage.getTotal());
         pageInfo.setTotalList(taskMainInfoIPage.getRecords());
+        pageInfo.setTotalPage((int) taskMainInfoIPage.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
         return result;

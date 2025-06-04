@@ -137,13 +137,13 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> createUser(User loginUser,
-                                          String userName,
-                                          String userPassword,
-                                          String email,
-                                          int tenantId,
-                                          String phone,
-                                          String queue,
-                                          int state) throws Exception {
+            String userName,
+            String userPassword,
+            String email,
+            int tenantId,
+            String phone,
+            String queue,
+            int state) throws Exception {
         Map<String, Object> result = new HashMap<>();
 
         // check all user params
@@ -183,12 +183,12 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     @Override
     @Transactional
     public User createUser(String userName,
-                           String userPassword,
-                           String email,
-                           int tenantId,
-                           String phone,
-                           String queue,
-                           int state) {
+            String userPassword,
+            String email,
+            int tenantId,
+            String phone,
+            String queue,
+            int state) {
         User user = new User();
         Date now = new Date();
 
@@ -227,7 +227,8 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
         user.setUserType(userType);
         user.setCreateTime(now);
         user.setUpdateTime(now);
-        user.setTenantId(-1);
+        // 1 为默认租户
+        user.setTenantId(1);
         user.setQueue("");
         user.setState(Flag.YES.getCode());
 
@@ -342,6 +343,7 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
         PageInfo<User> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) scheduleList.getTotal());
         pageInfo.setTotalList(scheduleList.getRecords());
+        pageInfo.setTotalPage((int) scheduleList.getPages());
         result.setData(pageInfo);
         putMsg(result, Status.SUCCESS);
 
@@ -351,15 +353,15 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     @Override
     @Transactional
     public User updateUser(User loginUser,
-                           Integer userId,
-                           String userName,
-                           String userPassword,
-                           String email,
-                           Integer tenantId,
-                           String phone,
-                           String queue,
-                           int state,
-                           String timeZone) {
+            Integer userId,
+            String userName,
+            String userPassword,
+            String email,
+            Integer tenantId,
+            String phone,
+            String queue,
+            int state,
+            String timeZone) {
         if (resourcePermissionCheckService.functionDisabled()) {
             throw new ServiceException(Status.FUNCTION_DISABLED);
         }
@@ -496,9 +498,10 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
 
     /**
      * revoke the project permission for specified user by id
-     * @param loginUser     Login user
-     * @param userId        User id
-     * @param projectIds   project id array
+     * 
+     * @param loginUser  Login user
+     * @param userId     User id
+     * @param projectIds project id array
      * @return
      */
     @Override
@@ -541,8 +544,8 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     /**
      * grant project with read permission
      *
-     * @param loginUser login user
-     * @param userId user id
+     * @param loginUser  login user
+     * @param userId     user id
      * @param projectIds project id array
      * @return grant result code
      */
@@ -1121,7 +1124,7 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
      * @throws IOException io exception
      */
     private void copyResourceFiles(String oldTenantCode, String newTenantCode, ResourceComponent resourceComponent,
-                                   String srcBasePath, String dstBasePath) {
+            String srcBasePath, String dstBasePath) {
         List<ResourceComponent> components = resourceComponent.getChildren();
 
         try {
@@ -1196,7 +1199,8 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     }
 
     /**
-     * activate user, only system admin have permission, change user state code 0 to 1
+     * activate user, only system admin have permission, change user state code 0 to
+     * 1
      *
      * @param loginUser login user
      * @param userName  user name
@@ -1244,7 +1248,8 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     }
 
     /**
-     * activate user, only system admin have permission, change users state code 0 to 1
+     * activate user, only system admin have permission, change users state code 0
+     * to 1
      *
      * @param loginUser login user
      * @param userNames user name
@@ -1313,12 +1318,12 @@ public class UsersServiceImpl extends BaseServiceImpl implements UsersService {
     @Override
     @Transactional
     public User createUserIfNotExists(String userName,
-                                      String userPassword,
-                                      String email,
-                                      String phone,
-                                      String tenantCode,
-                                      String queue,
-                                      int state) {
+            String userPassword,
+            String email,
+            String phone,
+            String tenantCode,
+            String queue,
+            int state) {
         User user = userMapper.queryByUserNameAccurately(userName);
         if (Objects.isNull(user)) {
             Tenant tenant = tenantMapper.queryByTenantCode(tenantCode);

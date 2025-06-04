@@ -18,6 +18,7 @@
 package org.apache.dolphinscheduler.server.master.runner.task.dynamic;
 
 import org.apache.dolphinscheduler.common.constants.CommandKeyConstants;
+import org.apache.dolphinscheduler.common.constants.PlatformConstant;
 import org.apache.dolphinscheduler.common.enums.Flag;
 import org.apache.dolphinscheduler.common.enums.WorkflowExecutionStatus;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
@@ -54,6 +55,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -80,12 +82,12 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
     private boolean haveBeenCanceled = false;
 
     public DynamicLogicTask(TaskExecutionContext taskExecutionContext,
-                            ProcessInstanceDao processInstanceDao,
-                            TaskInstanceDao taskInstanceDao,
-                            SubWorkflowService subWorkflowService,
-                            ProcessService processService,
-                            ProcessDefinitionMapper processDefineMapper,
-                            CommandMapper commandMapper) {
+            ProcessInstanceDao processInstanceDao,
+            TaskInstanceDao taskInstanceDao,
+            SubWorkflowService subWorkflowService,
+            ProcessService processService,
+            ProcessDefinitionMapper processDefineMapper,
+            CommandMapper commandMapper) {
         super(taskExecutionContext,
                 JSONUtils.parseObject(taskExecutionContext.getTaskParams(), new TypeReference<DynamicParameters>() {
                 }));
@@ -110,8 +112,8 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
         }
 
         // if already exists sub process instance, do not generate again
-        List<ProcessInstance> existsSubProcessInstanceList =
-                subWorkflowService.getAllDynamicSubWorkflow(processInstance.getId(), taskInstance.getTaskCode());
+        List<ProcessInstance> existsSubProcessInstanceList = subWorkflowService
+                .getAllDynamicSubWorkflow(processInstance.getId(), taskInstance.getTaskCode());
         if (CollectionUtils.isEmpty(existsSubProcessInstanceList)) {
             generateSubWorkflowInstance(parameterGroup);
         } else {
@@ -132,8 +134,8 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
                 break;
             case START_FAILURE_TASK_PROCESS:
             case RECOVER_TOLERANCE_FAULT_PROCESS:
-                List<ProcessInstance> failedProcessInstances =
-                        subWorkflowService.filterFailedProcessInstances(existsSubProcessInstanceList);
+                List<ProcessInstance> failedProcessInstances = subWorkflowService
+                        .filterFailedProcessInstances(existsSubProcessInstanceList);
                 failedProcessInstances.forEach(processInstance -> {
                     processInstance.setState(WorkflowExecutionStatus.WAIT_TO_RUN);
                     processInstanceDao.updateById(processInstance);
@@ -142,15 +144,17 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
         }
     }
 
-    public void generateSubWorkflowInstance(List<Map<String, String>> parameterGroup) throws MasterTaskExecuteException {
+    public void generateSubWorkflowInstance(List<Map<String, String>> parameterGroup)
+            throws MasterTaskExecuteException {
         List<ProcessInstance> processInstanceList = new ArrayList<>();
-        ProcessDefinition subProcessDefinition =
-                processDefineMapper.queryByCode(taskParameters.getProcessDefinitionCode());
+        ProcessDefinition subProcessDefinition = processDefineMapper
+                .queryByCode(taskParameters.getProcessDefinitionCode());
         for (Map<String, String> parameters : parameterGroup) {
             String dynamicStartParams = JSONUtils.toJsonString(parameters);
             Command command = DynamicCommandUtils.createCommand(processInstance, subProcessDefinition.getCode(),
                     subProcessDefinition.getVersion(), parameters);
-            // todo: set id to -1? we use command to generate sub process instance, but the generate method will use the
+            // todo: set id to -1? we use command to generate sub process instance, but the
+            // generate method will use the
             // command id to do
             // somethings
             command.setId(-1);
@@ -194,36 +198,70 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
 
     public List<Map<String, String>> generateParameterGroup() {
         List<DynamicInputParameter> dynamicInputParameters = getDynamicInputParameters();
-        Set<String> filterStrings =
-                Arrays.stream(StringUtils.split(taskParameters.getFilterCondition(), ",")).map(String::trim)
-                        .collect(Collectors.toSet());
+        Set<String> filterStrings = Arrays.stream(StringUtils.split(taskParameters.getFilterCondition(), ","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
 
         List<List<DynamicInputParameter>> allParameters = new ArrayList<>();
+        boolean needExpanded = false;
         for (DynamicInputParameter dynamicInputParameter : dynamicInputParameters) {
             List<DynamicInputParameter> singleParameters = new ArrayList<>();
             String value = dynamicInputParameter.getValue();
             String separator = dynamicInputParameter.getSeparator();
-            List<String> valueList =
-                    Arrays.stream(StringUtils.split(value, separator)).map(String::trim).collect(Collectors.toList());
+            if (PlatformConstant.DYNAMIC_LIST_SEPAROTOR.equalsIgnoreCase(separator)) {
+                needExpanded = true;
+                List<Object> valueList = JSONUtils.toList(value, Object.class);
+                valueList.forEach(v -> {
+                    DynamicInputParameter singleParameter = new DynamicInputParameter();
+                    singleParameter.setName(dynamicInputParameter.getName());
+                    singleParameter.setValue(JSONUtils.toJsonString(v));
+                    singleParameter.setSeparator(separator);
+                    singleParameters.add(singleParameter);
+                });
+            } else {
+                List<String> valueList = Arrays.stream(StringUtils.split(value, separator)).map(String::trim)
+                        .collect(Collectors.toList());
 
-            valueList = valueList.stream().filter(v -> !filterStrings.contains(v)).collect(Collectors.toList());
-
-            for (String v : valueList) {
-                DynamicInputParameter singleParameter = new DynamicInputParameter();
-                singleParameter.setName(dynamicInputParameter.getName());
-                singleParameter.setValue(v);
-                singleParameters.add(singleParameter);
+                valueList = valueList.stream().filter(v -> !filterStrings.contains(v)).collect(Collectors.toList());
+                for (String v : valueList) {
+                    DynamicInputParameter singleParameter = new DynamicInputParameter();
+                    singleParameter.setName(dynamicInputParameter.getName());
+                    singleParameter.setValue(v);
+                    singleParameters.add(singleParameter);
+                }
             }
             allParameters.add(singleParameters);
         }
 
         // use Sets.cartesianProduct to get the cartesian product of all parameters
         List<List<DynamicInputParameter>> cartesianProduct = Lists.cartesianProduct(allParameters);
+        List<List<DynamicInputParameter>> expandedCartesianProduct = new ArrayList<>();
+        if (needExpanded) {
+            cartesianProduct.forEach(parameters -> {
+                List<DynamicInputParameter> appendedParameters = new ArrayList<>();
+                parameters.forEach(parameter -> {
+                    if (PlatformConstant.DYNAMIC_LIST_SEPAROTOR.equalsIgnoreCase(parameter.getSeparator())) {
+                        Map<String, String> map = JSONUtils.toMap(parameter.getValue());
+                        for (Map.Entry<String, String> entry : map.entrySet()) {
+                            DynamicInputParameter dynamicInputParameter = new DynamicInputParameter();
+                            dynamicInputParameter.setName(parameter.getName() + "." + entry.getKey());
+                            dynamicInputParameter.setValue(entry.getValue());
+                            dynamicInputParameter.setSeparator(",");
+                            appendedParameters.add(dynamicInputParameter);
+                        }
+                    } else {
+                        appendedParameters.add(parameter);
+                    }
+                });
+                expandedCartesianProduct.add(appendedParameters);
+            });
+        }
 
         // convert cartesian product to parameter group List<Map<name:value>>
-        List<Map<String, String>> parameterGroup = cartesianProduct.stream().map(
-                inputParameterList -> inputParameterList.stream().collect(
-                        Collectors.toMap(DynamicInputParameter::getName, DynamicInputParameter::getValue)))
+        List<Map<String, String>> parameterGroup = (needExpanded ? expandedCartesianProduct : cartesianProduct)
+                .stream().map(
+                        inputParameterList -> inputParameterList.stream().collect(
+                                Collectors.toMap(DynamicInputParameter::getName, DynamicInputParameter::getValue)))
                 .collect(Collectors.toList());
 
         log.info("parameter group size: {}", parameterGroup.size());
@@ -258,12 +296,13 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
         }
     }
 
-    private void changeRunningSubprocessInstancesToStop(WorkflowExecutionStatus stopStatus) throws MasterTaskExecuteException {
+    private void changeRunningSubprocessInstancesToStop(WorkflowExecutionStatus stopStatus)
+            throws MasterTaskExecuteException {
         this.haveBeenCanceled = true;
-        List<ProcessInstance> existsSubProcessInstanceList =
-                subWorkflowService.getAllDynamicSubWorkflow(processInstance.getId(), taskInstance.getTaskCode());
-        List<ProcessInstance> runningSubProcessInstanceList =
-                subWorkflowService.filterRunningProcessInstances(existsSubProcessInstanceList);
+        List<ProcessInstance> existsSubProcessInstanceList = subWorkflowService
+                .getAllDynamicSubWorkflow(processInstance.getId(), taskInstance.getTaskCode());
+        List<ProcessInstance> runningSubProcessInstanceList = subWorkflowService
+                .filterRunningProcessInstances(existsSubProcessInstanceList);
         for (ProcessInstance subProcessInstance : runningSubProcessInstanceList) {
             subProcessInstance.setState(stopStatus);
             processInstanceDao.updateById(subProcessInstance);
@@ -285,9 +324,8 @@ public class DynamicLogicTask extends BaseAsyncLogicTask<DynamicParameters> {
     }
 
     private void sendToSubProcess(TaskExecutionContext taskExecutionContext, ProcessInstance subProcessInstance) {
-        final ITaskInstanceExecutionEventListener iTaskInstanceExecutionEventListener =
-                SingletonJdkDynamicRpcClientProxyFactory
-                        .getProxyClient(subProcessInstance.getHost(), ITaskInstanceExecutionEventListener.class);
+        final ITaskInstanceExecutionEventListener iTaskInstanceExecutionEventListener = SingletonJdkDynamicRpcClientProxyFactory
+                .getProxyClient(subProcessInstance.getHost(), ITaskInstanceExecutionEventListener.class);
         final WorkflowInstanceStateChangeEvent workflowInstanceStateChangeEvent = new WorkflowInstanceStateChangeEvent(
                 taskExecutionContext.getProcessInstanceId(),
                 taskExecutionContext.getTaskInstanceId(),

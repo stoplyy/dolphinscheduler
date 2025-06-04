@@ -17,6 +17,14 @@
 
 package org.apache.dolphinscheduler.plugin.task.http;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.common.utils.DateUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.AbstractTask;
@@ -28,9 +36,6 @@ import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
@@ -44,15 +49,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 public class HttpTask extends AbstractTask {
@@ -134,25 +133,36 @@ public class HttpTask extends AbstractTask {
         RequestBuilder builder = createRequestBuilder();
 
         // replace placeholder,and combine local and global parameters
-        Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+        final Map<String, String> prepareParamMap = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
 
         List<HttpProperty> httpPropertyList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(httpParameters.getHttpParams())) {
             for (HttpProperty httpProperty : httpParameters.getHttpParams()) {
                 String jsonObject = JSONUtils.toJsonString(httpProperty);
-                String params =
-                        ParameterUtils.convertParameterPlaceholders(jsonObject, ParameterUtils.convert(paramsMap));
+                String params = ParameterUtils.convertParameterPlaceholders(jsonObject, prepareParamMap);
                 log.info("http request params：{}", params);
                 httpPropertyList.add(JSONUtils.parseObject(params, HttpProperty.class));
             }
         }
-        String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(),
-                ParameterUtils.convert(paramsMap));
+
+        String httpBody = ParameterUtils.convertParameterPlaceholders(httpParameters.getHttpBody(), prepareParamMap);
         addRequestParams(builder, httpPropertyList, httpBody);
-        String requestUrl =
-                ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(), ParameterUtils.convert(paramsMap));
+
+        String requestUrl = ParameterUtils.convertParameterPlaceholders(httpParameters.getUrl(), prepareParamMap);
         HttpUriRequest request = builder.setUri(requestUrl).build();
         setHeaders(request, httpPropertyList);
+
+        if (httpParameters.getCondition() != null) {
+            httpParameters.setCondition(
+                    ParameterUtils.convertParameterPlaceholders(httpParameters.getCondition(), prepareParamMap));
+        }
+
+        log.info("http request url: {}, method: {}, headers: {}, body: {} ,condition: {}", requestUrl,
+                httpParameters.getHttpMethod(),
+                JSONUtils.toJsonString(request.getAllHeaders()),
+                httpBody,
+                httpParameters.getCondition());
+
         return client.execute(request);
     }
 
@@ -162,7 +172,7 @@ public class HttpTask extends AbstractTask {
      * @param httpResponse http response
      * @return response body
      * @throws ParseException parse exception
-     * @throws IOException io exception
+     * @throws IOException    io exception
      */
     protected String getResponseBody(CloseableHttpResponse httpResponse) throws ParseException, IOException {
         if (httpResponse == null) {
@@ -188,7 +198,7 @@ public class HttpTask extends AbstractTask {
     /**
      * valid response
      *
-     * @param body body
+     * @param body       body
      * @param statusCode status code
      * @return exit status code
      */
@@ -247,7 +257,7 @@ public class HttpTask extends AbstractTask {
     /**
      * add request params
      *
-     * @param builder buidler
+     * @param builder          buidler
      * @param httpPropertyList http property list
      */
     protected void addRequestParams(RequestBuilder builder, List<HttpProperty> httpPropertyList, String httpBody) {
@@ -259,19 +269,19 @@ public class HttpTask extends AbstractTask {
         }
 
         if (CollectionUtils.isNotEmpty(httpPropertyList)) {
-            ObjectNode jsonParam = JSONUtils.createObjectNode();
+            ObjectNode bodyParams = JSONUtils.createObjectNode();
             for (HttpProperty property : httpPropertyList) {
                 if (property.getHttpParametersType() != null) {
                     if (property.getHttpParametersType().equals(HttpParametersType.PARAMETER)) {
                         builder.addParameter(property.getProp(), property.getValue());
                     } else if (property.getHttpParametersType().equals(HttpParametersType.BODY)) {
-                        jsonParam.put(property.getProp(), property.getValue());
+                        bodyParams.put(property.getProp(), property.getValue());
                     }
                 }
             }
-            if (builder.getEntity() == null) {
+            if (builder.getEntity() == null && bodyParams.size() > 0) {
                 builder.setEntity(new StringEntity(
-                        jsonParam.toString(),
+                        bodyParams.toString(),
                         ContentType.create(ContentType.APPLICATION_JSON.getMimeType(),
                                 StandardCharsets.UTF_8)));
             }
@@ -281,7 +291,7 @@ public class HttpTask extends AbstractTask {
     /**
      * set headers
      *
-     * @param request request
+     * @param request          request
      * @param httpPropertyList http property list
      */
     protected void setHeaders(HttpUriRequest request, List<HttpProperty> httpPropertyList) {

@@ -36,9 +36,9 @@ import com.google.common.collect.Lists;
 public class DynamicCommandUtils {
 
     static public Command createCommand(ProcessInstance processInstance,
-                                        Long subProcessDefinitionCode,
-                                        Integer subProcessDefinitionVersion,
-                                        Map<String, String> parameters) {
+            Long subProcessDefinitionCode,
+            Integer subProcessDefinitionVersion,
+            Map<String, String> parameters) {
         Command command = new Command();
         if (processInstance.getCommandType().equals(CommandType.START_PROCESS)) {
             command.setCommandType(CommandType.DYNAMIC_GENERATION);
@@ -65,6 +65,7 @@ public class DynamicCommandUtils {
         command.setProcessInstancePriority(processInstance.getProcessInstancePriority());
         command.setWorkerGroup(processInstance.getWorkerGroup());
         command.setDryRun(processInstance.getDryRun());
+        command.setTenantCode(processInstance.getTenantCode());
         return command;
     }
 

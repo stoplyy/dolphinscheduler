@@ -17,12 +17,28 @@
 
 package org.apache.dolphinscheduler.plugin.task.remoteshell;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.dolphinscheduler.common.utils.FileUtils;
 import org.apache.dolphinscheduler.plugin.datasource.ssh.SSHUtils;
 import org.apache.dolphinscheduler.plugin.datasource.ssh.param.SSHConnectionParam;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
+import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
+import org.apache.dolphinscheduler.plugin.task.api.enums.DataType;
+import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
+import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parser.TaskOutputParameterParser;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannelEvent;
@@ -30,35 +46,47 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.apache.sshd.sftp.client.fs.SftpFileSystem;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RemoteExecutor implements AutoCloseable {
 
-    static final String REMOTE_SHELL_HOME = "/tmp/dolphinscheduler-remote-shell-%s/";
+    // remote shell home /tmp/dolphinscheduler-remote-shell/{user}/{taskId}
+    static final String REMOTE_SHELL_HOME = "/tmp/dolphinscheduler-remote-shell/%s/%s/";
     static final String STATUS_TAG_MESSAGE = "DOLPHINSCHEDULER-REMOTE-SHELL-TASK-STATUS-";
     static final int TRACK_INTERVAL = 5000;
 
     protected Map<String, String> taskOutputParams = new HashMap<>();
+    protected TaskExecutionContext taskExecutionContext;
+
+    protected List<Property> fileProperties = new ArrayList<>();
+
+    protected List<Property> inputFiles() {
+        return fileProperties.stream().filter(p -> p.getDirect() == Direct.IN).collect(Collectors.toList());
+    }
+
+    protected List<Property> outputFiles() {
+        return fileProperties.stream().filter(p -> p.getDirect() == Direct.OUT).collect(Collectors.toList());
+    }
 
     private SshClient sshClient;
     private ClientSession session;
     private SSHConnectionParam sshConnectionParam;
 
     public RemoteExecutor(SSHConnectionParam sshConnectionParam) {
-
         this.sshConnectionParam = sshConnectionParam;
         initClient();
+    }
+
+    public void bindFiles(List<Property> fileParams, TaskExecutionContext taskExecutionContext) {
+        try {
+            this.taskExecutionContext = taskExecutionContext;
+            fileProperties = fileParams.stream().filter(p -> p.getType().equals(
+                    DataType.FILE)).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new TaskException("SSH connection failed", e);
+        }
     }
 
     private void initClient() {
@@ -71,6 +99,7 @@ public class RemoteExecutor implements AutoCloseable {
             return session;
         }
         try {
+            log.info("SSH connection params:{}", sshConnectionParam.getLogString());
             session = SSHUtils.getSession(sshClient, sshConnectionParam);
             if (session == null || !session.auth().verify().isSuccess()) {
                 throw new TaskException("SSH connection failed");
@@ -85,10 +114,14 @@ public class RemoteExecutor implements AutoCloseable {
         try {
             // only run task if no exist same task
             String pid = getTaskPid(taskId);
+            log.info("Remote shell task pid: {}", pid);
             if (StringUtils.isEmpty(pid)) {
+                // save command to remote
                 saveCommand(taskId, localFile);
-                String runCommand = String.format(COMMAND.RUN_COMMAND, getRemoteShellHome(), taskId,
-                        getRemoteShellHome(), taskId);
+                String runCommand = String.format(COMMAND.RUN_COMMAND,
+                        getRemoteShellHome(taskId), taskId,
+                        getRemoteShellHome(taskId), taskId);
+                // run remote shell task
                 runRemote(runCommand);
             }
             track(taskId);
@@ -105,7 +138,7 @@ public class RemoteExecutor implements AutoCloseable {
         TaskOutputParameterParser taskOutputParameterParser = new TaskOutputParameterParser();
         do {
             pid = getTaskPid(taskId);
-            String trackCommand = String.format(COMMAND.TRACK_COMMAND, logN + 1, getRemoteShellHome(), taskId);
+            String trackCommand = String.format(COMMAND.TRACK_COMMAND, logN + 1, getRemoteShellHome(taskId), taskId);
             String logLine = runRemote(trackCommand);
             if (StringUtils.isEmpty(logLine)) {
                 Thread.sleep(TRACK_INTERVAL);
@@ -123,28 +156,35 @@ public class RemoteExecutor implements AutoCloseable {
     }
 
     public Integer getTaskExitCode(String taskId) throws IOException {
-        String trackCommand = String.format(COMMAND.LOG_TAIL_COMMAND, getRemoteShellHome(), taskId);
+        String trackCommand = String.format(COMMAND.LOG_TAIL_COMMAND, getRemoteShellHome(taskId), taskId);
         String logLine = runRemote(trackCommand);
         int exitCode = -1;
         log.info("Remote shell task run status: {}", logLine);
         if (logLine.contains(STATUS_TAG_MESSAGE)) {
-            String status = logLine.replace(STATUS_TAG_MESSAGE, "").trim();
+            String status = StringUtils.substringAfter(logLine, STATUS_TAG_MESSAGE).trim();
             if (status.equals("0")) {
                 log.info("Remote shell task success");
                 exitCode = 0;
+                downloadFile(taskId);
             } else {
                 log.error("Remote shell task failed");
                 exitCode = Integer.parseInt(status);
             }
         }
         cleanData(taskId);
-        log.error("Remote shell task failed");
         return exitCode;
     }
 
     public void cleanData(String taskId) {
-        String cleanCommand =
-                String.format(COMMAND.CLEAN_COMMAND, getRemoteShellHome(), taskId, getRemoteShellHome(), taskId);
+        String cleanCommand = String.format(COMMAND.CLEAN_COMMAND,
+                getRemoteShellHome(taskId), taskId,
+                getRemoteShellHome(taskId), taskId);
+        for (Property p : inputFiles()) {
+            cleanCommand += String.format(" %s%s", getRemoteShellHome(taskId), p.getProp());
+        }
+        for (Property p : outputFiles()) {
+            cleanCommand += String.format(" %s%s", getRemoteShellHome(taskId), p.getValue());
+        }
         try {
             runRemote(cleanCommand);
         } catch (Exception e) {
@@ -165,22 +205,58 @@ public class RemoteExecutor implements AutoCloseable {
     }
 
     public void saveCommand(String taskId, String localFile) throws IOException {
-        String checkDirCommand = String.format(COMMAND.CHECK_DIR, getRemoteShellHome(), getRemoteShellHome());
+        String checkDirCommand = String.format(COMMAND.CHECK_DIR, getRemoteShellHome(taskId), getRemoteShellHome(
+                taskId));
         runRemote(checkDirCommand);
         uploadScript(taskId, localFile);
+        uploadFile(taskId);
 
         log.info("The final script is: \n{}",
-                runRemote(String.format(COMMAND.CAT_FINAL_SCRIPT, getRemoteShellHome(), taskId)));
+                runRemote(String.format(COMMAND.CAT_FINAL_SCRIPT, getRemoteShellHome(taskId), taskId)));
     }
 
     public void uploadScript(String taskId, String localFile) throws IOException {
 
-        String remotePath = getRemoteShellHome() + taskId + ".sh";
+        String remotePath = getRemoteShellHome(taskId) + taskId + ".sh";
         log.info("upload script from local:{} to remote: {}", localFile, remotePath);
         try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(getSession())) {
             Path path = fs.getPath(remotePath);
             Files.copy(Paths.get(localFile), path);
         }
+    }
+
+    public void uploadFile(String taskId) throws IOException {
+        String remotePath = getRemoteShellHome(taskId);
+        log.info("upload file to remote dic : {}", remotePath);
+        inputFiles().forEach(p -> {
+            try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(getSession())) {
+                Path remoteNodePath = fs.getPath(remotePath + p.getProp());
+                Path localFilePath = Paths.get(getLocalDownloadString(p.getProp()));
+                Files.copy(localFilePath, remoteNodePath);
+                log.info("upload file success, remote path: {}", remoteNodePath);
+            } catch (IOException e) {
+                log.error("upload file failed", e);
+            }
+        });
+    }
+
+    public void downloadFile(String taskId) throws IOException {
+        String remotePath = getRemoteShellHome(taskId);
+        log.info("download file from remote dic : {}", remotePath);
+        outputFiles().forEach(p -> {
+            try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(getSession())) {
+                Path remoteNodePath = fs.getPath(remotePath + p.getValue());
+                Path localFilePath = Paths.get(getLocalDownloadString(p.getValue()));
+                Files.copy(remoteNodePath, localFilePath);
+                log.info("download file success, local path: {}", localFilePath);
+            } catch (IOException e) {
+                log.error("download file failed", e);
+            }
+        });
+    }
+
+    public String getLocalDownloadString(String fileName) {
+        return FileUtils.formatDownloadUpstreamLocalFullPath(taskExecutionContext.getExecutePath(), fileName);
     }
 
     public String runRemote(String command) throws IOException {
@@ -202,8 +278,8 @@ public class RemoteExecutor implements AutoCloseable {
         }
     }
 
-    private String getRemoteShellHome() {
-        return String.format(REMOTE_SHELL_HOME, sshConnectionParam.getUser());
+    private String getRemoteShellHome(String taskId) {
+        return String.format(REMOTE_SHELL_HOME, sshConnectionParam.getUser(), taskId);
     }
 
     @SneakyThrows

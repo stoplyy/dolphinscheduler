@@ -348,8 +348,7 @@ public class TaskConstants {
     /**
      * hadoop.security.authentication
      */
-    public static final String HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE =
-            "hadoop.security.authentication.startup.state";
+    public static final String HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE = "hadoop.security.authentication.startup.state";
 
     /**
      * hdfs/s3 configuration

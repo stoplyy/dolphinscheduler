@@ -35,4 +35,15 @@ public class PageListingResult<T> {
     private int currentPage;
 
     private int pageSize;
+
+    public long getPages() {
+        if (totalCount == 0) {
+            return 0;
+        }
+        long pages = totalCount / pageSize;
+        if (totalCount % pageSize != 0) {
+            pages++;
+        }
+        return pages;
+    }
 }

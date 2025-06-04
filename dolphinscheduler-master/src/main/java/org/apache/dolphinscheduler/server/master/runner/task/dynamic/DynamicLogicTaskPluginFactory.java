@@ -31,8 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.tuhu.dolphin.spring.annotation.DolphinForceMaster;
+
 @Slf4j
 @Component
+@DolphinForceMaster
 public class DynamicLogicTaskPluginFactory implements ILogicTaskPluginFactory<DynamicLogicTask> {
 
     @Autowired

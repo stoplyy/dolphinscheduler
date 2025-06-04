@@ -41,7 +41,7 @@ export function useModal(
     model: {
       code: ref<number>(-1),
       projectParameterName: ref(''),
-      projectParameterValue: ref('')
+      projectParameterValue: ref(''),
     },
     saving: false,
     rules: {

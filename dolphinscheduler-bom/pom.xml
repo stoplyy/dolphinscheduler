@@ -15,7 +15,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
@@ -100,6 +101,7 @@
         <htrace.version>4.1.1</htrace.version>
         <datasync.version>2.17.282</datasync.version>
         <springdoc-openapi-ui.version>1.6.9</springdoc-openapi-ui.version>
+        <!-- <springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version> -->
         <aspectj.version>1.9.7</aspectj.version>
         <zt-zip.version>1.15</zt-zip.version>
         <trino-jdbc.version>402</trino-jdbc.version>
@@ -122,6 +124,8 @@
         <checker-qual.version>3.19.0</checker-qual.version>
         <zeppelin-client.version>0.10.1</zeppelin-client.version>
         <aliyun-voice.version>2.1.4</aliyun-voice.version>
+        <curator.version>4.3.0</curator.version>
+        <zookeeper.version>3.4.14</zookeeper.version>
     </properties>
 
     <dependencyManagement>
@@ -450,7 +454,8 @@
                 <version>${logback.version}</version>
             </dependency>
 
-            <!--excel poi-->
+            <!--excel
+            poi-->
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi</artifactId>
@@ -972,7 +977,7 @@
         <profile>
             <id>zk-3.8</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <zookeeper.version>3.8.0</zookeeper.version>
@@ -982,6 +987,7 @@
         <profile>
             <id>zk-3.4</id>
             <activation>
+                <activeByDefault>true</activeByDefault>
                 <property>
                     <name>zk-3.4</name>
                 </property>

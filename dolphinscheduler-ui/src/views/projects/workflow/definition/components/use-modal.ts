@@ -39,6 +39,7 @@ import { parseTime } from '@/common/common'
 import { EnvironmentItem } from '@/service/modules/environment/types'
 import { ITimingState, ProcessInstanceReq } from './types'
 import { queryTenantList } from '@/service/modules/tenants'
+import { PlatformConst } from '@/service/modules/project-platform/platform'
 
 export function useModal(
   state: any,
@@ -124,6 +125,15 @@ export function useModal(
         if (item.value !== '') {
           startParams[item.prop] = item.value
         }
+      }
+      if (true == state.startForm.isPlatform && startParams[PlatformConst.P_DATASOURCE_PARAM_NAME] == undefined) {
+        startParams[PlatformConst.P_DATASOURCE_PARAM_NAME] = state.startForm.platformSource
+      }
+      if (true == state.startForm.isPlatformCluster && startParams[PlatformConst.P_CLUSTER_PARAM_NAME] == undefined) {
+        startParams[PlatformConst.P_CLUSTER_PARAM_NAME] = state.startForm.platformClusters
+      }
+      if (true == state.startForm.isPlatformNode && startParams[PlatformConst.P_NODE_PARAM_NAME] == undefined) {
+        startParams[PlatformConst.P_NODE_PARAM_NAME] = state.startForm.platformNodes
       }
       params.startParams = !_.isEmpty(startParams)
         ? JSON.stringify(startParams)

@@ -15,7 +15,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
@@ -30,30 +31,30 @@
         <module>dolphinscheduler-datasource-sqlserver</module>
         <module>dolphinscheduler-datasource-clickhouse</module>
         <module>dolphinscheduler-datasource-db2</module>
-        <module>dolphinscheduler-datasource-hive</module>
+        <!-- <module>dolphinscheduler-datasource-hive</module> -->
         <module>dolphinscheduler-datasource-mysql</module>
         <module>dolphinscheduler-datasource-oceanbase</module>
-        <module>dolphinscheduler-datasource-oracle</module>
-        <module>dolphinscheduler-datasource-postgresql</module>
-        <module>dolphinscheduler-datasource-spark</module>
+        <!-- <module>dolphinscheduler-datasource-oracle</module> -->
+        <!-- <module>dolphinscheduler-datasource-postgresql</module> -->
+        <!-- <module>dolphinscheduler-datasource-spark</module> -->
         <module>dolphinscheduler-datasource-presto</module>
         <module>dolphinscheduler-datasource-api</module>
         <module>dolphinscheduler-datasource-all</module>
-        <module>dolphinscheduler-datasource-redshift</module>
+        <!-- <module>dolphinscheduler-datasource-redshift</module>
         <module>dolphinscheduler-datasource-athena</module>
         <module>dolphinscheduler-datasource-kyuubi</module>
         <module>dolphinscheduler-datasource-trino</module>
-        <module>dolphinscheduler-datasource-starrocks</module>
-        <module>dolphinscheduler-datasource-azure-sql</module>
+        <module>dolphinscheduler-datasource-starrocks</module> -->
+        <!-- <module>dolphinscheduler-datasource-azure-sql</module> -->
         <module>dolphinscheduler-datasource-dameng</module>
         <module>dolphinscheduler-datasource-ssh</module>
-        <module>dolphinscheduler-datasource-zeppelin</module>
+        <!-- <module>dolphinscheduler-datasource-zeppelin</module> -->
         <module>dolphinscheduler-datasource-databend</module>
-        <module>dolphinscheduler-datasource-snowflake</module>
-        <module>dolphinscheduler-datasource-vertica</module>
-        <module>dolphinscheduler-datasource-doris</module>
-        <module>dolphinscheduler-datasource-sagemaker</module>
-        <module>dolphinscheduler-datasource-hana</module>
+        <!-- <module>dolphinscheduler-datasource-snowflake</module> -->
+        <!-- <module>dolphinscheduler-datasource-vertica</module>
+        <module>dolphinscheduler-datasource-doris</module> -->
+        <!-- <module>dolphinscheduler-datasource-sagemaker</module> -->
+        <!-- <module>dolphinscheduler-datasource-hana</module> -->
     </modules>
 
     <dependencyManagement>

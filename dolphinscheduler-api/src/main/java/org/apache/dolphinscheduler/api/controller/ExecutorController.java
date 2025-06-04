@@ -174,7 +174,57 @@ public class ExecutorController extends BaseController {
                 startNodeList, taskDependType, warningType, warningGroupId, runMode, processInstancePriority,
                 workerGroup, tenantCode, environmentCode, timeout, startParamMap, expectedParallelismNumber, dryRun,
                 testFlag,
-                complementDependentMode, version, allLevelDependent, executionOrder);
+                complementDependentMode, version, allLevelDependent, executionOrder,false);
+        return returnDataList(result);
+    }
+
+
+    @PostMapping(value = "create-process-instance")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(START_PROCESS_INSTANCE_ERROR)
+    public Result createExecutor(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                       @Parameter(name = "projectCode", description = "PROJECT_CODE", required = true) @PathVariable long projectCode,
+                                       @RequestParam(value = "processDefinitionCode") long processDefinitionCode,
+                                       @RequestParam(value = "scheduleTime") String scheduleTime,
+                                       @RequestParam(value = "failureStrategy") FailureStrategy failureStrategy,
+                                       @RequestParam(value = "startNodeList", required = false) String startNodeList,
+                                       @RequestParam(value = "taskDependType", required = false) TaskDependType taskDependType,
+                                       @RequestParam(value = "execType", required = false) CommandType execType,
+                                       @RequestParam(value = "warningType") WarningType warningType,
+                                       @RequestParam(value = "warningGroupId", required = false) Integer warningGroupId,
+                                       @RequestParam(value = "runMode", required = false) RunMode runMode,
+                                       @RequestParam(value = "processInstancePriority", required = false) Priority processInstancePriority,
+                                       @RequestParam(value = "workerGroup", required = false, defaultValue = "default") String workerGroup,
+                                       @RequestParam(value = "tenantCode", required = false, defaultValue = "default") String tenantCode,
+                                       @RequestParam(value = "environmentCode", required = false, defaultValue = "-1") Long environmentCode,
+                                       @RequestParam(value = "timeout", required = false) Integer timeout,
+                                       @RequestParam(value = "startParams", required = false) String startParams,
+                                       @RequestParam(value = "expectedParallelismNumber", required = false) Integer expectedParallelismNumber,
+                                       @RequestParam(value = "dryRun", defaultValue = "0", required = false) int dryRun,
+                                       @RequestParam(value = "testFlag", defaultValue = "0") int testFlag,
+                                       @RequestParam(value = "complementDependentMode", required = false) ComplementDependentMode complementDependentMode,
+                                       @RequestParam(value = "version", required = false) Integer version,
+                                       @RequestParam(value = "allLevelDependent", required = false, defaultValue = "false") boolean allLevelDependent,
+                                       @RequestParam(value = "executionOrder", required = false) ExecutionOrder executionOrder) {
+
+        if (timeout == null) {
+            timeout = Constants.MAX_TASK_TIMEOUT;
+        }
+        Map<String, String> startParamMap = null;
+        if (startParams != null) {
+            startParamMap = JSONUtils.toMap(startParams);
+        }
+
+        if (complementDependentMode == null) {
+            complementDependentMode = ComplementDependentMode.OFF_MODE;
+        }
+
+        Map<String, Object> result = execService.execProcessInstance(loginUser, projectCode, processDefinitionCode,
+                scheduleTime, execType, failureStrategy,
+                startNodeList, taskDependType, warningType, warningGroupId, runMode, processInstancePriority,
+                workerGroup, tenantCode, environmentCode, timeout, startParamMap, expectedParallelismNumber, dryRun,
+                testFlag,
+                complementDependentMode, version, allLevelDependent, executionOrder,false);
         return returnDataList(result);
     }
 
@@ -281,7 +331,7 @@ public class ExecutorController extends BaseController {
                     startNodeList, taskDependType, warningType, warningGroupId, runMode, processInstancePriority,
                     workerGroup, tenantCode, environmentCode, timeout, startParamMap, expectedParallelismNumber, dryRun,
                     testFlag,
-                    complementDependentMode, null, allLevelDependent, executionOrder);
+                    complementDependentMode, null, allLevelDependent, executionOrder,false);
 
             if (!Status.SUCCESS.equals(result.get(Constants.STATUS))) {
                 log.error("Process definition start failed, projectCode:{}, processDefinitionCode:{}.", projectCode,

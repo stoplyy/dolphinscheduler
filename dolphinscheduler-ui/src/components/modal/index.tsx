@@ -27,6 +27,10 @@ const props = {
     type: Boolean as PropType<boolean>,
     default: false
   },
+  widthPercent: {
+    type: Number as PropType<number>,
+    default: 40
+  },
   title: {
     type: String as PropType<string>,
     required: true
@@ -107,6 +111,7 @@ const Modal = defineComponent({
       <NModal
         v-model={[this.show, 'show']}
         class={styles.container}
+        style={{ width: `${this.widthPercent}%` }}
         mask-closable={false}
         auto-focus={this.autoFocus}
         onMaskClick={onMaskClick}

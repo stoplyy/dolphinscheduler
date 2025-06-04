@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 /**
- * status enum      // todo #4855 One category one interval
+ * status enum // todo #4855 One category one interval
  */
 public enum Status {
 
@@ -297,6 +297,43 @@ public enum Status {
     UPDATE_PROJECT_PREFERENCE_ERROR(10301, "update project preference error", "更新项目偏好设置错误"),
     QUERY_PROJECT_PREFERENCE_ERROR(10302, "query project preference error", "查询项目偏好设置错误"),
     UPDATE_PROJECT_PREFERENCE_STATE_ERROR(10303, "Failed to update the state of the project preference", "更新项目偏好设置错误"),
+
+    // 104000-104999
+    PROJECT_CLUSTER_ALREADY_EXISTS(104001, "project {0} clusterId {1} already exists", "项目id[{0}]集群id[{1}]已存在"),
+    CREATE_PROJECT_CLUSTER_ERROR(1004002, "create project cluster error", "创建项目集群错误"),
+    PLATFORM_UNKNOW_PATH_ARGS(104000, "platform unknown path args {0}", "平台未知路径参数[{0}]"),
+    PROJECT_CLUSTER_NOT_EXIST(104003, "project {0} clusterId {1} not exists", "项目id[{0}]集群id[{1}]不存在"),
+    DELETE_PROJECT_CLUSTER_ERROR(104004, "delete project {0} cluster{1} error", "删除项目id[{0}]集群id[{1}]错误"),
+    PROJECT_NODE_ALREADY_EXISTS(104005, "project {0} clusterId {1} nodeId {2} already exists",
+            "项目id[{0}]集群id[{1}]节点id[{2}]已存在"),
+    CREATE_PROJECT_NODE_ERROR(1004006, "create project node error", "创建项目集群节点错误"),
+    PROJECT_NODE_NOT_EXIST(104007, "project {0} clusterId {1} nodeId {2} not exists", "项目id[{0}]集群id[{1}]节点id[{2}]不存在"),
+    DELETE_PROJECT_NODE_ERROR(104008, "delete project {0} cluster{1} node{2} error", "删除项目id[{0}]集群id[{1}]节点id[{2}]错误"),
+    PROJECT_CLUSTER_PARAMETER_ALREADY_EXISTS(104009, "project {0} clusterId {1} parameter {2} already exists",
+            "项目id[{0}]集群id[{1}]参数[{2}]已存在"),
+    CREATE_PROJECT_CLUSTER_PARAMETER_ERROR(104010, "create project cluster parameter error", "创建项目集群参数错误"),
+    CREATE_PROJECT_NODE_PARAMETER_ERROR(104010, "create project node parameter error", "创建项目集群节点参数错误"),
+    PROJECT_CLUSTER_PARAMETER_NOT_EXIST(104014, "project {0} cluster {1} parameter {2} not exists",
+            "项目[{0}]集群[{1}]参数[{2}]不存在"),
+    PROJECT_NODE_PARAMETER_NOT_EXIST(104011, "project {0} node {1} parameter {3} not exists",
+            "项目[{0}]节点[{1}]参数[{2}]不存在"),
+    UPDATE_PROJECT_CLUSTER_PARAMETER_ERROR(104012, "update project cluster parameter error", "更新项目集群参数错误"),
+    DELETE_PROJECT_CLUSTER_PARAMETER_ERROR(104013, "delete project cluster parameter error", "删除项目集群参数错误"),
+    PROJECT_CLUSTER_PARAMETER_CODE_EMPTY(104015, "project cluster parameter code empty", "项目集群参数code为空"),
+    DELETE_PROJECT_NODE_PARAMETER_ERROR(104016, "delete project node parameter error", "删除项目集群节点参数错误"),
+    PROJECT_NODE_PARAMETER_CODE_EMPTY(104017, "project node parameter code empty", "项目集群节点参数code为空"),
+    UPDATE_PROJECT_NODE_PARAMETER_ERROR(104018, "update project node parameter error", "更新项目集群节点参数错误"),
+    PROJECT_NODE_PARAMETER_ALREADY_EXISTS(104019, "project {0} clusterId {1} nodeId {2} parameter {3} already exists",
+            "项目id[{0}]集群id[{1}]节点id[{2}]参数[{3}]已存在"),
+    PROJECT_CLUSTER_NOT_EXIST_APPID(104020, "project {0} cluster {1} not exists appid", "项目[{0}]集群[{1}]未设置AppId"),
+    PROJECT_NODE_SOURCE_NO_HALLEY(104021,
+            "project {0} cluster {1} appid {2} not find nodes from halley", "项目[{0}] 集群[{1}] AppId[{2}] 未从Halley找到节点"),
+    PROJECT_NODE_SOURCE_ALL_EXIST(104022, "project {0} cluster {1} all nodes exist",
+            "项目[{0}] 集群[{1}] 所有节点已存在"),
+    PROJECT_NODE_SOURCE_EXIST(104023, "project {0} cluster {1} node {2} exist",
+            "项目[{0}] 集群[{1}] 节点[{2}] 数据源已存在"),
+    PROJECT_NODE_SOURCE_CREATE_ERROR(104024, " create erro nodekeys: {0}r",
+            "调用Sre接口粘贴公钥失败，请自行将平台公钥配置到目标机器！！失败源名称: {0}"),
 
     UDF_FUNCTION_NOT_EXIST(20001, "UDF function not found", "UDF函数不存在"),
     UDF_FUNCTION_EXISTS(20002, "UDF function already exists", "UDF函数已存在"),
@@ -586,6 +623,7 @@ public enum Status {
             "You can not modify or remove this worker group, cause it has [{0}] dependent environments.",
             "不能修改或删除该Worker组，有 [{0}] 个环境配置正在使用"),
             ;
+
     private final int code;
     private final String enMsg;
     private final String zhMsg;

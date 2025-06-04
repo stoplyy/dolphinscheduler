@@ -131,6 +131,7 @@ public class ClusterServiceImpl extends BaseServiceImpl implements ClusterServic
             return dto;
         }).collect(Collectors.toList());
         pageInfo.setTotalList(dtoList);
+        pageInfo.setTotalPage((int) clusterIPage.getPages());
         return pageInfo;
     }
 

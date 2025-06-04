@@ -41,59 +41,108 @@ public interface ExecutorService {
     /**
      * execute process instance
      *
-     * @param loginUser login user
-     * @param projectCode project code
-     * @param processDefinitionCode process definition code
-     * @param cronTime cron time
-     * @param commandType command type
-     * @param failureStrategy failure strategy
-     * @param startNodeList start nodelist
-     * @param taskDependType node dependency type
-     * @param warningType warning type
-     * @param warningGroupId notify group id
-     * @param processInstancePriority process instance priority
-     * @param workerGroup worker group name
-     * @param tenantCode tenant code
-     * @param environmentCode environment code
-     * @param runMode run mode
-     * @param timeout timeout
-     * @param startParams the global param values which pass to new process instance
-     * @param expectedParallelismNumber the expected parallelism number when execute complement in parallel mode
-     * @param executionOrder the execution order when complementing data
+     * @param loginUser                 login user
+     * @param projectCode               project code
+     * @param processDefinitionCode     process definition code
+     * @param cronTime                  cron time
+     * @param commandType               command type
+     * @param failureStrategy           failure strategy
+     * @param startNodeList             start nodelist
+     * @param taskDependType            node dependency type
+     * @param warningType               warning type
+     * @param warningGroupId            notify group id
+     * @param processInstancePriority   process instance priority
+     * @param workerGroup               worker group name
+     * @param tenantCode                tenant code
+     * @param environmentCode           environment code
+     * @param runMode                   run mode
+     * @param timeout                   timeout
+     * @param startParams               the global param values which pass to new
+     *                                  process instance
+     * @param expectedParallelismNumber the expected parallelism number when execute
+     *                                  complement in parallel mode
+     * @param executionOrder            the execution order when complementing data
+     * @return execute process instance code
+     */
+    default Map<String, Object> execProcessInstance(User loginUser, long projectCode,
+            long processDefinitionCode, String cronTime, CommandType commandType,
+            FailureStrategy failureStrategy, String startNodeList,
+            TaskDependType taskDependType, WarningType warningType,
+            Integer warningGroupId,
+            RunMode runMode,
+            Priority processInstancePriority, String workerGroup, String tenantCode,
+            Long environmentCode,
+            Integer timeout,
+            Map<String, String> startParams, Integer expectedParallelismNumber,
+            int dryRun, int testFlag,
+            ComplementDependentMode complementDependentMode, Integer version,
+            boolean allLevelDependent, ExecutionOrder executionOrder) {
+        return execProcessInstance(loginUser, projectCode, processDefinitionCode, cronTime, commandType,
+                failureStrategy, startNodeList, taskDependType, warningType, warningGroupId,
+                runMode, processInstancePriority, workerGroup, tenantCode, environmentCode, timeout, startParams,
+                expectedParallelismNumber, dryRun, testFlag, complementDependentMode, version,
+                allLevelDependent, executionOrder, false);
+    }
+
+    /**
+     * execute process instance
+     *
+     * @param loginUser                 login user
+     * @param projectCode               project code
+     * @param processDefinitionCode     process definition code
+     * @param cronTime                  cron time
+     * @param commandType               command type
+     * @param failureStrategy           failure strategy
+     * @param startNodeList             start nodelist
+     * @param taskDependType            node dependency type
+     * @param warningType               warning type
+     * @param warningGroupId            notify group id
+     * @param processInstancePriority   process instance priority
+     * @param workerGroup               worker group name
+     * @param tenantCode                tenant code
+     * @param environmentCode           environment code
+     * @param runMode                   run mode
+     * @param timeout                   timeout
+     * @param startParams               the global param values which pass to new
+     *                                  process instance
+     * @param expectedParallelismNumber the expected parallelism number when execute
+     *                                  complement in parallel mode
+     * @param executionOrder            the execution order when complementing data
      * @return execute process instance code
      */
     Map<String, Object> execProcessInstance(User loginUser, long projectCode,
-                                            long processDefinitionCode, String cronTime, CommandType commandType,
-                                            FailureStrategy failureStrategy, String startNodeList,
-                                            TaskDependType taskDependType, WarningType warningType,
-                                            Integer warningGroupId,
-                                            RunMode runMode,
-                                            Priority processInstancePriority, String workerGroup, String tenantCode,
-                                            Long environmentCode,
-                                            Integer timeout,
-                                            Map<String, String> startParams, Integer expectedParallelismNumber,
-                                            int dryRun, int testFlag,
-                                            ComplementDependentMode complementDependentMode, Integer version,
-                                            boolean allLevelDependent, ExecutionOrder executionOrder);
+            long processDefinitionCode, String cronTime, CommandType commandType,
+            FailureStrategy failureStrategy, String startNodeList,
+            TaskDependType taskDependType, WarningType warningType,
+            Integer warningGroupId,
+            RunMode runMode,
+            Priority processInstancePriority, String workerGroup, String tenantCode,
+            Long environmentCode,
+            Integer timeout,
+            Map<String, String> startParams, Integer expectedParallelismNumber,
+            int dryRun, int testFlag,
+            ComplementDependentMode complementDependentMode, Integer version,
+            boolean allLevelDependent, ExecutionOrder executionOrder, boolean delayStart);
 
     /**
      * check whether the process definition can be executed
      *
-     * @param projectCode project code
+     * @param projectCode       project code
      * @param processDefinition process definition
      * @param processDefineCode process definition code
-     * @param version process definition version
+     * @param version           process definition version
      */
     void checkProcessDefinitionValid(long projectCode, ProcessDefinition processDefinition, long processDefineCode,
-                                     Integer version);
+            Integer version);
 
     /**
-     * do action to process instance：pause, stop, repeat, recover from pause, recover from stop
+     * do action to process instance：pause, stop, repeat, recover from pause,
+     * recover from stop
      *
-     * @param loginUser login user
-     * @param projectCode project code
+     * @param loginUser         login user
+     * @param projectCode       project code
      * @param processInstanceId process instance id
-     * @param executeType execute type
+     * @param executeType       execute type
      * @return execute result code
      */
     Map<String, Object> execute(User loginUser, long projectCode, Integer processInstanceId, ExecuteType executeType);
@@ -101,23 +150,24 @@ public interface ExecutorService {
     /**
      * do action to execute task in process instance
      *
-     * @param loginUser login user
-     * @param projectCode project code
+     * @param loginUser         login user
+     * @param projectCode       project code
      * @param processInstanceId process instance id
-     * @param startNodeList start node list
-     * @param taskDependType task depend type
+     * @param startNodeList     start node list
+     * @param taskDependType    task depend type
      * @return execute result code
      */
     WorkflowExecuteResponse executeTask(User loginUser, long projectCode, Integer processInstanceId,
-                                        String startNodeList,
-                                        TaskDependType taskDependType);
+            String startNodeList,
+            TaskDependType taskDependType);
 
     /**
-     * do action to process instance：pause, stop, repeat, recover from pause, recover from stop
+     * do action to process instance：pause, stop, repeat, recover from pause,
+     * recover from stop
      *
-     * @param loginUser login user
+     * @param loginUser          login user
      * @param workflowInstanceId workflow instance id
-     * @param executeType execute type
+     * @param executeType        execute type
      * @return execute result code
      */
     Map<String, Object> execute(User loginUser, Integer workflowInstanceId, ExecuteType executeType);
@@ -132,6 +182,7 @@ public interface ExecutorService {
 
     /**
      * check if the current process has subprocesses and all subprocesses are valid
+     * 
      * @param processDefinition
      * @return check result
      */
@@ -139,6 +190,7 @@ public interface ExecutorService {
 
     /**
      * force start Task Instance
+     * 
      * @param loginUser
      * @param queueId
      * @return
@@ -147,6 +199,7 @@ public interface ExecutorService {
 
     /**
      * query executing workflow data in Master memory
+     * 
      * @param processInstanceId
      * @return
      */
@@ -155,21 +208,22 @@ public interface ExecutorService {
     /**
      * execute stream task instance
      *
-     * @param loginUser login user
-     * @param projectCode project code
-     * @param warningGroupId notify group id
-     * @param workerGroup worker group name
-     * @param tenantCode tenant code
+     * @param loginUser       login user
+     * @param projectCode     project code
+     * @param warningGroupId  notify group id
+     * @param workerGroup     worker group name
+     * @param tenantCode      tenant code
      * @param environmentCode environment code
-     * @param startParams the global param values which pass to new process instance
+     * @param startParams     the global param values which pass to new process
+     *                        instance
      * @return execute process instance code
      */
     void execStreamTaskInstance(User loginUser, long projectCode,
-                                long taskDefinitionCode, int taskDefinitionVersion,
-                                int warningGroupId,
-                                String workerGroup,
-                                String tenantCode,
-                                Long environmentCode,
-                                Map<String, String> startParams,
-                                int dryRun);
+            long taskDefinitionCode, int taskDefinitionVersion,
+            int warningGroupId,
+            String workerGroup,
+            String tenantCode,
+            Long environmentCode,
+            Map<String, String> startParams,
+            int dryRun);
 }

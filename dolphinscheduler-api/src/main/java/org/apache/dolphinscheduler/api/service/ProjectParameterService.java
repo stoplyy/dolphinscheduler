@@ -17,23 +17,29 @@
 
 package org.apache.dolphinscheduler.api.service;
 
+import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
+import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
 import org.apache.dolphinscheduler.dao.entity.User;
 
 public interface ProjectParameterService {
 
     Result createProjectParameter(User loginUser, long projectCode, String projectParameterName,
-                                  String projectParameterValue);
+            String projectParameterValue);
 
     Result updateProjectParameter(User loginUser, long projectCode, long code, String projectParameterName,
-                                  String projectParameterValue);
+            String projectParameterValue);
 
     Result deleteProjectParametersByCode(User loginUser, long projectCode, long code);
 
     Result batchDeleteProjectParametersByCodes(User loginUser, long projectCode, String codes);
 
     Result queryProjectParameterListPaging(User loginUser, long projectCode, Integer pageSize, Integer pageNo,
-                                           String searchVal);
+            String searchVal);
+
+    Result<PageInfo<ProjectParameter>> queryProjectParameterListPagingWithOutUser(long projectCode, Integer pageSize,
+            Integer pageNo,
+            String searchVal);
 
     Result queryProjectParameterByCode(User loginUser, long projectCode, long code);
 }

@@ -67,8 +67,8 @@ public class FileUtils {
      * @return download file name
      */
     public static String getDownloadFilename(String filename) {
-        String fileName =
-                String.format("%s/download/%s/%s", DATA_BASEDIR, DateUtils.getCurrentTime(YYYYMMDDHHMMSS), filename);
+        String fileName = String.format("%s/download/%s/%s", DATA_BASEDIR, DateUtils.getCurrentTime(YYYYMMDDHHMMSS),
+                filename);
 
         File file = new File(fileName);
         if (!file.getParentFile().exists()) {
@@ -82,7 +82,7 @@ public class FileUtils {
      * get upload file absolute path and name
      *
      * @param tenantCode tenant code
-     * @param filename file name
+     * @param filename   file name
      * @return local file path
      */
     public static String getUploadFilename(String tenantCode, String filename) {
@@ -107,11 +107,11 @@ public class FileUtils {
      * @return directory of process execution
      */
     public static String getTaskInstanceWorkingDirectory(String tenant,
-                                                         long projectCode,
-                                                         long processDefineCode,
-                                                         int processDefineVersion,
-                                                         int processInstanceId,
-                                                         int taskInstanceId) {
+            long projectCode,
+            long processDefineCode,
+            int processDefineVersion,
+            int processInstanceId,
+            int taskInstanceId) {
         return String.format(
                 "%s/exec/process/%s/%d/%d_%d/%d/%d",
                 DATA_BASEDIR,
@@ -136,7 +136,7 @@ public class FileUtils {
     /**
      * absolute path of appInfo file
      *
-     * @param execPath  directory of process execution
+     * @param execPath directory of process execution
      * @return
      */
     public static String getAppInfoPath(String execPath) {
@@ -151,9 +151,10 @@ public class FileUtils {
     }
 
     /**
-     * write content to file ,if parent path not exists, it will do one's utmost to mkdir
+     * write content to file ,if parent path not exists, it will do one's utmost to
+     * mkdir
      *
-     * @param content content
+     * @param content  content
      * @param filePath target file path
      * @return true if write success
      */
@@ -183,7 +184,7 @@ public class FileUtils {
      * <ul>
      * <li>A directory to be deleted does not have to be empty.</li>
      * <li>You get exceptions when a file or directory cannot be deleted.
-     *      (java.io.File methods returns a boolean)</li>
+     * (java.io.File methods returns a boolean)</li>
      * </ul>
      *
      * @param filename file name
@@ -215,7 +216,8 @@ public class FileUtils {
     }
 
     /**
-     * Check whether the given string type of path can be traversal or not, return true if path could
+     * Check whether the given string type of path can be traversal or not, return
+     * true if path could
      * traversal, and return false if it is not.
      *
      * @param filename String type of filename
@@ -237,6 +239,7 @@ public class FileUtils {
 
     /**
      * Calculate file checksum with CRC32 algorithm
+     * 
      * @param pathName
      * @return checksum of file/dir
      */
@@ -292,7 +295,8 @@ public class FileUtils {
                 Files.createDirectory(path);
                 Files.setPosixFilePermissions(path, PERMISSION_755);
             } catch (FileAlreadyExistsException fileAlreadyExistsException) {
-                // Catch the FileAlreadyExistsException here to avoid create the same parent directory in parallel
+                // Catch the FileAlreadyExistsException here to avoid create the same parent
+                // directory in parallel
                 log.debug("The directory: {} already exists", path);
             }
 
@@ -314,6 +318,18 @@ public class FileUtils {
                 setFileTo755(f);
             }
         }
+    }
+
+    /**
+     * get download upstream local full path
+     * 任务执行前，资源文件下载到本地的实际路径
+     * 
+     * @param executePath
+     * @param fileName
+     * @return
+     */
+    public static String formatDownloadUpstreamLocalFullPath(String executePath, String fileName) {
+        return String.format("%s/%s", executePath, fileName);
     }
 
 }

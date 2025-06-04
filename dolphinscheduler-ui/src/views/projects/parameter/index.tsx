@@ -21,14 +21,18 @@ import {
   NInput,
   NPagination,
   NSpace,
-  NButton
+  NButton,
+  NAlert,
+  NTag,
+  NTooltip,
+  NText
 } from 'naive-ui'
-import { defineComponent, onMounted, toRefs, watch } from 'vue'
+import { defineComponent, h, onMounted, toRefs, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTable } from '@/views/projects/parameter/use-table'
 import Card from '@/components/card'
 import ParameterModal from '@/views/projects/parameter/components/parameter-modal'
-import { SearchOutlined } from '@vicons/antd'
+import { SearchOutlined, LinkOutlined } from '@vicons/antd'
 
 export default defineComponent({
   name: 'ProjectParameterList',
@@ -102,6 +106,26 @@ export default defineComponent({
       onCancelModal
     } = this
 
+    const renderAlert = this.tableData &&  (
+      <NAlert type="info">
+        You can set parameters starting with
+        <NTag>platform_</NTag> to help the backend fetch project data. For example : 
+        {h(NTooltip, {}, {
+          trigger: () => <NTag>platform_appid</NTag>,
+          default: () => '该项目的所属AppId，如果接入stellarops-sdk，配置appid即可自动调用platform_xxx接口'
+        })},
+        {h(NTooltip, {}, {
+          trigger: () => <NTag>platform_baseUrl</NTag>,
+          default: () => 'API接口的基础URL地址，如果没有接入sdk，可以配置此参数，平台按照约定的方式调用platform_xxx接口' 
+        })},
+        {h(NTooltip, {}, {
+          trigger: () => <NTag>platform_cluster.list.rest</NTag>,
+          default: () =>'通过配置的API接口获取集群列表,最高优先级'
+        })}
+        ... <NText>For More TODO: link wiki</NText>
+      </NAlert>
+    );
+
     return (
       <NSpace vertical>
         <Card>
@@ -124,7 +148,8 @@ export default defineComponent({
             </NSpace>
           </NSpace>
         </Card>
-        <Card title={t('project.parameter.parameter_manage')}>
+        <Card title={t('project.parameter.parameter_manage')} >
+          {renderAlert}
           <NSpace vertical>
             <NDataTable
               loading={loadingRef}

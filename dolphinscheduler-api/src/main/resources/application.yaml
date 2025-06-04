@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+spring.main.allow-bean-definition-overriding: true
+spring.main.allow-circular-references: true
+
+datasource.plugin: mysql
+
+poseidon.soter.enabled: false
 
 server:
   port: 12345
@@ -31,6 +37,7 @@ server:
       custom-format: '%{client}a - %u %t "%r" %s %O %{ms}Tms'
 
 spring:
+  cloud.kubernetes.enabled: false
   profiles:
     active: postgresql
   banner:
@@ -83,6 +90,7 @@ spring:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
     static-path-pattern: /static/**
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -101,6 +109,9 @@ mybatis-plus:
     db-config:
       id-type: auto
     banner: false
+
+metrics:
+  enabled: true
 
 management:
   endpoints:
@@ -140,14 +151,15 @@ api:
   # global max request number per second
   # default tenant-level max request number
   traffic-control:
-      global-switch: false
-      max-global-qps-rate: 300
-      tenant-switch: false
-      default-tenant-qps-rate: 10
-        #customize-tenant-qps-rate:
-        # eg.
-      #tenant1: 11
-      #tenant2: 20
+    global-switch: false
+    max-global-qps-rate: 300
+    tenant-switch: false
+    default-tenant-qps-rate:
+      10
+      #customize-tenant-qps-rate:
+      # eg.
+    #tenant1: 11
+    #tenant2: 20
   python-gateway:
     # Weather enable python gateway server or not. The default value is true.
     enabled: true
@@ -170,9 +182,6 @@ api:
     # Close each active connection of socket server if python program not active after x milliseconds. Define value is
     # (0 = infinite), and socket server would never close even though no requests accept
     read-timeout: 0
-
-metrics:
-  enabled: true
 
 security:
   authentication:
@@ -202,27 +211,7 @@ security:
         admin: ""
     oauth2:
       enable: false
-      provider:
-        github:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: github
-        google:
-          authorizationUri: ""
-          redirectUri: ""
-          clientId: ""
-          clientSecret: ""
-          tokenUri: ""
-          userInfoUri: ""
-          callbackUrl: ""
-          iconUri: ""
-          provider: google
+
 casdoor:
   # Your Casdoor server url
   endpoint: ""
@@ -236,20 +225,3 @@ casdoor:
   application-name: ""
   # Doplhinscheduler login url
   redirect-url: ""
-
-
-# Override by profile
-
----
-spring:
-  config:
-    activate:
-      on-profile: mysql
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
-    username: root
-    password: root
-  quartz:
-    properties:
-      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate

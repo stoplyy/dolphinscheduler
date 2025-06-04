@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { useRouter,useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { clearCookie, getOauth2Provider, login } from '@/service/modules/login'
 import { getUserInfo } from '@/service/modules/users'
 import { useUserStore } from '@/store/user/user'
@@ -40,7 +40,7 @@ export function useLogin(state: any) {
         const loginRes: LoginRes = await login({ ...state.loginForm })
         await userStore.setSessionId(loginRes.sessionId)
         await userStore.setSecurityConfigType(loginRes.securityConfigType)
-        cookies.set('sessionId', loginRes.sessionId, { path: '/' })
+        cookies.set('sessionId', loginRes.sessionId, { path: '/', domain: getDomain() })
 
         const userInfoRes: UserInfoRes = await getUserInfo()
         await userStore.setUserInfo(userInfoRes)
@@ -64,7 +64,9 @@ export function useLogin(state: any) {
     })
   }
 
-
+  const getDomain = () => {
+    return window.location.hostname === 'localhost' ? '' : '.' + window.location.hostname.split('.').slice(-2).join('.');
+  }
 
   const handleGetOAuth2Provider = () => {
     getOauth2Provider().then((res: Array<OAuth2Provider> | []) => {
@@ -76,8 +78,10 @@ export function useLogin(state: any) {
 
   const gotoOAuth2Page = async (oauth2Provider: OAuth2Provider) => {
     await clearCookie()
-    window.location.href = `${oauth2Provider.authorizationUri}?client_id=${oauth2Provider.clientId}` +
-      `&response_type=code&redirect_uri=${oauth2Provider.redirectUri}?provider=${oauth2Provider.provider}`
+    const redirectUri = `${oauth2Provider.redirectUri}?provider=${oauth2Provider.provider}`;
+    const separator = oauth2Provider.authorizationUri.includes('?') ? '&' : '?';
+    window.location.href = `${oauth2Provider.authorizationUri}${separator}client_id=${oauth2Provider.clientId}` +
+      `&response_type=code&redirect_uri=${redirectUri}`;
   }
 
   const handleRedirect = async () => {
@@ -85,7 +89,10 @@ export function useLogin(state: any) {
     if (authType && authType === 'oauth2') {
       const sessionId = route.query.sessionId
       if (sessionId) {
-        cookies.set('sessionId', String(sessionId), { path: '/' })
+        cookies.set('sessionId', String(sessionId), {
+          path: '/',
+          domain: getDomain()
+        })
         const userInfoRes: UserInfoRes = await getUserInfo()
         await userStore.setUserInfo(userInfoRes)
         const timezone = userInfoRes.timeZone ? userInfoRes.timeZone : 'UTC'

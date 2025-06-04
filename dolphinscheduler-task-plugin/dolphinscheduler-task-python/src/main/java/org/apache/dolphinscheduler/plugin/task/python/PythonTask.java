@@ -175,7 +175,8 @@ public class PythonTask extends AbstractTask {
 
     /**
      * Build the python task command.
-     * If user have set the 'PYTHON_LAUNCHER' environment, we will use the 'PYTHON_LAUNCHER',
+     * If user have set the 'PYTHON_LAUNCHER' environment, we will use the
+     * 'PYTHON_LAUNCHER',
      * if not, we will default use python.
      *
      * @param pythonFile Python file, cannot be empty.
@@ -186,7 +187,13 @@ public class PythonTask extends AbstractTask {
 
         String pythonHome = String.format("${%s}", PYTHON_LAUNCHER);
 
-        return pythonHome + " " + pythonFile;
+        String printCurrentUser = "echo '当前执行脚本的用户是：'$(whoami); ";
+        String printPython = String.format("echo 'PYTHON_LAUNCHER: $%s'", PYTHON_LAUNCHER);
+
+        return printCurrentUser + System.lineSeparator() +
+                printPython + System.lineSeparator() +
+                "chmod +x " + pythonFile + System.lineSeparator() +
+                pythonHome + " " + pythonFile;
     }
 
 }

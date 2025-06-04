@@ -20,6 +20,7 @@ spring:
     name: api-server
   cloud:
     kubernetes:
+      enabled: false
       reload:
         enabled: true
         mode: event

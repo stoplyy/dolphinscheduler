@@ -17,12 +17,11 @@
 
 package org.apache.dolphinscheduler.api.configuration;
 
+import java.util.Locale;
+
 import org.apache.dolphinscheduler.api.interceptor.LocaleChangeInterceptor;
 import org.apache.dolphinscheduler.api.interceptor.LoginHandlerInterceptor;
 import org.apache.dolphinscheduler.api.interceptor.RateLimitInterceptor;
-
-import java.util.Locale;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,9 +54,10 @@ public class AppConfiguration implements WebMvcConfigurer {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("*");
         config.addAllowedMethod("*");
+        config.setAllowCredentials(true);
         config.addAllowedHeader("*");
+        config.addAllowedOriginPattern("*");
         UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
         configSource.registerCorsConfiguration(PATH_PATTERN, config);
         return new CorsFilter(configSource);
@@ -70,6 +70,7 @@ public class AppConfiguration implements WebMvcConfigurer {
 
     /**
      * Cookie
+     * 
      * @return local resolver
      */
     @Bean(name = "localeResolver")

@@ -1,0 +1,65 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.dolphinscheduler.plugin.task.resource;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+
+import lombok.Data;
+
+/**
+ * http parameter
+ */
+
+@Data
+public class ResourceTaskParameters extends AbstractParameters {
+
+    @Override
+    public boolean checkParameters() {
+        return resourceItems != null && !resourceItems.isEmpty()
+                && resourceItems.stream().allMatch(ResourceTaskParameter::checkParameters);
+    }
+
+    /**
+     * get resource files list need download
+     *
+     * @return resource files list
+     */
+    @Override
+    public List<ResourceInfo> getResourceFilesList() {
+        List<ResourceInfo> resourceInfoList = new ArrayList<>();
+        if (resourceItems != null) {
+            for (ResourceTaskParameter taskParameter : resourceItems) {
+                // 返回需要下载的资源文件列表，如果是操作删除的资源文件，则不返回
+                if (taskParameter.getResource() != null
+                        && taskParameter.getOperMethod() != OperMethod.DELETE) {
+                    ResourceInfo resourceInfo = new ResourceInfo();
+                    resourceInfo.setResourceName(taskParameter.getResource());
+                    resourceInfoList.add(resourceInfo);
+                }
+            }
+        }
+        return resourceInfoList;
+    }
+
+    List<ResourceTaskParameter> resourceItems = new ArrayList<>();
+
+}

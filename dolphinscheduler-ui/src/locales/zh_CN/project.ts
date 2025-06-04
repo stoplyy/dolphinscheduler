@@ -877,6 +877,7 @@ export default {
   },
   parameter: {
     create_parameter: '创建项目级别参数',
+    create_tuhu_parameter: '创建Tuhu通用参数',
     edit_parameter: '修改项目级别参数',
     parameter_manage: '参数管理',
     code: '参数编码',
@@ -900,5 +901,11 @@ export default {
     submit: '提交',
     enabled: '启用',
     disabled: '未启用'
+  },
+  cluster: {
+    cluster_manage: '项目集群'
+  },
+  nodes: {
+    nodes_manage: '项目节点'
   },
 }

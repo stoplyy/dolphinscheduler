@@ -52,7 +52,8 @@ public final class Constants {
     public static final String FS_DEFAULT_FS = "resource.hdfs.fs.defaultFS";
 
     /**
-     * hdfs defaultFS property name. Should be consistent with the property name in hdfs-site.xml
+     * hdfs defaultFS property name. Should be consistent with the property name in
+     * hdfs-site.xml
      */
     public static final String HDFS_DEFAULT_FS = "fs.defaultFS";
 
@@ -110,8 +111,7 @@ public final class Constants {
      */
     public static final String RESOURCE_VIEW_SUFFIXES = "resource.view.suffixs";
 
-    public static final String RESOURCE_VIEW_SUFFIXES_DEFAULT_VALUE =
-            "txt,log,sh,bat,conf,cfg,py,java,sql,xml,hql,properties,json,yml,yaml,ini,js";
+    public static final String RESOURCE_VIEW_SUFFIXES_DEFAULT_VALUE = "txt,log,sh,bat,conf,cfg,py,java,sql,xml,hql,properties,json,yml,yaml,ini,js";
 
     /**
      * development.state
@@ -373,7 +373,7 @@ public final class Constants {
      */
     public static final String RUNNING = "RUNNING";
     /**
-     * underline  "_"
+     * underline "_"
      */
     public static final String UNDERLINE = "_";
 
@@ -434,8 +434,7 @@ public final class Constants {
     /**
      * hadoop.security.authentication
      */
-    public static final String HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE =
-            "hadoop.security.authentication.startup.state";
+    public static final String HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE = "hadoop.security.authentication.startup.state";
 
     /**
      * loginUserFromKeytab user
@@ -597,7 +596,8 @@ public final class Constants {
     public static final int TENANT_FULL_NAME_MAX_LENGTH = 30;
 
     /**
-     * schedule time  the amount of date data is too large, affecting the memory, so set 100
+     * schedule time the amount of date data is too large, affecting the memory, so
+     * set 100
      */
     public static final int SCHEDULE_TIME_MAX_LENGTH = 100;
 
@@ -657,7 +657,7 @@ public final class Constants {
     public static final String STRING_PLUGIN_PARAM_VALIDATE = "validate";
     /** alert plugin param options string **/
     public static final String STRING_PLUGIN_PARAM_OPTIONS = "options";
-    /**plugin param emit string **/
+    /** plugin param emit string **/
     public static final String STRING_PLUGIN_PARAM_EMIT = "emit";
 
     /** string true */
@@ -674,7 +674,7 @@ public final class Constants {
     public static final String CHANGE = "change";
 
     /**
-     *  support hive datasource in one session
+     * support hive datasource in one session
      */
     public static final String SUPPORT_HIVE_ONE_SESSION = "support.hive.oneSession";
 
@@ -735,4 +735,23 @@ public final class Constants {
      * K8S sensitive param
      */
     public static final String K8S_CONFIG_REGEX = "(?<=((?i)configYaml(\" : \"))).*?(?=(\",\\n))";
+
+    /**
+     * datasource publicKeyIdentity
+     */
+    public static final String DATASOURCE_PUBLIC_KEY_IDENTITY = "datasource.publicKeyIdentity";
+    /**
+     * if publicKey set this flag,
+     * use system private key withDATASOURCE_PUBLIC_KEY_IDENTITY config value
+     */
+    public static final String DATASOURCE_PUBLIC_KEY_FLAG = "USE_SYSTEM_PRIVATE_KEY";
+    
+    /**
+     * resource.storage.type: jfrog
+     */
+    public static String JFROG_REPO_NAME = "resource.jfrog.repo.name";
+    public static String JFROG_URL = "resource.jfrog.url";
+    public static String JFROG_USERNAME = "resource.jfrog.user";
+    public static String JFROG_DIR_PREFIX = "resource.jfrog.dir.prefix";
+    public static String JFROG_PASSWORD = "resource.jfrog.password";
 }

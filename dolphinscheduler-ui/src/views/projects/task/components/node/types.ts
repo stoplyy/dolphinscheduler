@@ -421,6 +421,8 @@ interface ITaskParams {
   sagemakerRequestJson?: string
   script?: string
   scriptParams?: string
+  enablePlatformSource?: boolean
+  platformSourceParamName?: string
   pythonPath?: string
   isCreateEnvironment?: string
   pythonCommand?: string
@@ -453,26 +455,27 @@ interface ITaskParams {
   listParameters?: Array<any>
   yarnQueue?: string
   awsRegion?: string
-  kubeConfig?: string
+  kubeConfig?: string,
+  resourceItems?: []
 }
 
 interface INodeData
   extends Omit<
-      ITaskParams,
-      | 'resourceList'
-      | 'mainJar'
-      | 'targetParams'
-      | 'sourceParams'
-      | 'dependence'
-      | 'sparkParameters'
-      | 'conditionResult'
-      | 'udfs'
-      | 'customConfig'
-    >,
-    ISqoopTargetData,
-    ISqoopSourceData,
-    IDependentParameters,
-    Omit<IRuleParameters, 'mapping_columns'> {
+    ITaskParams,
+    | 'resourceList'
+    | 'mainJar'
+    | 'targetParams'
+    | 'sourceParams'
+    | 'dependence'
+    | 'sparkParameters'
+    | 'conditionResult'
+    | 'udfs'
+    | 'customConfig'
+  >,
+  ISqoopTargetData,
+  ISqoopSourceData,
+  IDependentParameters,
+  Omit<IRuleParameters, 'mapping_columns'> {
   id?: string
   taskType?: ITaskType
   processName?: number

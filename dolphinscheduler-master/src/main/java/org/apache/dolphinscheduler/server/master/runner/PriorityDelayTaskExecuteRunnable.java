@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 public abstract class PriorityDelayTaskExecuteRunnable extends BaseTaskExecuteRunnable implements Delayed {
 
     public PriorityDelayTaskExecuteRunnable(ProcessInstance workflowInstance,
-                                            TaskInstance taskInstance,
-                                            TaskExecutionContext taskExecutionContext) {
+            TaskInstance taskInstance,
+            TaskExecutionContext taskExecutionContext) {
         super(workflowInstance, taskInstance, taskExecutionContext);
     }
 
@@ -37,7 +37,7 @@ public abstract class PriorityDelayTaskExecuteRunnable extends BaseTaskExecuteRu
     public long getDelay(TimeUnit unit) {
         return unit.convert(
                 DateUtils.getRemainTime(taskExecutionContext.getFirstSubmitTime(),
-                        taskExecutionContext.getDelayTime() * 60L),
+                        taskExecutionContext.getDelayTime()),
                 TimeUnit.SECONDS);
     }
 
@@ -46,8 +46,8 @@ public abstract class PriorityDelayTaskExecuteRunnable extends BaseTaskExecuteRu
         if (o == null) {
             return 1;
         }
-        int delayTimeCompareResult =
-                Long.compare(this.getDelay(TimeUnit.MILLISECONDS), o.getDelay(TimeUnit.MILLISECONDS));
+        int delayTimeCompareResult = Long.compare(this.getDelay(TimeUnit.MILLISECONDS),
+                o.getDelay(TimeUnit.MILLISECONDS));
         if (delayTimeCompareResult != 0) {
             return delayTimeCompareResult;
         }
@@ -73,8 +73,8 @@ public abstract class PriorityDelayTaskExecuteRunnable extends BaseTaskExecuteRu
             return taskInstancePriorityCompareResult;
         }
         // larger number, higher priority
-        int taskGroupPriorityCompareResult =
-                taskInstance.getTaskGroupPriority() - other.getTaskInstance().getTaskGroupPriority();
+        int taskGroupPriorityCompareResult = taskInstance.getTaskGroupPriority()
+                - other.getTaskInstance().getTaskGroupPriority();
         if (taskGroupPriorityCompareResult != 0) {
             return -taskGroupPriorityCompareResult;
         }

@@ -15,12 +15,15 @@
  * limitations under the License.
  */
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IJsonItem } from '../../task/components/node/types'
 import { queryTenantList } from '@/service/modules/tenants'
+import { FormItemProps } from 'naive-ui'
 
-export function useTenant(): IJsonItem {
+export function useTenant(
+  span: number | Ref<number> = 12,
+  itemProps?: FormItemProps): IJsonItem {
   const { t } = useI18n()
 
   const options = ref([] as { label: string; value: string }[])
@@ -40,7 +43,8 @@ export function useTenant(): IJsonItem {
   return {
     type: 'select',
     field: 'tenant',
-    span: 12,
+    itemProps: itemProps,
+    span: span,
     name: t('project.workflow.tenant_code'),
     options: options
   }

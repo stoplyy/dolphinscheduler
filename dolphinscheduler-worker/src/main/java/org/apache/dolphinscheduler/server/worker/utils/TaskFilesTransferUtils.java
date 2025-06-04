@@ -19,6 +19,15 @@ package org.apache.dolphinscheduler.server.worker.utils;
 
 import static org.apache.dolphinscheduler.common.constants.Constants.CRC_SUFFIX;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.common.utils.DateUtils;
 import org.apache.dolphinscheduler.common.utils.FileUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
@@ -28,22 +37,12 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.enums.DataType;
 import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
-
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
-
+import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import org.zeroturnaround.zip.ZipUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TaskFilesTransferUtils {
@@ -69,7 +68,7 @@ public class TaskFilesTransferUtils {
      * @throws TaskException TaskException
      */
     public static void uploadOutputFiles(TaskExecutionContext taskExecutionContext,
-                                         StorageOperate storageOperate) throws TaskException {
+            StorageOperate storageOperate) throws TaskException {
         List<Property> varPools = getVarPools(taskExecutionContext);
         // get map of varPools for quick search
         Map<String, Property> varPoolsMap = varPools.stream().collect(Collectors.toMap(Property::getProp, x -> x));
@@ -80,9 +79,15 @@ public class TaskFilesTransferUtils {
         if (localParamsProperty.isEmpty()) {
             return;
         }
+        Map<String, String> taskParamsMap = ParameterUtils.convert(taskExecutionContext.getPrepareParamsMap());
 
         log.info("Upload output files ...");
         for (Property property : localParamsProperty) {
+            
+            // convert parameter placeholders
+            String convertProVal = ParameterUtils.convertParameterPlaceholders(property.getValue(), taskParamsMap);
+            property.setValue(convertProVal);
+
             // get local file path
             String path = String.format("%s/%s", taskExecutionContext.getExecutePath(), property.getValue());
             String srcPath = packIfDir(path);
@@ -100,10 +105,10 @@ public class TaskFilesTransferUtils {
             String resourceCRCPath = resourcePath + CRC_SUFFIX;
             try {
                 // upload file to storage
-                String resourceWholePath =
-                        storageOperate.getResourceFullName(taskExecutionContext.getTenantCode(), resourcePath);
-                String resourceCRCWholePath =
-                        storageOperate.getResourceFullName(taskExecutionContext.getTenantCode(), resourceCRCPath);
+                String resourceWholePath = storageOperate.getResourceFullName(taskExecutionContext.getTenantCode(),
+                        resourcePath);
+                String resourceCRCWholePath = storageOperate.getResourceFullName(taskExecutionContext.getTenantCode(),
+                        resourceCRCPath);
                 log.info("{} --- Local:{} to Remote:{}", property, srcPath, resourceWholePath);
                 storageOperate.upload(taskExecutionContext.getTenantCode(), srcPath, resourceWholePath, false, true);
                 log.info("{} --- Local:{} to Remote:{}", "CRC file", srcCRCPath, resourceCRCWholePath);
@@ -162,10 +167,12 @@ public class TaskFilesTransferUtils {
             }
 
             String resourcePath = inVarPool.getValue();
-            String targetPath = String.format("%s/%s", executePath, property.getProp());
+            String targetPath = FileUtils.formatDownloadUpstreamLocalFullPath(taskExecutionContext.getExecutePath(),
+                    property.getProp());
 
             String downloadPath;
-            // If the data is packaged, download it to a special directory (DOWNLOAD_TMP) and unpack it to the
+            // If the data is packaged, download it to a special directory (DOWNLOAD_TMP)
+            // and unpack it to the
             // targetPath
             boolean isPack = resourcePath.endsWith(PACK_SUFFIX);
             if (isPack) {
@@ -175,8 +182,8 @@ public class TaskFilesTransferUtils {
             }
 
             try {
-                String resourceWholePath =
-                        storageOperate.getResourceFullName(taskExecutionContext.getTenantCode(), resourcePath);
+                String resourceWholePath = storageOperate.getResourceFullName(taskExecutionContext.getTenantCode(),
+                        resourcePath);
                 log.info("{} --- Remote:{} to Local:{}", property, resourceWholePath, downloadPath);
                 storageOperate.download(resourceWholePath, downloadPath, true);
             } catch (IOException ex) {
@@ -200,7 +207,8 @@ public class TaskFilesTransferUtils {
     }
 
     /**
-     * get local parameters property which type is FILE and direction is equal to direct
+     * get local parameters property which type is FILE and direction is equal to
+     * direct
      *
      * @param taskExecutionContext is the context of task
      * @param direct               may be Direct.IN or Direct.OUT.
@@ -224,12 +232,14 @@ public class TaskFilesTransferUtils {
      *
      * @param taskExecutionContext is the context of task
      * @param fileName             is the file name
-     * @return resource path, RESOURCE_TAG/DATE/ProcessDefineCode/ProcessDefineVersion_ProcessInstanceID/TaskName_TaskInstanceID_FileName
+     * @return resource path,
+     *         RESOURCE_TAG/DATE/ProcessDefineCode/ProcessDefineVersion_ProcessInstanceID/TaskName_TaskInstanceID_FileName
      */
     public static String getResourcePath(TaskExecutionContext taskExecutionContext, String fileName) {
-        String date =
-                DateUtils.formatTimeStamp(taskExecutionContext.getEndTime(), DateTimeFormatter.ofPattern("yyyyMMdd"));
-        // get resource Folder: RESOURCE_TAG/DATE/ProcessDefineCode/ProcessDefineVersion_ProcessInstanceID
+        String date = DateUtils.formatTimeStamp(taskExecutionContext.getEndTime(),
+                DateTimeFormatter.ofPattern("yyyyMMdd"));
+        // get resource Folder:
+        // RESOURCE_TAG/DATE/ProcessDefineCode/ProcessDefineVersion_ProcessInstanceID
         String resourceFolder = String.format("%s/%s/%d/%d_%d", RESOURCE_TAG, date,
                 taskExecutionContext.getProcessDefineCode(), taskExecutionContext.getProcessDefineVersion(),
                 taskExecutionContext.getProcessInstanceId());

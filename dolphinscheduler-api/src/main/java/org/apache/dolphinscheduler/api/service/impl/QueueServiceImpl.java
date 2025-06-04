@@ -152,6 +152,7 @@ public class QueueServiceImpl extends BaseServiceImpl implements QueueService {
         Integer count = (int) queueList.getTotal();
         pageInfo.setTotal(count);
         pageInfo.setTotalList(queueList.getRecords());
+        pageInfo.setTotalPage((int) queueList.getPages());
         return pageInfo;
     }
 

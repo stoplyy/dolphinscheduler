@@ -63,7 +63,7 @@ export const useForm = () => {
       runMode: 'RUN_MODE_SERIAL',
       processInstancePriority: 'MEDIUM',
       workerGroup: 'default',
-      tenantCode: 'default',
+      tenantCode: 'root',
       environmentCode: null,
       startParams: null,
       expectedParallelismNumber: '',
@@ -71,7 +71,13 @@ export const useForm = () => {
       testFlag: 0,
       version: null,
       allLevelDependent: 'false',
-      executionOrder: 'DESC_ORDER'
+      executionOrder: 'DESC_ORDER',
+      isPlatform: Boolean(false),
+      isPlatformCluster: Boolean(false),
+      isPlatformNode: Boolean(false),
+      platformSource: "",
+      platformClusters: "",
+      platformNodes: "",
     },
     saving: false,
     rules: {

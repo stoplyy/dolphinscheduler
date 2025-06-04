@@ -96,6 +96,7 @@ public class DqExecuteResultServiceImpl extends BaseServiceImpl implements DqExe
 
         pageInfo.setTotal((int) dqsResultPage.getTotal());
         pageInfo.setTotalList(dqsResultPage.getRecords());
+        pageInfo.setTotalPage((int) dqsResultPage.getPages());
         return pageInfo;
     }
 }

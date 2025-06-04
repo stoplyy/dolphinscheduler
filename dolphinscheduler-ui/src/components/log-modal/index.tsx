@@ -26,7 +26,7 @@ import {
   onUnmounted
 } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NIcon, NLog } from 'naive-ui'
+import { NIcon, NLog,NTimeline } from 'naive-ui'
 import Modal from '../modal'
 import {
   DownloadOutlined,

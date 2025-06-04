@@ -94,6 +94,7 @@ public class TaskGroupQueueServiceImpl extends BaseServiceImpl implements TaskGr
 
         pageInfo.setTotal((int) taskGroupQueue.getTotal());
         pageInfo.setTotalList(taskGroupQueue.getRecords());
+        pageInfo.setTotalPage((int) taskGroupQueue.getPages());
 
         result.put(Constants.DATA_LIST, pageInfo);
         putMsg(result, Status.SUCCESS);
@@ -137,6 +138,7 @@ public class TaskGroupQueueServiceImpl extends BaseServiceImpl implements TaskGr
         PageInfo<TaskGroupQueue> pageInfo = new PageInfo<>(pageNo, pageSize);
         pageInfo.setTotal((int) taskGroupQueue.getTotal());
         pageInfo.setTotalList(taskGroupQueue.getRecords());
+        pageInfo.setTotalPage((int) taskGroupQueue.getPages());
 
         result.put(Constants.DATA_LIST, pageInfo);
         putMsg(result, Status.SUCCESS);

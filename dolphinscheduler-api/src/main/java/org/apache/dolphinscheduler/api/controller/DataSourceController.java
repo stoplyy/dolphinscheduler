@@ -178,6 +178,7 @@ public class DataSourceController extends BaseController {
     @Operation(summary = "queryDataSourceListPaging", description = "QUERY_DATA_SOURCE_LIST_PAGING_NOTES")
     @Parameters({
             @Parameter(name = "searchVal", description = "SEARCH_VAL", schema = @Schema(implementation = String.class)),
+            @Parameter(name = "project", description = "PROJECT_ID", required = false, schema = @Schema(implementation = int.class, example = "1")),
             @Parameter(name = "pageNo", description = "PAGE_NO", required = true, schema = @Schema(implementation = int.class, example = "1")),
             @Parameter(name = "pageSize", description = "PAGE_SIZE", required = true, schema = @Schema(implementation = int.class, example = "20"))
     })

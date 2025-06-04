@@ -16,6 +16,7 @@
  */
 
 import { axios } from '@/service/service'
+
 import {
   UserNameReq,
   UserNamesReq,
@@ -75,6 +76,7 @@ export function delUserById(data: IdReq) {
 }
 
 export function getUserInfo(): any {
+
   return axios({
     url: '/users/get-user-info',
     method: 'get'

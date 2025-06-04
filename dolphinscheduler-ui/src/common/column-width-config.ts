@@ -106,7 +106,7 @@ export const COLUMN_WIDTH_CONFIG = {
   },
   instances: {
     width: 40
-  }
+  },
 }
 
 export const calculateTableWidth = (columns: TableColumns) =>

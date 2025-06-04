@@ -52,7 +52,8 @@ public class OSUtils {
     private static final HardwareAbstractionLayer hal = SI.getHardware();
 
     /**
-     * Initialization regularization, solve the problem of pre-compilation performance,
+     * Initialization regularization, solve the problem of pre-compilation
+     * performance,
      * avoid the thread safety problem of multi-thread operation
      */
     private static final Pattern PATTERN = Pattern.compile("\\s+");
@@ -171,7 +172,8 @@ public class OSUtils {
                 return result.contains("uid=");
             }
         } catch (Exception e) {
-            // because ShellExecutor method throws exception to the linux return status is not 0
+            // because ShellExecutor method throws exception to the linux return status is
+            // not 0
             // not exist user return status is 1
             log.error(e.getMessage(), e);
         }
@@ -223,7 +225,7 @@ public class OSUtils {
     /**
      * create linux user
      *
-     * @param userName user name
+     * @param userName  user name
      * @param userGroup user group
      * @throws IOException in case of an I/O error
      */
@@ -237,7 +239,7 @@ public class OSUtils {
     /**
      * create mac user (Supports Mac OSX 10.10+)
      *
-     * @param userName user name
+     * @param userName  user name
      * @param userGroup user group
      * @throws IOException in case of an I/O error
      */
@@ -256,7 +258,7 @@ public class OSUtils {
     /**
      * create windows user
      *
-     * @param userName user name
+     * @param userName  user name
      * @param userGroup user group
      * @throws IOException in case of an I/O error
      */
@@ -304,7 +306,7 @@ public class OSUtils {
      * get sudo command
      *
      * @param tenantCode tenantCode
-     * @param command command
+     * @param command    command
      * @return result of sudo execute command
      */
     public static String getSudoCmd(String tenantCode, String command) {
@@ -315,7 +317,7 @@ public class OSUtils {
     }
 
     public static boolean isSudoEnable() {
-        return PropertyUtils.getBoolean(Constants.SUDO_ENABLE, true);
+        return PropertyUtils.getBoolean(Constants.SUDO_ENABLE, false);
     }
 
     /**

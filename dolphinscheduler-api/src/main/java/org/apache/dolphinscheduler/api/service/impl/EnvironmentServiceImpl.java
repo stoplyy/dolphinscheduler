@@ -202,6 +202,7 @@ public class EnvironmentServiceImpl extends BaseServiceImpl implements Environme
             }).collect(Collectors.toList());
 
             pageInfo.setTotalList(dtoList);
+            pageInfo.setTotalPage((int) environmentIPage.getPages());
         } else {
             pageInfo.setTotalList(new ArrayList<>());
         }

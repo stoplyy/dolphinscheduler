@@ -17,6 +17,7 @@
 
 package org.apache.dolphinscheduler.plugin.task.remoteshell;
 
+import org.apache.dolphinscheduler.common.constants.PlatformConstant;
 import org.apache.dolphinscheduler.plugin.task.api.enums.ResourceType;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
@@ -35,6 +36,11 @@ public class RemoteShellParameters extends AbstractParameters {
      */
     private int datasource;
 
+    // 是否启用平台数据源
+    private boolean enablePlatformSource;
+    // 平台数据源参数名称
+    private String platformSourceParamName = PlatformConstant.getNodeDataSourceParamName();
+
     @Override
     public boolean checkParameters() {
         return rawScript != null && !rawScript.isEmpty();
@@ -46,5 +52,4 @@ public class RemoteShellParameters extends AbstractParameters {
         resources.put(ResourceType.DATASOURCE, datasource);
         return resources;
     }
-
 }

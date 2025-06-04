@@ -243,6 +243,7 @@ const NodeDetailModal = defineComponent({
     return () => (
       <Modal
         show={props.show}
+        widthPercent={50}
         title={
           props.from === 1
             ? `${t('project.task.current_task_settings')}`
@@ -252,6 +253,7 @@ const NodeDetailModal = defineComponent({
         confirmLoading={props.saving}
         confirmDisabled={props.readonly}
         onCancel={onCancel}
+
         headerLinks={headerLinks}
       >
         <Detail

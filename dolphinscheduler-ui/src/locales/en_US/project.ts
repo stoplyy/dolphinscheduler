@@ -929,4 +929,13 @@ export default {
     enabled: 'Enabled',
     disabled: 'Disabled'
   },
+  cluster: {
+    edit_preference: '修改项目偏好设置',
+    cluster_manage: '集群管理',
+    instruction_tips: '下面这些项目偏好配置将影响这个项目下的所有工作流和任务。当创建工作流和任务时，这些配置将影响组件中的默认选项',
+    success: '成功',
+    submit: '提交',
+    enabled: '启用',
+    disabled: '未启用'
+  },
 }

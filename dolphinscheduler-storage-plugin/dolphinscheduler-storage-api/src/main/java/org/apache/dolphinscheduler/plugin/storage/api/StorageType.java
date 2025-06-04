@@ -29,7 +29,9 @@ public enum StorageType {
 
     ABS(5, "ABS"),
 
-    OBS(6, "OBS");
+    OBS(6, "OBS"),
+
+    JFROG(7, "JFROG");
 
     private final int code;
     private final String name;

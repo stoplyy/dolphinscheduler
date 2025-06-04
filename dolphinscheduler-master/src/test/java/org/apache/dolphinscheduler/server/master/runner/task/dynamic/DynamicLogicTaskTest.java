@@ -17,8 +17,15 @@
 
 package org.apache.dolphinscheduler.server.master.runner.task.dynamic;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.dolphinscheduler.common.constants.PlatformConstant;
 import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.WorkflowExecutionStatus;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 import org.apache.dolphinscheduler.dao.mapper.CommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
@@ -29,12 +36,6 @@ import org.apache.dolphinscheduler.plugin.task.api.model.DynamicInputParameter;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.DynamicParameters;
 import org.apache.dolphinscheduler.service.process.ProcessService;
 import org.apache.dolphinscheduler.service.subworkflow.SubWorkflowService;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,67 @@ class DynamicLogicTaskTest {
     }
 
     @Test
+    void testGenerateParameterListGroup() throws Exception {
+        DynamicInputParameter dynamicInputParameter1 = new DynamicInputParameter();
+        dynamicInputParameter1.setName("node");
+        dynamicInputParameter1
+                .setValue("[{\"nodeName\":\"node1\",\"nodeId\":\"1\"},{\"nodeName\":\"node2\",\"nodeId\":\"2\"}]");
+        dynamicInputParameter1.setSeparator(PlatformConstant.DYNAMIC_LIST_SEPAROTOR);
+
+        DynamicInputParameter dynamicInputParameter2 = new DynamicInputParameter();
+        dynamicInputParameter2.setName("param2");
+        dynamicInputParameter2.setValue("1. 2 . 3");
+        dynamicInputParameter2.setSeparator(".");
+
+        List<DynamicInputParameter> dynamicInputParameters = Arrays.asList(dynamicInputParameter1,
+                dynamicInputParameter2);
+        dynamicParameters.setListParameters(dynamicInputParameters);
+        dynamicParameters.setFilterCondition("b,2");
+
+        Mockito.when(taskExecutionContext.getPrepareParamsMap()).thenReturn(new HashMap<>());
+        Mockito.when(taskExecutionContext.getTaskParams())
+                .thenReturn(objectMapper.writeValueAsString(dynamicParameters));
+
+        dynamicLogicTask = new DynamicLogicTask(
+                taskExecutionContext,
+                processInstanceDao,
+                taskInstanceDao,
+                subWorkflowService,
+                processService,
+                processDefineMapper,
+                commandMapper);
+
+        List<Map<String, String>> parameterGroup = dynamicLogicTask.generateParameterGroup();
+        System.out.println("result:" + JSONUtils.toJsonString(parameterGroup));
+        Assertions.assertEquals(4, parameterGroup.size()); // expected cartesian product without filtered values is 6
+
+        // node: [{"nodeName":"node1","nodeId":"1"},{"nodeName":"node2","nodeId":"2"}]
+        // param2: 1. 2 . 3
+        Map<String, String> expectedMap1 = new HashMap<>();
+        expectedMap1.put("node.nodeName", "node1");
+        expectedMap1.put("node.nodeId", "1");
+        expectedMap1.put("param2", "1");
+
+        Map<String, String> expectedMap2 = new HashMap<>();
+        expectedMap2.put("node.nodeName", "node1");
+        expectedMap2.put("node.nodeId", "1");
+        expectedMap2.put("param2", "3");
+
+        Map<String, String> expectedMap3 = new HashMap<>();
+        expectedMap3.put("node.nodeName", "node2");
+        expectedMap3.put("node.nodeId", "2");
+        expectedMap3.put("param2", "1");
+
+        Map<String, String> expectedMap4 = new HashMap<>();
+        expectedMap4.put("node.nodeName", "node2");
+        expectedMap4.put("node.nodeId", "2");
+        expectedMap4.put("param2", "3");
+
+        assert (parameterGroup.containsAll(Arrays.asList(expectedMap1, expectedMap2, expectedMap3, expectedMap4)));
+
+    }
+
+    @Test
     void testGenerateParameterGroup() throws Exception {
         DynamicInputParameter dynamicInputParameter1 = new DynamicInputParameter();
         dynamicInputParameter1.setName("param1");
@@ -106,8 +168,8 @@ class DynamicLogicTaskTest {
         dynamicInputParameter2.setValue("1. 2 . 3");
         dynamicInputParameter2.setSeparator(".");
 
-        List<DynamicInputParameter> dynamicInputParameters =
-                Arrays.asList(dynamicInputParameter1, dynamicInputParameter2);
+        List<DynamicInputParameter> dynamicInputParameters = Arrays.asList(dynamicInputParameter1,
+                dynamicInputParameter2);
         dynamicParameters.setListParameters(dynamicInputParameters);
         dynamicParameters.setFilterCondition("b,2");
 
@@ -128,7 +190,8 @@ class DynamicLogicTaskTest {
 
         Assertions.assertEquals(4, parameterGroup.size()); // expected cartesian product without filtered values is 6
 
-        // Assert the value of parameter groups. Adjust these according to your expectations.
+        // Assert the value of parameter groups. Adjust these according to your
+        // expectations.
         // Here we only check for a few representative cases to keep the test concise.
         Map<String, String> expectedMap1 = new HashMap<>();
         expectedMap1.put("param1", "a");

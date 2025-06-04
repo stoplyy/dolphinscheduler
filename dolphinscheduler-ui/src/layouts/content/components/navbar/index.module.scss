@@ -15,6 +15,29 @@
  * limitations under the License.
  */
 
+:global {
+
+  /* 定义全局样式，并使用 CSS 变量设置高度 */
+  :root {
+    --menu-item-padding: 0 20px;
+  }
+
+  .n-menu .n-menu-item .n-menu-item-content {
+    padding: var(--menu-item-padding);
+  }
+
+  @media screen and (max-width: 1500px) {
+
+    /* 在小屏幕下，修改 CSS 变量的值
+      const screenWidth=window.innerWidth;
+      console.log("当前屏幕宽度：" + screenWidth + "px"); 
+    */
+    :root {
+      --menu-item-padding: 0 5px;
+    }
+  }
+}
+
 .container {
   display: flex;
   align-items: center;

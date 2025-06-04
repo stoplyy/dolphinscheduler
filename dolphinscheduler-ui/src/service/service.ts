@@ -27,6 +27,8 @@ import utils from '@/utils'
 const userStore = useUserStore()
 const uiSettingStore = useUISettingStore()
 
+axios.defaults.withCredentials = true
+
 /**
  * @description Log and display errors
  * @param {Error} error Error object
@@ -75,7 +77,8 @@ const err = (err: AxiosError): Promise<AxiosError> => {
 
 service.interceptors.request.use((config: AxiosRequestConfig<any>) => {
   config.headers = config.headers || {}
-  config.headers.sessionId = userStore.getSessionId
+  const storeSessionId = userStore.getSessionId
+  if (storeSessionId) { config.headers.sessionId = storeSessionId }
   const language = cookies.get('language')
   if (language) config.headers.language = language
 

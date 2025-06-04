@@ -14,7 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+datasource.plugin: mysql
+elk.enable: false
+
+dolphin.force.master.mapper-packages: org.apache.dolphinscheduler
+spring.main.allow-circular-references: true
+poseidon.soter.enabled: false
+
 spring:
+  cloud.kubernetes.enabled: false
+  # main:
+  #   allow-bean-definition-overriding: true
   profiles:
     active: postgresql
   banner:
@@ -85,12 +95,11 @@ mybatis-plus:
       id-type: auto
     banner: false
 
-
 registry:
   type: zookeeper
   zookeeper:
-    namespace: dolphinscheduler
-    connect-string: localhost:2181
+    namespace: stellarops
+    connect-string: 127.0.0.1:2181
     retry-policy:
       base-sleep-time: 60ms
       max-sleep: 300ms
@@ -123,13 +132,13 @@ master:
     # If set true, will open master overload protection
     enabled: true
     # Master max cpu usage, when the master's cpu usage is smaller then this value, master server can execute workflow.
-    max-cpu-usage-percentage-thresholds: 0.7
+    max-cpu-usage-percentage-thresholds: 0.9
     # Master max JVM memory usage , when the master's jvm memory usage is smaller then this value, master server can execute workflow.
-    max-jvm-memory-usage-percentage-thresholds: 0.7
+    max-jvm-memory-usage-percentage-thresholds: 0.9
     # Master max System memory usage , when the master's system memory usage is smaller then this value, master server can execute workflow.
-    max-system-memory-usage-percentage-thresholds: 0.7
+    max-system-memory-usage-percentage-thresholds: 0.9
     # Master max disk usage , when the master's disk usage is smaller then this value, master server can execute workflow.
-    max-disk-usage-percentage-thresholds: 0.7
+    max-disk-usage-percentage-thresholds: 0.9
   # failover interval, the unit is minute
   failover-interval: 10m
   # kill yarn / k8s application when failover taskInstance, default true
@@ -164,19 +173,18 @@ management:
 
 metrics:
   enabled: true
-
 # Override by profile
 
----
-spring:
-  config:
-    activate:
-      on-profile: mysql
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
-    username: root
-    password: root
-  quartz:
-    properties:
-      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+# ---
+# spring:
+#   config:
+#     activate:
+#       on-profile: mysql
+#   datasource:
+#     driver-class-name: com.mysql.cj.jdbc.Driver
+#     url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
+#     username: root
+#     password: root
+#   quartz:
+#     properties:
+#       org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate

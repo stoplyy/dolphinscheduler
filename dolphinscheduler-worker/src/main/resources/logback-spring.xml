@@ -18,7 +18,7 @@
 
 <configuration scan="true" scanPeriod="120 seconds">
     <property name="log.base" value="logs"/>
-    <property scope="context" name="log.base.ctx" value="${log.base}" />
+    <property scope="context" name="log.base.ctx" value="${log.base}"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -30,7 +30,7 @@
     </appender>
 
     <conversionRule conversionWord="message"
-                    converterClass="org.apache.dolphinscheduler.common.log.SensitiveDataConverter"/>
+        converterClass="org.apache.dolphinscheduler.common.log.SensitiveDataConverter"/>
     <appender name="TASKLOGFILE" class="ch.qos.logback.classic.sift.SiftingAppender">
         <filter class="org.apache.dolphinscheduler.plugin.task.api.log.TaskLogFilter"/>
         <Discriminator class="org.apache.dolphinscheduler.plugin.task.api.log.TaskLogDiscriminator">
@@ -73,6 +73,7 @@
                 <appender-ref ref="STDOUT"/>
             </then>
         </if>
+        <appender-ref ref="STDOUT"/>
         <appender-ref ref="TASKLOGFILE"/>
         <appender-ref ref="WORKERLOGFILE"/>
     </root>
