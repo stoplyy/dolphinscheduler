@@ -33,7 +33,7 @@ public final class HttpAlertChannel implements AlertChannel {
         if (null == paramsMap) {
             return new AlertResult("false", "http params is null");
         }
-
+        
         return new HttpSender(paramsMap).send(alertData.getContent());
     }
 }
