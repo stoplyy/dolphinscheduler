@@ -23,7 +23,8 @@
         <!-- 颜色区分不同日志级别 -->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
-                %highlight([%d{HH:mm:ss.SSS}]) [%thread] %-5level %logger{36}:%line - %msg%n%throwable
+                %highlight([%d{HH:mm:ss.SSS}]) [%thread] %-5level %logger{36}:%line -
+                %msg%n%throwable
             </pattern>
             <charset>UTF-8</charset>
         </encoder>
@@ -40,7 +41,8 @@
         </rollingPolicy>
         <encoder>
             <pattern>
-                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger{36}:%line - %msg%n%throwable
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger{36}:%line -
+                %msg%n%throwable
             </pattern>
             <charset>UTF-8</charset>
         </encoder>
@@ -55,12 +57,8 @@
 
     <springProfile name="!local">
         <root level="INFO">
-            <if condition="${DOCKER:-false}">
-                <then>
-                    <appender-ref ref="STDOUT" />
-                </then>
-            </if>
-            <appender-ref ref="ALERTLOGFILE" />
+            <appender-ref ref="STDOUT" />
+            <!-- <appender-ref ref="ALERTLOGFILE" /> -->
         </root>
     </springProfile>
 </configuration>
