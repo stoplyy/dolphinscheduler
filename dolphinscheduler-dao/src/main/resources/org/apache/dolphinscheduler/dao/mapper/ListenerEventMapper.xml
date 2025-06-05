@@ -35,8 +35,8 @@
 
     <insert id="insertServerDownEvent">
         insert into t_ds_listener_event (content, sign, post_status, event_type, create_time, update_time)
-        SELECT #{event.sign},
-               #{event.content},
+        SELECT #{event.content},
+               #{event.sign},
                #{event.postStatus.code},
                #{event.eventType.code},
                #{event.createTime},
