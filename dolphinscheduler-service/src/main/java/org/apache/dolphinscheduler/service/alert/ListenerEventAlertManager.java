@@ -240,7 +240,13 @@ public class ListenerEventAlertManager {
         String content = JSONUtils.toJsonString(event);
         listenerEvent.setContent(content);
         listenerEvent.setPostStatus(AlertStatus.WAIT_EXECUTION);
-        listenerEvent.setSign(generateSign(content));
+        String sign = generateSign(content);
+        //mysql column  char(64)
+        if( sign.length() > 64) {
+            log.warn("The sign length is greater than 64, it will be truncated: {}", sign);
+            sign = sign.substring(0, 64);
+        }
+        listenerEvent.setSign(sign);
         listenerEvent.setCreateTime(new Date());
         listenerEvent.setUpdateTime(new Date());
         listenerEvent.setEventType(event.getEventType());
