@@ -95,7 +95,7 @@ public class AlertBootstrapServiceTest {
                 alertBootstrapService.syncHandler(ALERT_GROUP_ID, TITLE, CONTENT, WarningType.ALL.getCode());
         Assertions.assertFalse(alertSendResponse.isSuccess());
         alertSendResponse.getResResults().forEach(result -> logger
-                .info("alert send response result, status:{}, message:{}", result.isSuccess(), result.getMessage()));
+                .info("alert send  response result, status:{}, message:{}", result.isSuccess(), result.getMessage()));
 
         // 2.alert plugin does not exist
         int pluginDefineId = 1;
