@@ -42,9 +42,17 @@ public class AlertRegistryClient implements AutoCloseable {
 
     private AlertHeartbeatTask alertHeartbeatTask;
 
+    final static String ALERT_LOCK_PATH = RegistryNodeType.ALERT_LOCK.getRegistryPath();
+
     public void start() {
         log.info("AlertRegistryClient starting...");
-        registryClient.getLock(RegistryNodeType.ALERT_LOCK.getRegistryPath());
+        // 临时处理：解决发布过程中同时出现两个运行实例的问题
+        if(registryClient.exists(ALERT_LOCK_PATH)) {
+            log.warn("Alert lock path {} already exists, it may be caused by the previous AlertServer not closed properly, " +
+                    "please check if there is any other AlertServer running.", ALERT_LOCK_PATH);
+            registryClient.releaseLock(ALERT_LOCK_PATH);
+        }
+        registryClient.getLock(ALERT_LOCK_PATH);
         alertHeartbeatTask = new AlertHeartbeatTask(alertConfig, metricsProvider, registryClient);
         alertHeartbeatTask.start();
         // start heartbeat task
@@ -55,7 +63,7 @@ public class AlertRegistryClient implements AutoCloseable {
     public void close() {
         log.info("AlertRegistryClient closing...");
         alertHeartbeatTask.shutdown();
-        registryClient.releaseLock(RegistryNodeType.ALERT_LOCK.getRegistryPath());
+        registryClient.releaseLock(ALERT_LOCK_PATH);
         log.info("AlertRegistryClient closed...");
     }
 }
