@@ -116,7 +116,7 @@ master:
   # master prepare execute thread number to limit handle commands in parallel
   pre-exec-threads: 10
   # master execute thread number to limit process instances in parallel
-  exec-threads: 100
+  exec-threads: 20
   # master dispatch task number per batch, if all the tasks dispatch failed in a batch, will sleep 1s.
   dispatch-task-number: 3
   # master host selector to select a suitable worker, default value: LowerWeight. Optional values include random, round_robin, lower_weight
