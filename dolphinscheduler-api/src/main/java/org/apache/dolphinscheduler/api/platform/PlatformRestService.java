@@ -1,5 +1,6 @@
 package org.apache.dolphinscheduler.api.platform;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,7 @@ import com.tuhu.stellarops.client.core.StellarOpsClusterInfo;
 import com.tuhu.stellarops.client.core.StellarOpsNodeInfo;
 import com.tuhu.stellarops.client.spring.endpoint.StellarOpsOpenApiEndpoint;
 
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -73,9 +75,17 @@ public class PlatformRestService {
     }
 
     public Result<List<StellarOpsClusterInfo>> getPlatformClusterList(String appIdOrUrl) {
-        BizResponse<List<StellarOpsClusterInfo>> bizResponse = autoPlatformFactory
-                .getClient(appIdOrUrl).getClusterList();
-        return PlatformRestService.mapToResult(bizResponse);
+        try {
+            BizResponse<List<StellarOpsClusterInfo>> bizResponse = autoPlatformFactory
+                    .getClient(appIdOrUrl).getClusterList();
+            return PlatformRestService.mapToResult(bizResponse);
+        } catch (FeignException e) { // feign.FeignException$Unauthorized: [401 ]
+            log.error("getPlatformClusterList error, appIdOrUrl: {}", appIdOrUrl, e);
+            return Result.success(new ArrayList<>());
+        } catch (Exception e) {
+            log.error("getPlatformClusterList error, appIdOrUrl: {}", appIdOrUrl, e);
+            return Result.success(new ArrayList<>());
+        }
     }
 
     public Result<List<StellarOpsNodeInfo>> getPlatformNodeListWithUri(String uri, RestParamEntry entry) {
@@ -83,9 +93,17 @@ public class PlatformRestService {
     }
 
     public Result<List<StellarOpsNodeInfo>> getPlatformNodeList(String appIdOrUrl, RestParamEntry entry) {
-        BizResponse<List<StellarOpsNodeInfo>> bizResponse = autoPlatformFactory
-                .getClient(appIdOrUrl).getNodeList(entry.getClusterId(), entry.getTaskName());
-        return PlatformRestService.mapToResult(bizResponse);
+        try {
+            BizResponse<List<StellarOpsNodeInfo>> bizResponse = autoPlatformFactory
+                    .getClient(appIdOrUrl).getNodeList(entry.getClusterId(), entry.getTaskName());
+            return PlatformRestService.mapToResult(bizResponse);
+        } catch (FeignException e) { // feign.FeignException$Unauthorized: [401 ]
+            log.error("getPlatformNodeList error, appIdOrUrl: {}, entry: {}", appIdOrUrl, entry, e);
+            return Result.success(new ArrayList<>());
+        } catch (Exception e) {
+            log.error("getPlatformNodeList error, appIdOrUrl: {}, entry: {}", appIdOrUrl, entry, e);
+            return Result.success(new ArrayList<>());
+        }
     }
 
     /*
