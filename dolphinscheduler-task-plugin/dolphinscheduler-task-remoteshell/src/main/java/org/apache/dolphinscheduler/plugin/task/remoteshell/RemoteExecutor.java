@@ -99,7 +99,6 @@ public class RemoteExecutor implements AutoCloseable {
             return session;
         }
         try {
-            log.info("SSH connection params:{}", sshConnectionParam.getLogString());
             session = SSHUtils.getSession(sshClient, sshConnectionParam);
             if (session == null || !session.auth().verify().isSuccess()) {
                 throw new TaskException("SSH connection failed");
@@ -271,8 +270,10 @@ public class RemoteExecutor implements AutoCloseable {
             channel.open();
             channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), 0);
             channel.close();
-            if (channel.getExitStatus() != 0) {
-                throw new TaskException("Remote shell task error, error message: " + err.toString());
+            Integer exitStatus = channel.getExitStatus();
+            if (exitStatus == null || exitStatus != 0) {
+                throw new TaskException(
+                        "Remote shell task error, exitStatus: " + exitStatus + " error message: " + err);
             }
             return out.toString();
         }
