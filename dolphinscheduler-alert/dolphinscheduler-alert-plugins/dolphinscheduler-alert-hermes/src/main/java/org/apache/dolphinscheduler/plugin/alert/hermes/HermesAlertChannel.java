@@ -21,9 +21,13 @@ import org.apache.dolphinscheduler.alert.api.AlertChannel;
 import org.apache.dolphinscheduler.alert.api.AlertData;
 import org.apache.dolphinscheduler.alert.api.AlertInfo;
 import org.apache.dolphinscheduler.alert.api.AlertResult;
+import org.apache.dolphinscheduler.common.enums.ListenerEventType;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
+@Slf4j
 public final class HermesAlertChannel implements AlertChannel {
 
     @Override
@@ -33,7 +37,24 @@ public final class HermesAlertChannel implements AlertChannel {
         if (null == paramsMap) {
             return new AlertResult("false", "http params is null");
         }
-        
+
+        if (isSendSolarisAlert(alertData.getListenerEventType())) {
+            try {
+                new SolarisSender(paramsMap).send(alertData);
+            } catch (Exception e) {
+                log.error("send solaris alert msg exception: {}", e.getMessage());
+            }
+        }
+
         return new HermesSender(paramsMap).send(alertData);
+    }
+
+    private boolean isSendSolarisAlert(ListenerEventType eventType) {
+        // 工作流执行失败 发送告警
+        switch (eventType) {
+            case PROCESS_FAIL:
+            default:
+                return false;
+        }
     }
 }

@@ -87,7 +87,15 @@ public final class HermesAlertChannelFactory implements AlertChannelFactory {
                         .build())
                 .build();
 
-        return Arrays.asList(url, token, eventCode, env, ignoreProjectCode, filterTaskTypeCode);
+        InputParam solarisUrl = InputParam
+                .newBuilder(HermesAlertConstants.NAME_SOLARIS_URL, HermesAlertConstants.SOLARIS_URL)
+                .setPlaceholder(AlertInputTips.SOLARIS_URL.getMsg())
+                .addValidate(Validate.newBuilder()
+                        .setRequired(false)
+                        .build())
+                .build();
+
+        return Arrays.asList(url, token, eventCode, env, ignoreProjectCode, filterTaskTypeCode, solarisUrl);
     }
 
     @Override

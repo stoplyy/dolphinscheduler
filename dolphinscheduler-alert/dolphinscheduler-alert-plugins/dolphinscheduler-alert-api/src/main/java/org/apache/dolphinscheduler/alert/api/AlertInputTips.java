@@ -64,7 +64,9 @@ public enum AlertInputTips {
     HERMES_EVENT_CODE("please input hermes event code", "请输入hermes事件代码"), 
     IGNORE_PROJECT_CODE("please input ignore project code, use `,` to separate multiple project codes", "请输入忽略项目代码, 使用 `,` 来分割多个项目代码"), 
     TOKEN("please input token", "请输入token"),
-    ENV("please input env", "请输入环境 work/prod");
+    ENV("please input env", "请输入环境 work/prod"),
+    SOLARIS_URL("please input solaris url", "请输入solaris的url")
+    ;
 
     private final String enMsg;
     private final String zhMsg;

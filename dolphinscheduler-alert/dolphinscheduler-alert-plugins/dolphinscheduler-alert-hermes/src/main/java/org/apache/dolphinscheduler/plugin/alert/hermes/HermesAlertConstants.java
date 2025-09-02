@@ -22,6 +22,9 @@ public final class HermesAlertConstants {
     public static final String URL = "$t('url')";
     public static final String NAME_URL = "url";
 
+    public static final String SOLARIS_URL = "$t('solaris_url')";
+    public static final String NAME_SOLARIS_URL = "solaris_url";
+
     public static final String TOKEN = "$t('token')";
     public static final String NAME_TOKEN = "token";
 
